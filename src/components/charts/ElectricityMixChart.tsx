@@ -22,14 +22,14 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
   
   const chartData = {
     labels: [
-      'Nuclear',
-      'Hydro',
-      'Coal',
-      'Gas',
-      'Wind',
-      'Solar',
-      'Other Renewables',
-      'Oil'
+      'Jadrová',
+      'Vodná',
+      'Uhlie',
+      'Plyn',
+      'Veterná',
+      'Solárna',
+      'Ostatné obnoviteľné',
+      'Ropa'
     ],
     datasets: [
       {
@@ -111,8 +111,8 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
   return (
     <div className="bg-card rounded-lg border p-6">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-card-foreground">Electricity Generation Mix</h3>
-        <p className="text-sm text-muted-foreground">Slovakia's power sources ({electricityMix.year})</p>
+        <h3 className="text-lg font-semibold text-card-foreground">Mix výroby elektriny</h3>
+        <p className="text-sm text-muted-foreground">Energetické zdroje Slovenska ({electricityMix.year})</p>
       </div>
       
       <div className="flex flex-col lg:flex-row items-center gap-8">
@@ -125,22 +125,22 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
             <div className="text-2xl font-bold text-success">
               {lowCarbonShare.toFixed(1)}%
             </div>
-            <div className="text-sm text-muted-foreground">Low-carbon electricity</div>
+            <div className="text-sm text-muted-foreground">Nízkouhlíková elektrina</div>
           </div>
           
           <div className="space-y-2 text-sm">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="font-medium">Nuclear:</span> {electricityMix.nuclear.toFixed(1)}%
+                <span className="font-medium">Jadrová:</span> {electricityMix.nuclear.toFixed(1)}%
               </div>
               <div>
-                <span className="font-medium">Hydro:</span> {electricityMix.hydro.toFixed(1)}%
+                <span className="font-medium">Vodná:</span> {electricityMix.hydro.toFixed(1)}%
               </div>
               <div>
-                <span className="font-medium">Wind:</span> {electricityMix.wind.toFixed(1)}%
+                <span className="font-medium">Veterná:</span> {electricityMix.wind.toFixed(1)}%
               </div>
               <div>
-                <span className="font-medium">Solar:</span> {electricityMix.solar.toFixed(1)}%
+                <span className="font-medium">Solárna:</span> {electricityMix.solar.toFixed(1)}%
               </div>
             </div>
           </div>
@@ -148,7 +148,7 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
       </div>
       
       <div className="mt-4 text-xs text-muted-foreground">
-        <p>Data source: Our World in Data • Year: {electricityMix.year} • Low-carbon = Nuclear + Renewables</p>
+        <p>Zdroj údajov: Our World in Data • Rok: {electricityMix.year} • Nízkouhlíková = Jadrová + Obnoviteľné</p>
       </div>
     </div>
   );

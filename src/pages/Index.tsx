@@ -95,10 +95,10 @@ const Index = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
-          <h1 className="text-2xl font-bold mb-2">Unable to Load Data</h1>
+          <h1 className="text-2xl font-bold mb-2">Nie je možné načítať údaje</h1>
           <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={() => window.location.reload()}>
-            Try Again
+            Skúsiť znovu
           </Button>
         </div>
       </div>
@@ -112,18 +112,18 @@ const Index = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Climate & Slovakia: Trends and Impacts</h1>
-              <p className="text-muted-foreground">A simple data overview of climate trends and what they mean for people and industry in Slovakia.</p>
+              <h1 className="text-3xl font-bold text-foreground">Klíma a Slovensko: Trendy a dopady</h1>
+              <p className="text-muted-foreground">Jednoduchý prehľad klimatických trendov a ich význam pre ľudí a priemysel na Slovensku.</p>
             </div>
             <div className="flex items-center gap-4 text-sm">
               <button 
                 onClick={scrollToSources}
                 className="text-primary hover:underline"
               >
-                Sources
+                Zdroje
               </button>
               <span className="text-muted-foreground">
-                Last updated: {new Date().toLocaleDateString()}
+                Posledná aktualizácia: {new Date().toLocaleDateString('sk-SK')}
               </span>
             </div>
           </div>
@@ -133,7 +133,7 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         {/* KPI Tiles */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Key Metrics</h2>
+          <h2 className="text-2xl font-bold mb-6">Kľúčové ukazovatele</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {loading || !kpiMetrics ? (
               <>
@@ -144,27 +144,27 @@ const Index = () => {
             ) : (
               <>
                 <KPITile
-                  title="CO₂ per Capita"
+                  title="CO₂ na obyvateľa"
                   value={kpiMetrics.co2.value}
-                  unit="tCO₂/person"
-                  description={`Latest data from ${kpiMetrics.co2.year}`}
-                  tooltip="Annual carbon dioxide emissions divided by population. Includes emissions from fossil fuel combustion and cement production."
+                  unit="tCO₂/osoba"
+                  description={`Najnovšie údaje z roku ${kpiMetrics.co2.year}`}
+                  tooltip="Ročné emisie oxidu uhličitého delené počtom obyvateľov. Zahŕňa emisie zo spaľovania fosílnych palív a výroby cementu."
                   color="co2"
                 />
                 <KPITile
-                  title="Low-Carbon Electricity"
+                  title="Nízkouhlíková elektrina"
                   value={kpiMetrics.lowCarbon}
                   unit="%"
-                  description="Nuclear + renewables combined"
-                  tooltip="Percentage of electricity from sources with low CO₂ emissions: nuclear, hydro, wind, solar, and other renewables."
+                  description="Jadrová energia + obnoviteľné zdroje"
+                  tooltip="Percentuálny podiel elektrickej energie zo zdrojov s nízkymi emisiami CO₂: jadrová, vodná, veterná, solárna a ostatné obnoviteľné zdroje."
                   color="success"
                 />
                 <KPITile
-                  title="Warming Since 1950"
+                  title="Otepľovanie od roku 1950"
                   value={kpiMetrics.warming}
                   unit="°C"
-                  description="Average temperature change"
-                  tooltip="Difference between recent 5-year average (2018-2022) and 1950s baseline (1950-1959) for Bratislava area."
+                  description="Priemerná zmena teploty"
+                  tooltip="Rozdiel medzi nedávnym 5-ročným priemerom (2018-2022) a referenčnou hodnotou z 50. rokov (1950-1959) pre oblasť Bratislavy."
                   color="warning"
                 />
               </>
@@ -174,7 +174,7 @@ const Index = () => {
 
         {/* Charts */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Climate Trends</h2>
+          <h2 className="text-2xl font-bold mb-6">Klimatické trendy</h2>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {loading || !co2Data ? (
               <ChartSkeleton />
@@ -200,53 +200,53 @@ const Index = () => {
 
         {/* Impact Cards */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">What This Means for Slovakia</h2>
+          <h2 className="text-2xl font-bold mb-6">Čo to znamená pre Slovensko</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <InfoCard
-              title="Industry & Energy"
+              title="Priemysel a energetika"
               icon={<Factory size={20} />}
               content={[
-                { text: "Slovakia's industrial sector faces exposure to volatile energy prices, particularly affecting steel and aluminum production." },
-                { text: "High nuclear share (50%+) provides relatively stable electricity costs but requires long-term investment in fleet renewal." },
-                { text: "Growing renewable capacity creates opportunities for green manufacturing and attracts clean energy investments." },
-                { text: "EU decarbonization policies drive industrial transformation toward electrification and hydrogen applications.", 
-                  link: { url: "https://www.eea.europa.eu/", text: "Learn more" } }
+                { text: "Slovenský priemyselný sektor je vystavený volatilným cenám energie, čo ovplyvňuje najmä výrobu ocele a hliníka." },
+                { text: "Vysoký podiel jadrovej energie (50%+) poskytuje relatívne stabilné náklady na elektrinu, ale vyžaduje si dlhodobé investície do obnovy parku." },
+                { text: "Rastúca kapacita obnoviteľných zdrojov vytvára príležitosti pre zelenú výrobu a priťahuje investície do čistej energie." },
+                { text: "Dekarbonizačné politiky EÚ poháňajú priemyselnú transformáciu smerom k elektrifikácii a aplikáciám vodíka.", 
+                  link: { url: "https://www.eea.europa.eu/", text: "Viac informácií" } }
               ]}
             />
             
             <InfoCard
-              title="People & Health"
+              title="Ľudia a zdravie"
               icon={<Users size={20} />}
               content={[
-                { text: "Rising temperatures increase heat-related health risks, particularly in urban areas like Bratislava and Košice." },
-                { text: "Air quality improvements from cleaner electricity and transport reduce respiratory disease burden." },
-                { text: "Energy transition affects household bills: nuclear provides cost stability while renewables offer long-term price benefits." },
-                { text: "Climate adaptation needs include cooling systems and urban green infrastructure.", 
-                  link: { url: "https://www.shmu.sk/", text: "Learn more" } }
+                { text: "Rastúce teploty zvyšujú zdravotné riziká súvisiace s horúčavami, najmä v mestských oblastiach ako Bratislava a Košice." },
+                { text: "Zlepšenie kvality ovzdušia z čistejšej elektriny a dopravy znižuje zaťaženie respiračnými chorobami." },
+                { text: "Energetická transformácia ovplyvňuje účty domácností: jadrová energia poskytuje cenovú stabilitu, zatiaľ čo obnoviteľné zdroje ponúkajú dlhodobé cenové výhody." },
+                { text: "Potreby klimatickej adaptácie zahŕňajú chladiace systémy a mestskú zelenú infraštruktúru.", 
+                  link: { url: "https://www.shmu.sk/", text: "Viac informácií" } }
               ]}
             />
             
             <InfoCard
-              title="Water & Agriculture"
+              title="Voda a poľnohospodárstvo"
               icon={<Droplets size={20} />}
               content={[
-                { text: "Changing precipitation patterns affect Danube river levels, impacting hydroelectric generation and shipping." },
-                { text: "Agricultural productivity faces pressure from more frequent droughts and extreme weather events." },
-                { text: "Forest ecosystems experience stress from warming temperatures and pest outbreaks." },
-                { text: "Water management requires investment in storage, efficiency, and flood protection systems.", 
-                  link: { url: "https://www.eea.europa.eu/", text: "Learn more" } }
+                { text: "Meniace sa vzorce zrážok ovplyvňujú hladiny Dunaja, čo má dopad na výrobu vodnej energie a lodná preprava." },
+                { text: "Poľnohospodárska produktivita čelí tlaku z častejších sucha a extrémnych poveternostných udalostí." },
+                { text: "Lesné ekosystémy zažívajú stres z otepľovania a prepuknutia škodcov." },
+                { text: "Vodohospodárstvo si vyžaduje investície do skladovania, efektívnosti a systémov protipovodňovej ochrany.", 
+                  link: { url: "https://www.eea.europa.eu/", text: "Viac informácií" } }
               ]}
             />
             
             <InfoCard
-              title="Policy Context"
+              title="Politický kontext"
               icon={<FileText size={20} />}
               content={[
-                { text: "EU Fit for 55 package requires 55% emission reduction by 2030, affecting all economic sectors." },
-                { text: "Slovakia's National Energy and Climate Plan targets increased renewables and energy efficiency." },
-                { text: "EU Emissions Trading System (ETS) puts carbon price on industrial emissions and electricity generation." },
-                { text: "Recovery and Resilience Plan includes €2.2 billion for green transition projects.", 
-                  link: { url: "https://www.eea.europa.eu/", text: "Learn more" } }
+                { text: "Balík EÚ Fit for 55 vyžaduje 55% zníženie emisií do roku 2030, čo ovplyvňuje všetky ekonomické sektory." },
+                { text: "Národný energetický a klimatický plán Slovenska cieli na zvýšenie obnoviteľných zdrojov a energetickej efektívnosti." },
+                { text: "Systém obchodovania s emisiami EÚ (ETS) stanovuje uhlíkovú cenu na priemyselné emisie a výrobu elektriny." },
+                { text: "Plán obnovy a odolnosti zahŕňa 2,2 miliardy eur na projekty zelenej transformácie.", 
+                  link: { url: "https://www.eea.europa.eu/", text: "Viac informácií" } }
               ]}
             />
           </div>

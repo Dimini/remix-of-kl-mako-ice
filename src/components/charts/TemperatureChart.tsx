@@ -63,7 +63,7 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
     labels: filteredRawData.map(item => item.date),
     datasets: [
       {
-        label: 'Monthly temperature',
+        label: 'Mesačná teplota',
         data: filteredRawData.map(item => item.value),
         borderColor: 'hsl(var(--temperature-cool) / 0.6)',
         backgroundColor: 'transparent',
@@ -73,7 +73,7 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
         tension: 0.1,
       },
       {
-        label: '12-month rolling average',
+        label: '12-mesačný kĺzavý priemer',
         data: filteredRollingData.map((item, index) => {
           // Align rolling average with raw data indices
           const rawIndex = filteredRawData.findIndex(raw => raw.date === item.date);
@@ -114,7 +114,7 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
       x: {
         title: {
           display: true,
-          text: 'Year-Month',
+          text: 'Rok-Mesiac',
           font: {
             weight: 'bold',
           },
@@ -137,7 +137,7 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
       y: {
         title: {
           display: true,
-          text: 'Temperature (°C)',
+          text: 'Teplota (°C)',
           font: {
             weight: 'bold',
           },
@@ -158,8 +158,8 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
     <div className="bg-card rounded-lg border p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-card-foreground">Monthly Mean Temperature</h3>
-          <p className="text-sm text-muted-foreground">Bratislava proxy for Slovakia trend</p>
+          <h3 className="text-lg font-semibold text-card-foreground">Mesačná priemerná teplota</h3>
+          <p className="text-sm text-muted-foreground">Bratislava ako zástupca trendu Slovenska</p>
         </div>
         
         <Select value={timeWindow} onValueChange={setTimeWindow}>
@@ -167,9 +167,9 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All years</SelectItem>
-            <SelectItem value="since-1990">Since 1990</SelectItem>
-            <SelectItem value="since-2000">Since 2000</SelectItem>
+            <SelectItem value="all">Všetky roky</SelectItem>
+            <SelectItem value="since-1990">Od roku 1990</SelectItem>
+            <SelectItem value="since-2000">Od roku 2000</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -179,7 +179,7 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
       </div>
       
       <div className="mt-4 text-xs text-muted-foreground space-y-1">
-        <p>Data source: Open-Meteo ERA5 • Bratislava coordinates: 48.15°N, 17.11°E</p>
+        <p>Zdroj údajov: Open-Meteo ERA5 • Súradnice Bratislavy: 48.15°N, 17.11°E</p>
         <p className="italic">{data.note}</p>
       </div>
     </div>

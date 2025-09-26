@@ -48,7 +48,7 @@ export function CO2Chart({ data }: CO2ChartProps) {
     labels: filteredData.map(item => item.year.toString()),
     datasets: [
       {
-        label: 'CO₂ per capita (tCO₂/person)',
+        label: 'CO₂ na obyvateľa (tCO₂/osoba)',
         data: filteredData.map(item => item.value),
         borderColor: 'hsl(var(--co2-primary))',
         backgroundColor: 'hsl(var(--co2-primary) / 0.1)',
@@ -85,7 +85,7 @@ export function CO2Chart({ data }: CO2ChartProps) {
       x: {
         title: {
           display: true,
-          text: 'Year',
+          text: 'Rok',
           font: {
             weight: 'bold',
           },
@@ -97,7 +97,7 @@ export function CO2Chart({ data }: CO2ChartProps) {
       y: {
         title: {
           display: true,
-          text: 'CO₂ per capita (tCO₂/person)',
+          text: 'CO₂ na obyvateľa (tCO₂/osoba)',
           font: {
             weight: 'bold',
           },
@@ -119,8 +119,8 @@ export function CO2Chart({ data }: CO2ChartProps) {
     <div className="bg-card rounded-lg border p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-card-foreground">CO₂ Emissions per Capita</h3>
-          <p className="text-sm text-muted-foreground">Slovakia's carbon footprint over time</p>
+          <h3 className="text-lg font-semibold text-card-foreground">Emisie CO₂ na obyvateľa</h3>
+          <p className="text-sm text-muted-foreground">Uhlíková stopa Slovenska v čase</p>
         </div>
         
         <Select value={timeWindow} onValueChange={setTimeWindow}>
@@ -128,9 +128,9 @@ export function CO2Chart({ data }: CO2ChartProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All years</SelectItem>
-            <SelectItem value="since-1990">Since 1990</SelectItem>
-            <SelectItem value="since-2000">Since 2000</SelectItem>
+            <SelectItem value="all">Všetky roky</SelectItem>
+            <SelectItem value="since-1990">Od roku 1990</SelectItem>
+            <SelectItem value="since-2000">Od roku 2000</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -140,7 +140,7 @@ export function CO2Chart({ data }: CO2ChartProps) {
       </div>
       
       <div className="mt-4 text-xs text-muted-foreground">
-        <p>Data source: World Bank • Latest: {data.latest.year} ({data.latest.value.toFixed(2)} tCO₂/person)</p>
+        <p>Zdroj údajov: World Bank • Najnovšie: {data.latest.year} ({data.latest.value.toFixed(2)} tCO₂/osoba)</p>
       </div>
     </div>
   );
