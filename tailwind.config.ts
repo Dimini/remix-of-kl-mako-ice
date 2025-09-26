@@ -57,6 +57,32 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Climate-specific colors for charts and data visualization
+        "co2-primary": "hsl(var(--co2-primary))",
+        "temperature-warm": "hsl(var(--temperature-warm))",
+        "temperature-cool": "hsl(var(--temperature-cool))",
+        "renewable-green": "hsl(var(--renewable-green))",
+        "nuclear-purple": "hsl(var(--nuclear-purple))",
+        "fossil-gray": "hsl(var(--fossil-gray))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        // Chart color palette
+        chart: {
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
+          4: "hsl(var(--chart-4))",
+          5: "hsl(var(--chart-5))",
+          6: "hsl(var(--chart-6))",
+          7: "hsl(var(--chart-7))",
+          8: "hsl(var(--chart-8))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
