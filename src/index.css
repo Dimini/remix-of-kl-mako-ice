@@ -1,137 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    /* Clean, climate-focused design with Slovakia accent */
-    --background: 210 20% 98%;
-    --foreground: 220 13% 18%;
-
+    /* Base colors inspired by klimatapotrebuje.sk */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 220 13% 18%;
-
+    --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 18%;
-
-    /* Slovakia blue accent */
-    --primary: 217 91% 52%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
     --primary-foreground: 0 0% 98%;
-
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 220 13% 18%;
-
-    --muted: 210 40% 96%;
-    --muted-foreground: 220 8.9% 46.1%;
-
-    --accent: 210 40% 96%;
-    --accent-foreground: 220 13% 18%;
-
-    /* Climate warning colors */
-    --destructive: 0 84% 60%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    
-    /* Environmental colors */
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 98%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 98%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 52%;
-    
-    /* Climate-specific colors */
-    --co2-primary: 0 84% 60%;
-    --temperature-warm: 14 91% 60%;
-    --temperature-cool: 197 71% 73%;
-    --renewable-green: 142 76% 36%;
-    --nuclear-purple: 270 95% 75%;
-    --fossil-gray: 220 8.9% 46.1%;
-    
-    /* Chart colors for accessibility */
-    --chart-1: 217 91% 52%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 270 95% 75%;
-    --chart-4: 14 91% 60%;
-    --chart-5: 197 71% 73%;
-    --chart-6: 38 92% 50%;
-    --chart-7: 220 8.9% 46.1%;
-    --chart-8: 0 84% 60%;
-
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
     --radius: 0.5rem;
+    --chart-1: 0 0% 9%;
+    --chart-2: 0 0% 20%;
+    --chart-3: 0 0% 40%;
+    --chart-4: 0 0% 60%;
+    --chart-5: 0 0% 80%;
 
-    --sidebar-background: 0 0% 98%;
+    /* Climate-specific colors */
+    --co2-primary: 0 0% 15%;
+    --temperature-cool: 200 100% 70%;
+    --temperature-warm: 15 100% 60%;
+    --renewable-green: 120 50% 30%;
+    --nuclear-purple: 270 50% 40%;
+    --fossil-gray: 0 0% 40%;
+    --warning: 40 100% 50%;
+    --success: 120 50% 40%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Klimatapotrebuje.sk inspired accent colors */
+    --climate-green: 120 40% 25%;
+    --climate-action: 15 100% 45%;
   }
 
   .dark {
-    --background: 220 13% 9%;
-    --foreground: 210 20% 98%;
-
-    --card: 220 13% 12%;
-    --card-foreground: 210 20% 98%;
-
-    --popover: 220 13% 12%;
-    --popover-foreground: 210 20% 98%;
-
-    --primary: 217 91% 65%;
-    --primary-foreground: 220 13% 9%;
-
-    --secondary: 220 13% 15%;
-    --secondary-foreground: 210 20% 98%;
-
-    --muted: 220 13% 15%;
-    --muted-foreground: 220 9% 65%;
-
-    --accent: 220 13% 15%;
-    --accent-foreground: 210 20% 98%;
-
-    --destructive: 0 84% 60%;
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 98%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 98%;
-
-    --border: 220 13% 20%;
-    --input: 220 13% 20%;
-    --ring: 217 91% 65%;
-    
-    --co2-primary: 0 84% 70%;
-    --temperature-warm: 14 91% 70%;
-    --temperature-cool: 197 71% 73%;
-    --renewable-green: 142 76% 46%;
-    --nuclear-purple: 270 95% 75%;
-    --fossil-gray: 220 9% 65%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -139,8 +79,56 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Klimatapotrebuje.sk inspired typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+
+  .hero-title {
+    @apply text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter;
+    font-weight: 900;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight;
+  }
+
+  .lead-text {
+    @apply text-lg md:text-xl leading-relaxed;
+  }
+
+  /* Climate action button styles */
+  .cta-button {
+    @apply bg-primary text-primary-foreground px-8 py-4 text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary/90 hover:scale-105;
+  }
+
+  .cta-button-secondary {
+    @apply border-2 border-primary text-primary px-8 py-4 text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary hover:text-primary-foreground;
+  }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .bg-mosaic {
+    background-image: 
+      linear-gradient(45deg, hsl(var(--climate-green)) 25%, transparent 25%),
+      linear-gradient(-45deg, hsl(var(--climate-green)) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, hsl(var(--climate-action)) 75%),
+      linear-gradient(-45deg, transparent 75%, hsl(var(--climate-action)) 75%);
+    background-size: 40px 40px;
+    background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+  }
+
+  .chart-container {
+    @apply bg-white border border-gray-200 rounded-none shadow-sm;
   }
 }

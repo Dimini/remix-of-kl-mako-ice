@@ -109,10 +109,10 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
   const lowCarbonShare = electricityMix.nuclear + electricityMix.hydro + electricityMix.wind + electricityMix.solar + electricityMix.other_renewables;
 
   return (
-    <div className="bg-card rounded-lg border p-6">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-card-foreground">Mix výroby elektriny</h3>
-        <p className="text-sm text-muted-foreground">Energetické zdroje Slovenska ({electricityMix.year})</p>
+    <div className="bg-white rounded-none border border-gray-200 p-8">
+      <div className="mb-8">
+        <h3 className="text-2xl font-bold text-black mb-2">Mix výroby elektriny</h3>
+        <p className="text-gray-600">Energetické zdroje Slovenska ({electricityMix.year})</p>
       </div>
       
       <div className="flex flex-col lg:flex-row items-center gap-8">
@@ -121,33 +121,33 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className="text-center lg:text-left mb-4">
-            <div className="text-2xl font-bold text-success">
+          <div className="text-center lg:text-left mb-6">
+            <div className="text-3xl font-black text-green-700 mb-1">
               {lowCarbonShare.toFixed(1)}%
             </div>
-            <div className="text-sm text-muted-foreground">Nízkouhlíková elektrina</div>
+            <div className="text-gray-600 font-medium">Nízkouhlíková elektrina</div>
           </div>
           
-          <div className="space-y-2 text-sm">
+          <div className="space-y-3 text-sm">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="font-medium">Jadrová:</span> {electricityMix.nuclear.toFixed(1)}%
+              <div className="font-medium">
+                <span className="text-gray-700">Jadrová:</span> {electricityMix.nuclear.toFixed(1)}%
               </div>
-              <div>
-                <span className="font-medium">Vodná:</span> {electricityMix.hydro.toFixed(1)}%
+              <div className="font-medium">
+                <span className="text-gray-700">Vodná:</span> {electricityMix.hydro.toFixed(1)}%
               </div>
-              <div>
-                <span className="font-medium">Veterná:</span> {electricityMix.wind.toFixed(1)}%
+              <div className="font-medium">
+                <span className="text-gray-700">Veterná:</span> {electricityMix.wind.toFixed(1)}%
               </div>
-              <div>
-                <span className="font-medium">Solárna:</span> {electricityMix.solar.toFixed(1)}%
+              <div className="font-medium">
+                <span className="text-gray-700">Solárna:</span> {electricityMix.solar.toFixed(1)}%
               </div>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="mt-4 text-xs text-muted-foreground">
+      <div className="mt-6 text-xs text-gray-500 border-t pt-4">
         <p>Zdroj údajov: Our World in Data (GitHub CSV API) • Rok: {electricityMix.year} • Nízkouhlíková = Jadrová + Obnoviteľné</p>
       </div>
     </div>
