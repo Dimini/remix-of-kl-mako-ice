@@ -5,6 +5,7 @@ const REQUEST_TIMEOUT = 30000; // 30 seconds for external APIs
 // API endpoints
 const WORLD_BANK_API = 'https://api.worldbank.org/v2';
 const OPEN_METEO_API = 'https://archive-api.open-meteo.com/v1/era5';
+const CORS_PROXY = 'https://api.allorigins.win/get?url=';
 
 interface ApiResponse<T> {
   data?: T;
@@ -63,28 +64,31 @@ export interface TemperatureData {
 
 export async function fetchCO2Data(): Promise<CO2Data | null> {
   try {
-    // Fetch CO2 emissions data for Slovakia from World Bank API
-    const response = await fetchWithTimeout(
-      `${WORLD_BANK_API}/country/SVK/indicator/EN.ATM.CO2E.PC?format=json&date=1990:2023&per_page=50`
-    );
-    const result = await response.json();
+    // Fetch CO2 emissions data for Slovakia from World Bank API via CORS proxy
+    const apiUrl = `${WORLD_BANK_API}/country/SVK/indicator/EN.ATM.CO2E.PC?format=json&date=1990:2023&per_page=50`;
+    const response = await fetchWithTimeout(`${CORS_PROXY}${encodeURIComponent(apiUrl)}`);
+    const proxyResult = await response.json();
     
-    if (Array.isArray(result) && result.length > 1) {
-      const dataPoints = result[1] // World Bank API returns metadata in first element, data in second
-        .filter((item: any) => item.value !== null)
-        .map((item: any) => ({
-          year: parseInt(item.date),
-          value: parseFloat(item.value)
-        }))
-        .sort((a: any, b: any) => a.year - b.year);
+    if (proxyResult.contents) {
+      const result = JSON.parse(proxyResult.contents);
       
-      const latest = dataPoints[dataPoints.length - 1];
-      
-      return {
-        timeSeries: dataPoints,
-        latest,
-        lastUpdated: new Date().toISOString()
-      };
+      if (Array.isArray(result) && result.length > 1) {
+        const dataPoints = result[1] // World Bank API returns metadata in first element, data in second
+          .filter((item: any) => item.value !== null)
+          .map((item: any) => ({
+            year: parseInt(item.date),
+            value: parseFloat(item.value)
+          }))
+          .sort((a: any, b: any) => a.year - b.year);
+        
+        const latest = dataPoints[dataPoints.length - 1];
+        
+        return {
+          timeSeries: dataPoints,
+          latest,
+          lastUpdated: new Date().toISOString()
+        };
+      }
     }
     
     throw new Error('Invalid World Bank API response');
@@ -111,57 +115,61 @@ export async function fetchCO2Data(): Promise<CO2Data | null> {
 
 export async function fetchElectricityData(): Promise<ElectricityData | null> {
   try {
-    // Fetch electricity mix data for Slovakia from Our World in Data CSV
+    // Fetch electricity mix data for Slovakia from Our World in Data CSV via CORS proxy
     const csvUrl = 'https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv';
-    const response = await fetchWithTimeout(csvUrl);
-    const csvText = await response.text();
+    const response = await fetchWithTimeout(`${CORS_PROXY}${encodeURIComponent(csvUrl)}`);
+    const proxyResult = await response.json();
     
-    // Parse CSV and find Slovakia data (simple parsing for specific structure)
-    const lines = csvText.split('\n');
-    const header = lines[0].split(',');
-    
-    // Find relevant column indices
-    const countryIndex = header.indexOf('country');
-    const yearIndex = header.indexOf('year');
-    const coalIndex = header.indexOf('coal_share_elec');
-    const gasIndex = header.indexOf('gas_share_elec');
-    const oilIndex = header.indexOf('oil_share_elec');
-    const nuclearIndex = header.indexOf('nuclear_share_elec');
-    const hydroIndex = header.indexOf('hydro_share_elec');
-    const windIndex = header.indexOf('wind_share_elec');
-    const solarIndex = header.indexOf('solar_share_elec');
-    const otherRenewablesIndex = header.indexOf('other_renewables_share_elec');
-    
-    // Find most recent Slovakia data
-    let latestYear = 0;
-    let latestData: any = null;
-    
-    for (let i = 1; i < lines.length; i++) {
-      const columns = lines[i].split(',');
-      if (columns[countryIndex] === 'Slovakia') {
-        const year = parseInt(columns[yearIndex]);
-        if (year > latestYear && columns[nuclearIndex] && columns[nuclearIndex] !== '') {
-          latestYear = year;
-          latestData = {
-            year,
-            coal: parseFloat(columns[coalIndex]) || 0,
-            gas: parseFloat(columns[gasIndex]) || 0,
-            oil: parseFloat(columns[oilIndex]) || 0,
-            nuclear: parseFloat(columns[nuclearIndex]) || 0,
-            hydro: parseFloat(columns[hydroIndex]) || 0,
-            wind: parseFloat(columns[windIndex]) || 0,
-            solar: parseFloat(columns[solarIndex]) || 0,
-            other_renewables: parseFloat(columns[otherRenewablesIndex]) || 0
-          };
+    if (proxyResult.contents) {
+      const csvText = proxyResult.contents;
+      
+      // Parse CSV and find Slovakia data (simple parsing for specific structure)
+      const lines = csvText.split('\n');
+      const header = lines[0].split(',');
+      
+      // Find relevant column indices
+      const countryIndex = header.indexOf('country');
+      const yearIndex = header.indexOf('year');
+      const coalIndex = header.indexOf('coal_share_elec');
+      const gasIndex = header.indexOf('gas_share_elec');
+      const oilIndex = header.indexOf('oil_share_elec');
+      const nuclearIndex = header.indexOf('nuclear_share_elec');
+      const hydroIndex = header.indexOf('hydro_share_elec');
+      const windIndex = header.indexOf('wind_share_elec');
+      const solarIndex = header.indexOf('solar_share_elec');
+      const otherRenewablesIndex = header.indexOf('other_renewables_share_elec');
+      
+      // Find most recent Slovakia data
+      let latestYear = 0;
+      let latestData: any = null;
+      
+      for (let i = 1; i < lines.length; i++) {
+        const columns = lines[i].split(',');
+        if (columns[countryIndex] === 'Slovakia') {
+          const year = parseInt(columns[yearIndex]);
+          if (year > latestYear && columns[nuclearIndex] && columns[nuclearIndex] !== '') {
+            latestYear = year;
+            latestData = {
+              year,
+              coal: parseFloat(columns[coalIndex]) || 0,
+              gas: parseFloat(columns[gasIndex]) || 0,
+              oil: parseFloat(columns[oilIndex]) || 0,
+              nuclear: parseFloat(columns[nuclearIndex]) || 0,
+              hydro: parseFloat(columns[hydroIndex]) || 0,
+              wind: parseFloat(columns[windIndex]) || 0,
+              solar: parseFloat(columns[solarIndex]) || 0,
+              other_renewables: parseFloat(columns[otherRenewablesIndex]) || 0
+            };
+          }
         }
       }
-    }
-    
-    if (latestData) {
-      return {
-        electricityMix: latestData,
-        lastUpdated: new Date().toISOString()
-      };
+      
+      if (latestData) {
+        return {
+          electricityMix: latestData,
+          lastUpdated: new Date().toISOString()
+        };
+      }
     }
     
     throw new Error('No Slovakia electricity data found');
