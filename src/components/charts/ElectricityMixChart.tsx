@@ -148,7 +148,7 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
       </div>
       
       <div className="mt-4 text-xs text-muted-foreground">
-        <p>Zdroj údajov: Our World in Data • Rok: {electricityMix.year} • Nízkouhlíková = Jadrová + Obnoviteľné</p>
+        <p>Zdroj údajov: Our World in Data (GitHub CSV API) • Rok: {electricityMix.year} • Nízkouhlíková = Jadrová + Obnoviteľné</p>
       </div>
     </div>
   );

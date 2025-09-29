@@ -140,7 +140,7 @@ export function CO2Chart({ data }: CO2ChartProps) {
       </div>
       
       <div className="mt-4 text-xs text-muted-foreground">
-        <p>Zdroj údajov: World Bank • Najnovšie: {data.latest.year} ({data.latest.value.toFixed(2)} tCO₂/osoba)</p>
+        <p>Zdroj údajov: World Bank Open Data API • Najnovšie: {data.latest.year} ({data.latest.value.toFixed(2)} tCO₂/osoba)</p>
       </div>
     </div>
   );

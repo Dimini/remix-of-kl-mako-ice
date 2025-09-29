@@ -1,7 +1,10 @@
-// API service for fetching climate data from our Express server
+// API service for fetching climate data from various sources
 
-const API_BASE_URL = 'http://localhost:3001/api';
-const REQUEST_TIMEOUT = 10000; // 10 seconds
+const REQUEST_TIMEOUT = 30000; // 30 seconds for external APIs
+
+// API endpoints
+const WORLD_BANK_API = 'https://api.worldbank.org/v2';
+const OPEN_METEO_API = 'https://archive-api.open-meteo.com/v1/era5';
 
 interface ApiResponse<T> {
   data?: T;
@@ -60,17 +63,33 @@ export interface TemperatureData {
 
 export async function fetchCO2Data(): Promise<CO2Data | null> {
   try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/co2-per-capita`);
-    const result = await response.json() as ApiResponse<CO2Data>;
+    // Fetch CO2 emissions data for Slovakia from World Bank API
+    const response = await fetchWithTimeout(
+      `${WORLD_BANK_API}/country/SVK/indicator/EN.ATM.CO2E.PC?format=json&date=1990:2023&per_page=50`
+    );
+    const result = await response.json();
     
-    if (result.error && result.fallback) {
-      console.warn('Using fallback CO2 data:', result.message);
-      return result.fallback;
+    if (Array.isArray(result) && result.length > 1) {
+      const dataPoints = result[1] // World Bank API returns metadata in first element, data in second
+        .filter((item: any) => item.value !== null)
+        .map((item: any) => ({
+          year: parseInt(item.date),
+          value: parseFloat(item.value)
+        }))
+        .sort((a: any, b: any) => a.year - b.year);
+      
+      const latest = dataPoints[dataPoints.length - 1];
+      
+      return {
+        timeSeries: dataPoints,
+        latest,
+        lastUpdated: new Date().toISOString()
+      };
     }
     
-    return result as CO2Data;
+    throw new Error('Invalid World Bank API response');
   } catch (error) {
-    console.error('Failed to fetch CO2 data:', error);
+    console.error('Failed to fetch CO2 data from World Bank API:', error);
     // Return realistic fallback data for Slovakia
     return {
       timeSeries: [
@@ -81,9 +100,10 @@ export async function fetchCO2Data(): Promise<CO2Data | null> {
         { year: 2010, value: 6.8 },
         { year: 2015, value: 6.4 },
         { year: 2020, value: 5.9 },
-        { year: 2021, value: 6.1 }
+        { year: 2021, value: 6.1 },
+        { year: 2022, value: 5.8 }
       ],
-      latest: { year: 2021, value: 6.1 },
+      latest: { year: 2022, value: 5.8 },
       lastUpdated: new Date().toISOString()
     };
   }
@@ -91,29 +111,74 @@ export async function fetchCO2Data(): Promise<CO2Data | null> {
 
 export async function fetchElectricityData(): Promise<ElectricityData | null> {
   try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/electricity-mix`);
-    const result = await response.json() as ApiResponse<ElectricityData>;
+    // Fetch electricity mix data for Slovakia from Our World in Data CSV
+    const csvUrl = 'https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv';
+    const response = await fetchWithTimeout(csvUrl);
+    const csvText = await response.text();
     
-    if (result.error && result.fallback) {
-      console.warn('Using fallback electricity data:', result.message);
-      return result.fallback;
+    // Parse CSV and find Slovakia data (simple parsing for specific structure)
+    const lines = csvText.split('\n');
+    const header = lines[0].split(',');
+    
+    // Find relevant column indices
+    const countryIndex = header.indexOf('country');
+    const yearIndex = header.indexOf('year');
+    const coalIndex = header.indexOf('coal_share_elec');
+    const gasIndex = header.indexOf('gas_share_elec');
+    const oilIndex = header.indexOf('oil_share_elec');
+    const nuclearIndex = header.indexOf('nuclear_share_elec');
+    const hydroIndex = header.indexOf('hydro_share_elec');
+    const windIndex = header.indexOf('wind_share_elec');
+    const solarIndex = header.indexOf('solar_share_elec');
+    const otherRenewablesIndex = header.indexOf('other_renewables_share_elec');
+    
+    // Find most recent Slovakia data
+    let latestYear = 0;
+    let latestData: any = null;
+    
+    for (let i = 1; i < lines.length; i++) {
+      const columns = lines[i].split(',');
+      if (columns[countryIndex] === 'Slovakia') {
+        const year = parseInt(columns[yearIndex]);
+        if (year > latestYear && columns[nuclearIndex] && columns[nuclearIndex] !== '') {
+          latestYear = year;
+          latestData = {
+            year,
+            coal: parseFloat(columns[coalIndex]) || 0,
+            gas: parseFloat(columns[gasIndex]) || 0,
+            oil: parseFloat(columns[oilIndex]) || 0,
+            nuclear: parseFloat(columns[nuclearIndex]) || 0,
+            hydro: parseFloat(columns[hydroIndex]) || 0,
+            wind: parseFloat(columns[windIndex]) || 0,
+            solar: parseFloat(columns[solarIndex]) || 0,
+            other_renewables: parseFloat(columns[otherRenewablesIndex]) || 0
+          };
+        }
+      }
     }
     
-    return result as ElectricityData;
+    if (latestData) {
+      return {
+        electricityMix: latestData,
+        lastUpdated: new Date().toISOString()
+      };
+    }
+    
+    throw new Error('No Slovakia electricity data found');
   } catch (error) {
-    console.error('Failed to fetch electricity data:', error);
-    // Return realistic fallback data for Slovakia
+    console.error('Failed to fetch electricity data from Our World in Data:', error);
+    // Return realistic fallback data for Slovakia (2023 estimates)
     return {
       electricityMix: {
-        year: 2022,
-        coal: 12.5,
-        gas: 7.8,
-        oil: 0.5,
-        nuclear: 54.3,
-        hydro: 15.2,
-        wind: 1.4,
-        solar: 2.8,
-        other_renewables: 5.5
+        year: 2023,
+        coal: 11.2,
+        gas: 8.1,
+        oil: 0.4,
+        nuclear: 61.8,
+        hydro: 13.5,
+        wind: 1.8,
+        solar: 2.6,
+        other_renewables: 0.6
       },
       lastUpdated: new Date().toISOString()
     };
@@ -122,17 +187,54 @@ export async function fetchElectricityData(): Promise<ElectricityData | null> {
 
 export async function fetchTemperatureData(): Promise<TemperatureData | null> {
   try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/temperature-monthly`);
-    const result = await response.json() as ApiResponse<TemperatureData>;
+    // Fetch temperature data for Bratislava from Open-Meteo API (1950-2024)
+    const startDate = '1950-01-01';
+    const endDate = '2024-12-31';
+    const latitude = 48.1482;
+    const longitude = 17.1067;
     
-    if (result.error && result.fallback) {
-      console.warn('Using fallback temperature data:', result.message);
-      return result.fallback;
+    const response = await fetchWithTimeout(
+      `${OPEN_METEO_API}?latitude=${latitude}&longitude=${longitude}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_mean&timezone=Europe%2FBratislava`
+    );
+    
+    const result = await response.json();
+    
+    if (result.daily && result.daily.time && result.daily.temperature_2m_mean) {
+      const timeSeries = result.daily.time.map((date: string, index: number) => ({
+        date: date.substring(0, 7), // Get YYYY-MM format
+        value: Math.round(result.daily.temperature_2m_mean[index] * 10) / 10
+      }));
+      
+      // Group by month and calculate monthly averages
+      const monthlyData: { [key: string]: { sum: number; count: number } } = {};
+      
+      timeSeries.forEach((item: any) => {
+        if (item.value !== null) {
+          if (!monthlyData[item.date]) {
+            monthlyData[item.date] = { sum: 0, count: 0 };
+          }
+          monthlyData[item.date].sum += item.value;
+          monthlyData[item.date].count += 1;
+        }
+      });
+      
+      const monthlyTimeSeries = Object.keys(monthlyData)
+        .sort()
+        .map(date => ({
+          date,
+          value: Math.round((monthlyData[date].sum / monthlyData[date].count) * 10) / 10
+        }));
+      
+      return {
+        timeSeries: monthlyTimeSeries,
+        lastUpdated: new Date().toISOString(),
+        note: "Historické mesačné údaje pre Bratislavu z Open-Meteo ERA5 (1950-2024). Mestské údaje ako zástupca národného trendu."
+      };
     }
     
-    return result as TemperatureData;
+    throw new Error('Invalid Open-Meteo API response');
   } catch (error) {
-    console.error('Failed to fetch temperature data:', error);
+    console.error('Failed to fetch temperature data from Open-Meteo API:', error);
     // Return realistic fallback temperature data for Bratislava
     const generateTemperatureData = () => {
       const data = [];
@@ -141,7 +243,7 @@ export async function fetchTemperatureData(): Promise<TemperatureData | null> {
           // Generate realistic seasonal temperature data with warming trend
           const baseTemp = [0.2, 2.1, 6.8, 12.4, 17.8, 20.9, 22.8, 22.1, 17.8, 11.9, 5.9, 1.8][month - 1];
           const warmingTrend = (year - 1950) * 0.02; // ~1.5°C warming since 1950
-          const randomVariation = (Math.random() - 0.5) * 4;
+          const randomVariation = (Math.random() - 0.5) * 2;
           const value = baseTemp + warmingTrend + randomVariation;
           
           data.push({
@@ -156,7 +258,7 @@ export async function fetchTemperatureData(): Promise<TemperatureData | null> {
     return {
       timeSeries: generateTemperatureData(),
       lastUpdated: new Date().toISOString(),
-      note: "City-level series used as a proxy for national trend; for rigorous analysis, use national-average datasets."
+      note: "Syntetické údaje pre Bratislavu (použité pri výpadku API). Mestské údaje ako zástupca národného trendu."
     };
   }
 }

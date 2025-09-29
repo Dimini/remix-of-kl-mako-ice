@@ -179,7 +179,7 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
       </div>
       
       <div className="mt-4 text-xs text-muted-foreground space-y-1">
-        <p>Zdroj údajov: Open-Meteo ERA5 • Súradnice Bratislavy: 48.15°N, 17.11°E</p>
+        <p>Zdroj údajov: Open-Meteo ERA5 Archive API • Súradnice Bratislavy: 48.15°N, 17.11°E</p>
         <p className="italic">{data.note}</p>
       </div>
     </div>
