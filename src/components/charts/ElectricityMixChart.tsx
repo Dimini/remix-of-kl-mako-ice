@@ -20,6 +20,18 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
 
   const { electricityMix } = data;
   
+  // Define colors directly with HSL values
+  const colors = [
+    'hsl(270, 65%, 55%)',  // nuclear-purple
+    'hsl(200, 80%, 50%)',  // hydro-blue
+    'hsl(25, 40%, 30%)',   // coal-brown
+    'hsl(30, 85%, 55%)',   // gas-orange
+    'hsl(185, 70%, 45%)',  // wind-cyan
+    'hsl(45, 100%, 55%)',  // solar-yellow
+    'hsl(120, 60%, 35%)',  // renewable-green
+    'hsl(0, 60%, 40%)',    // oil-red
+  ];
+  
   const chartData = {
     labels: [
       'Jadrová',
@@ -43,17 +55,8 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
           electricityMix.other_renewables,
           electricityMix.oil,
         ],
-        backgroundColor: [
-          'hsl(var(--nuclear-purple))',
-          'hsl(var(--hydro-blue))',
-          'hsl(var(--coal-brown))',
-          'hsl(var(--gas-orange))',
-          'hsl(var(--wind-cyan))',
-          'hsl(var(--solar-yellow))',
-          'hsl(var(--renewable-green))',
-          'hsl(var(--oil-red))',
-        ],
-        borderColor: 'hsl(var(--background))',
+        backgroundColor: colors,
+        borderColor: '#ffffff',
         borderWidth: 2,
       },
     ],
