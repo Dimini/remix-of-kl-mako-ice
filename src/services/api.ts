@@ -62,6 +62,12 @@ export interface TemperatureData {
   note: string;
 }
 
+export interface PrecipitationData {
+  timeSeries: Array<{ date: string; value: number }>;
+  lastUpdated: string;
+  note: string;
+}
+
 export async function fetchCO2Data(): Promise<CO2Data | null> {
   try {
     // Fetch CO2 emissions data for Slovakia from World Bank API via CORS proxy
@@ -308,4 +314,77 @@ export function calculateWarmingSince1950(data: Array<{ date: string; value: num
   const recentAvg = recent5Years.reduce((sum, item) => sum + item.value, 0) / recent5Years.length;
   
   return Number((recentAvg - baselineAvg).toFixed(1));
+}
+
+export async function fetchPrecipitationData(): Promise<PrecipitationData | null> {
+  try {
+    // Fetch precipitation data for Bratislava from Open-Meteo API (1950-2024)
+    const startDate = '1950-01-01';
+    const endDate = '2024-12-31';
+    const latitude = 48.1482;
+    const longitude = 17.1067;
+    
+    const response = await fetchWithTimeout(
+      `${OPEN_METEO_API}?latitude=${latitude}&longitude=${longitude}&start_date=${startDate}&end_date=${endDate}&daily=precipitation_sum&timezone=Europe%2FBratislava`
+    );
+    
+    const result = await response.json();
+    
+    if (result.daily && result.daily.time && result.daily.precipitation_sum) {
+      // Group by year and calculate annual totals
+      const yearlyData: { [key: string]: { sum: number } } = {};
+      
+      result.daily.time.forEach((date: string, index: number) => {
+        const year = date.substring(0, 4);
+        const precip = result.daily.precipitation_sum[index];
+        
+        if (precip !== null) {
+          if (!yearlyData[year]) {
+            yearlyData[year] = { sum: 0 };
+          }
+          yearlyData[year].sum += precip;
+        }
+      });
+      
+      const yearlyTimeSeries = Object.keys(yearlyData)
+        .sort()
+        .map(year => ({
+          date: year,
+          value: Math.round(yearlyData[year].sum * 10) / 10
+        }));
+      
+      return {
+        timeSeries: yearlyTimeSeries,
+        lastUpdated: new Date().toISOString(),
+        note: "Historické ročné údaje o zrážkach pre Bratislavu z Open-Meteo ERA5 (1950-2024)."
+      };
+    }
+    
+    throw new Error('Invalid Open-Meteo API response');
+  } catch (error) {
+    console.error('Failed to fetch precipitation data from Open-Meteo API:', error);
+    // Return realistic fallback precipitation data for Bratislava
+    const generatePrecipitationData = () => {
+      const data = [];
+      for (let year = 1950; year <= 2024; year++) {
+        // Generate realistic annual precipitation data (around 600mm with variation)
+        const basePrecip = 580;
+        const trend = (year - 1950) * 0.3; // Slight increase over time
+        const randomVariation = (Math.random() - 0.5) * 100;
+        const value = basePrecip + trend + randomVariation;
+        
+        data.push({
+          date: year.toString(),
+          value: Math.round(value * 10) / 10
+        });
+      }
+      return data;
+    };
+
+    return {
+      timeSeries: generatePrecipitationData(),
+      lastUpdated: new Date().toISOString(),
+      note: "Syntetické údaje o zrážkach pre Bratislavu (použité pri výpadku API)."
+    };
+  }
 }

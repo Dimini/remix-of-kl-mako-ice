@@ -2,24 +2,32 @@ import { useEffect, useState } from 'react';
 import { CO2Chart } from '@/components/charts/CO2Chart';
 import { ElectricityMixChart } from '@/components/charts/ElectricityMixChart';
 import { TemperatureChart } from '@/components/charts/TemperatureChart';
+import { PrecipitationChart } from '@/components/charts/PrecipitationChart';
 import { KPITile } from '@/components/KPITile';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
-import { CO2Data, ElectricityData, TemperatureData, fetchCO2Data, fetchElectricityData, fetchTemperatureData, calculateWarmingSince1950 } from '@/services/api';
+import { CO2Data, ElectricityData, TemperatureData, PrecipitationData, fetchCO2Data, fetchElectricityData, fetchTemperatureData, fetchPrecipitationData, calculateWarmingSince1950 } from '@/services/api';
 import { TrendingUp, TrendingDown, Activity, Zap, Thermometer, Leaf } from 'lucide-react';
 const Index = () => {
   const [co2Data, setCo2Data] = useState<CO2Data | null>(null);
   const [electricityData, setElectricityData] = useState<ElectricityData | null>(null);
   const [temperatureData, setTemperatureData] = useState<TemperatureData | null>(null);
+  const [precipitationData, setPrecipitationData] = useState<PrecipitationData | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [co2, electricity, temperature] = await Promise.all([fetchCO2Data(), fetchElectricityData(), fetchTemperatureData()]);
+        const [co2, electricity, temperature, precipitation] = await Promise.all([
+          fetchCO2Data(), 
+          fetchElectricityData(), 
+          fetchTemperatureData(),
+          fetchPrecipitationData()
+        ]);
         setCo2Data(co2);
         setElectricityData(electricity);
         setTemperatureData(temperature);
+        setPrecipitationData(precipitation);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -90,6 +98,10 @@ const Index = () => {
           
           {temperatureData && <div className="chart-container">
               <TemperatureChart data={temperatureData} />
+            </div>}
+          
+          {precipitationData && <div className="chart-container mt-8">
+              <PrecipitationChart data={precipitationData} />
             </div>}
         </div>
       </section>
