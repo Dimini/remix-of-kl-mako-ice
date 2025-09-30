@@ -65,26 +65,43 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
       {
         label: 'Mesačná teplota',
         data: filteredRawData.map(item => item.value),
-        borderColor: 'hsl(var(--temperature-cool) / 0.6)',
+        borderColor: 'hsla(200, 60%, 70%, 0.4)',
         backgroundColor: 'transparent',
         borderWidth: 1,
         pointRadius: 0,
         pointHoverRadius: 3,
         tension: 0.1,
+        segment: {
+          borderColor: (ctx: any) => {
+            const value = ctx.p1.parsed.y;
+            // Light blue for lows, light orange for highs
+            return value > 15 ? 'hsla(30, 100%, 70%, 0.5)' : 'hsla(200, 80%, 70%, 0.5)';
+          }
+        }
       },
       {
         label: '12-mesačný kĺzavý priemer',
         data: filteredRollingData.map((item, index) => {
-          // Align rolling average with raw data indices
           const rawIndex = filteredRawData.findIndex(raw => raw.date === item.date);
           return rawIndex >= 0 ? item.value : null;
         }),
-        borderColor: 'hsl(var(--temperature-warm))',
+        borderColor: 'hsl(15, 100%, 55%)',
         backgroundColor: 'transparent',
         borderWidth: 3,
         pointRadius: 0,
         pointHoverRadius: 5,
         tension: 0.1,
+        segment: {
+          borderColor: (ctx: any) => {
+            const value = ctx.p1.parsed.y;
+            // Yellow to red gradient based on temperature
+            if (value < 8) return 'hsl(45, 100%, 50%)';
+            if (value < 10) return 'hsl(35, 100%, 50%)';
+            if (value < 12) return 'hsl(25, 100%, 50%)';
+            if (value < 14) return 'hsl(15, 100%, 50%)';
+            return 'hsl(0, 100%, 50%)';
+          }
+        }
       },
     ],
   };

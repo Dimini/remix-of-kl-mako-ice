@@ -50,8 +50,8 @@ export function CO2Chart({ data }: CO2ChartProps) {
       {
         label: 'CO₂ na obyvateľa (tCO₂/osoba)',
         data: filteredData.map(item => item.value),
-        borderColor: 'hsl(var(--co2-primary))',
-        backgroundColor: 'hsl(var(--co2-primary) / 0.1)',
+        borderColor: 'hsl(0, 70%, 50%)',
+        backgroundColor: 'hsla(0, 70%, 50%, 0.1)',
         borderWidth: 3,
         pointRadius: 4,
         pointHoverRadius: 6,
