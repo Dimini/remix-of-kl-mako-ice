@@ -36,11 +36,19 @@
     --co2-primary: 0 0% 15%;
     --temperature-cool: 200 100% 70%;
     --temperature-warm: 15 100% 60%;
-    --renewable-green: 120 50% 30%;
-    --nuclear-purple: 270 50% 40%;
-    --fossil-gray: 0 0% 40%;
-    --warning: 40 100% 50%;
+    --renewable-green: 120 60% 35%;
+    --nuclear-purple: 270 65% 55%;
+    --fossil-gray: 0 0% 45%;
+    --warning: 45 100% 55%;
     --success: 120 50% 40%;
+    
+    /* Electricity mix colors */
+    --hydro-blue: 200 80% 50%;
+    --coal-brown: 25 40% 30%;
+    --gas-orange: 30 85% 55%;
+    --wind-cyan: 185 70% 45%;
+    --solar-yellow: 45 100% 55%;
+    --oil-red: 0 60% 40%;
 
     /* Klimatapotrebuje.sk inspired accent colors */
     --climate-green: 120 40% 25%;
