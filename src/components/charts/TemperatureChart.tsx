@@ -94,12 +94,19 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
         segment: {
           borderColor: (ctx: any) => {
             const value = ctx.p1.parsed.y;
-            // Yellow to red gradient based on temperature
-            if (value < 8) return 'hsl(45, 100%, 50%)';
-            if (value < 10) return 'hsl(35, 100%, 50%)';
-            if (value < 12) return 'hsl(25, 100%, 50%)';
-            if (value < 14) return 'hsl(15, 100%, 50%)';
-            return 'hsl(0, 100%, 50%)';
+            // Below 10: yellow
+            if (value < 10) return 'hsl(45, 100%, 55%)';
+            // 10-12: yellow to orange gradient
+            if (value < 12) {
+              const progress = (value - 10) / 2; // 0 to 1
+              const hue = 45 - (progress * 15); // 45 (yellow) to 30 (orange)
+              return `hsl(${hue}, 100%, 55%)`;
+            }
+            // 12+: orange to dark red gradient
+            const progress = Math.min((value - 12) / 4, 1); // Cap at temperature 16
+            const hue = 30 - (progress * 30); // 30 (orange) to 0 (red)
+            const lightness = 55 - (progress * 15); // 55% to 40% (not too dark)
+            return `hsl(${hue}, 100%, ${lightness}%)`;
           }
         }
       },
