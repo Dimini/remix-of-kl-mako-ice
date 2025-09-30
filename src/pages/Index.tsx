@@ -61,14 +61,12 @@ const Index = () => {
             Kľúčové klimatické ukazovatele
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {co2Data && <KPITile title="CO₂ emisie" value={co2Data.latest.value.toFixed(1)} unit="t/osoba" description={`Emisie CO₂ na obyvateľa v roku ${co2Data.latest.year}`} tooltip="CO₂ emisie z fosílnych palív na obyvateľa - kľúčový ukazovateľ uhlíkovej stopy krajiny" trend={co2Data.timeSeries.length > 1 && co2Data.latest.value < co2Data.timeSeries[co2Data.timeSeries.length - 2].value ? 'down' : 'up'} color="co2" />}
 
             {electricityData && <KPITile title="Čistá elektrina" value={lowCarbonShare.toFixed(0)} unit="%" description="Podiel nízkouhlíkovej elektriny" tooltip="Percentuálny podiel elektriny z jadrových a obnoviteľných zdrojov" trend={lowCarbonShare > 80 ? 'up' : 'down'} color="success" />}
 
             {warmingSince1950 !== null && <KPITile title="Otepľovanie" value={warmingSince1950 > 0 ? `+${warmingSince1950}` : warmingSince1950.toString()} unit="°C" description="Zmena teploty od roku 1950" tooltip="Priemerná zmena teploty za posledných 5 rokov oproti 50. rokom" trend={warmingSince1950 > 0 ? 'up' : 'down'} color="warning" />}
-
-            {electricityData && <KPITile title="Jadrová energia" value={electricityData.electricityMix.nuclear.toFixed(0)} unit="%" description="Podiel jadrovej energie" tooltip="Percentuálny podiel jadrovej energie vo výrobe elektriny" trend="neutral" color="primary" />}
           </div>
         </div>
       </section>
