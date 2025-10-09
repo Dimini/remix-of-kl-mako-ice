@@ -52,10 +52,16 @@ const Index = () => {
             a pozrite si, ako sa mení naša krajina v reálnom čase.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-            <button className="bg-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary/90 w-full sm:w-auto">
+            <button 
+              onClick={() => document.getElementById('metrics')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary/90 w-full sm:w-auto"
+            >
               Pozrite si údaje
             </button>
-            <button className="border-2 border-primary text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary hover:text-primary-foreground w-full sm:w-auto">
+            <button 
+              onClick={() => document.getElementById('cta')?.scrollIntoView({ behavior: 'smooth' })}
+              className="border-2 border-primary text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary hover:text-primary-foreground w-full sm:w-auto"
+            >
               Zistite viac
             </button>
           </div>
@@ -63,7 +69,7 @@ const Index = () => {
       </section>
 
       {/* Key Metrics Section */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 bg-gray-50">
+      <section id="metrics" className="py-12 sm:py-16 md:py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-center mb-8 sm:mb-12 md:mb-16">
             Kľúčové klimatické ukazovatele
@@ -107,7 +113,7 @@ const Index = () => {
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 bg-primary text-primary-foreground">
+      <section id="cta" className="py-12 sm:py-16 md:py-20 px-4 bg-primary text-primary-foreground">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-6 sm:mb-8">
             Kríza je tu, aký je váš plán?
@@ -117,12 +123,22 @@ const Index = () => {
             Ak ju chceme zastaviť, musíme konať. Teraz.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-            <button className="bg-white text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none hover:bg-gray-100 transition-colors w-full sm:w-auto">
+            <a 
+              href="https://klimatapotrebuje.sk/pridaj-sa-k-nam/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-white text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none hover:bg-gray-100 transition-colors w-full sm:w-auto text-center"
+            >
               Zapojte sa do akcie
-            </button>
-            <button className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none hover:bg-white hover:text-primary transition-colors w-full sm:w-auto">
-              Zdieľajte údaje
-            </button>
+            </a>
+            <a 
+              href="https://klimatapotrebuje.darujme.sk/podpor-nase-aktivity-klimatapotrebuje/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none hover:bg-white hover:text-primary transition-colors w-full sm:w-auto text-center"
+            >
+              Podporte tento projekt
+            </a>
           </div>
         </div>
       </section>
