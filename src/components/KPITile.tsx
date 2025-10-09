@@ -26,27 +26,27 @@ export function KPITile({ title, value, unit, description, tooltip, trend, color
   };
 
   return (
-    <div className={`bg-card rounded-lg border p-6 transition-all hover:shadow-md ${colorClasses[color]}`}>
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <h3 className="font-semibold text-card-foreground">{title}</h3>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold">{value}</span>
-            {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+    <div className={`bg-card rounded-lg border p-4 sm:p-6 transition-all hover:shadow-md ${colorClasses[color]}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1 sm:space-y-2 flex-1 min-w-0">
+          <h3 className="font-semibold text-card-foreground text-sm sm:text-base">{title}</h3>
+          <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
+            <span className="text-2xl sm:text-3xl font-bold">{value}</span>
+            {unit && <span className="text-xs sm:text-sm text-muted-foreground">{unit}</span>}
             {trend && (
-              <span className="text-lg" aria-label={`Trend: ${trend}`}>
+              <span className="text-base sm:text-lg" aria-label={`Trend: ${trend}`}>
                 {trendIndicator[trend]}
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>
         </div>
         
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="p-1 rounded-full hover:bg-muted transition-colors">
-                <Info size={16} className="text-muted-foreground" />
+              <button className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0">
+                <Info size={14} className="sm:w-4 sm:h-4 text-muted-foreground" />
                 <span className="sr-only">About this metric</span>
               </button>
             </TooltipTrigger>

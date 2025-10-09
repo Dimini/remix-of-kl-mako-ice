@@ -112,27 +112,27 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
   const lowCarbonShare = electricityMix.nuclear + electricityMix.hydro + electricityMix.wind + electricityMix.solar + electricityMix.other_renewables;
 
   return (
-    <div className="bg-white rounded-none border border-gray-200 p-8">
-      <div className="mb-8">
-        <h3 className="text-2xl font-bold text-black mb-2">Mix výroby elektriny</h3>
-        <p className="text-gray-600">Energetické zdroje Slovenska ({electricityMix.year})</p>
+    <div className="bg-white rounded-none border border-gray-200 p-4 sm:p-6 md:p-8">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2">Mix výroby elektriny</h3>
+        <p className="text-sm sm:text-base text-gray-600">Energetické zdroje Slovenska ({electricityMix.year})</p>
       </div>
       
-      <div className="flex flex-col lg:flex-row items-center gap-8">
-        <div className="h-64 w-64 flex-shrink-0">
+      <div className="flex flex-col items-center gap-4 sm:gap-6 md:gap-8">
+        <div className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64 flex-shrink-0">
           <Doughnut ref={chartRef} data={chartData} options={options} />
         </div>
         
-        <div className="flex-1 min-w-0">
-          <div className="text-center lg:text-left mb-6">
-            <div className="text-3xl font-black text-green-700 mb-1">
+        <div className="w-full">
+          <div className="text-center mb-4 sm:mb-6">
+            <div className="text-2xl sm:text-3xl font-black text-green-700 mb-1">
               {lowCarbonShare.toFixed(1)}%
             </div>
-            <div className="text-gray-600 font-medium">Nízkouhlíková elektrina</div>
+            <div className="text-sm sm:text-base text-gray-600 font-medium">Nízkouhlíková elektrina</div>
           </div>
           
-          <div className="space-y-3 text-sm">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
               <div className="font-medium">
                 <span className="text-gray-700">Jadrová:</span> {electricityMix.nuclear.toFixed(1)}%
               </div>
@@ -150,8 +150,8 @@ export function ElectricityMixChart({ data }: ElectricityMixChartProps) {
         </div>
       </div>
       
-      <div className="mt-6 text-xs text-gray-500 border-t pt-4">
-        <p>Zdroj údajov: Our World in Data (GitHub CSV API) • Rok: {electricityMix.year} • Nízkouhlíková = Jadrová + Obnoviteľné</p>
+      <div className="mt-4 sm:mt-6 text-xs text-gray-500 border-t pt-3 sm:pt-4">
+        <p className="break-words">Zdroj údajov: Our World in Data (GitHub CSV API) • Rok: {electricityMix.year} • Nízkouhlíková = Jadrová + Obnoviteľné</p>
       </div>
     </div>
   );

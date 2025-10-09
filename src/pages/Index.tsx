@@ -43,19 +43,19 @@ const Index = () => {
   const warmingSince1950 = temperatureData ? calculateWarmingSince1950(temperatureData.timeSeries) : null;
   return <div className="min-h-screen bg-white">
       {/* Hero Section - Klimatapotrebuje.sk inspired */}
-      <section className="relative min-h-screen flex flex-col justify-center items-center text-center px-4 py-20">
+      <section className="relative min-h-[70vh] sm:min-h-screen flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20">
         <div className="absolute inset-0 bg-mosaic opacity-5"></div>
         <div className="relative z-10 max-w-5xl mx-auto">
-          <h1 className="hero-title mb-8 text-balance">#klímaSlovenska</h1>
-          <p className="lead-text mb-12 max-w-3xl mx-auto text-muted-foreground">
+          <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter mb-6 sm:mb-8 text-balance">#klímaSlovenska</h1>
+          <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 sm:mb-12 max-w-3xl mx-auto text-muted-foreground px-2">
             Klimatická kríza je definitívne tu. Sledujte kľúčové údaje o klíme Slovenska 
             a pozrite si, ako sa mení naša krajina v reálnom čase.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="cta-button">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+            <button className="bg-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary/90 w-full sm:w-auto">
               Pozrite si údaje
             </button>
-            <button className="cta-button-secondary">
+            <button className="border-2 border-primary text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary hover:text-primary-foreground w-full sm:w-auto">
               Zistite viac
             </button>
           </div>
@@ -63,13 +63,13 @@ const Index = () => {
       </section>
 
       {/* Key Metrics Section */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section className="py-12 sm:py-16 md:py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <h2 className="section-title text-center mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-center mb-8 sm:mb-12 md:mb-16">
             Kľúčové klimatické ukazovatele
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12 md:mb-16">
             {co2Data && <KPITile title="CO₂ emisie" value={co2Data.latest.value.toFixed(1)} unit="t/osoba" description={`Emisie CO₂ na obyvateľa v roku ${co2Data.latest.year}`} tooltip="CO₂ emisie z fosílnych palív na obyvateľa - kľúčový ukazovateľ uhlíkovej stopy krajiny" trend={co2Data.timeSeries.length > 1 && co2Data.latest.value < co2Data.timeSeries[co2Data.timeSeries.length - 2].value ? 'down' : 'up'} color="co2" />}
 
             {electricityData && <KPITile title="Čistá elektrina" value={lowCarbonShare.toFixed(0)} unit="%" description="Podiel nízkouhlíkovej elektriny" tooltip="Percentuálny podiel elektriny z jadrových a obnoviteľných zdrojov" trend={lowCarbonShare > 80 ? 'up' : 'down'} color="success" />}
@@ -80,13 +80,13 @@ const Index = () => {
       </section>
 
       {/* Charts Section */}
-      <section className="py-20 px-4">
+      <section className="py-12 sm:py-16 md:py-20 px-4">
         <div className="max-w-7xl mx-auto">
-          <h2 className="section-title text-center mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-center mb-8 sm:mb-12 md:mb-16">
             Analýza klimatických trendov
           </h2>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-12">
             {co2Data && <div className="chart-container">
                 <CO2Chart data={co2Data} />
               </div>}
@@ -100,27 +100,27 @@ const Index = () => {
               <TemperatureChart data={temperatureData} />
             </div>}
           
-          {precipitationData && <div className="chart-container mt-8">
+          {precipitationData && <div className="chart-container mt-4 sm:mt-6 md:mt-8">
               <PrecipitationChart data={precipitationData} />
             </div>}
         </div>
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-20 px-4 bg-primary text-primary-foreground">
+      <section className="py-12 sm:py-16 md:py-20 px-4 bg-primary text-primary-foreground">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="section-title mb-8">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-6 sm:mb-8">
             Kríza je tu, aký je váš plán?
           </h2>
-          <p className="lead-text mb-12 opacity-90">
+          <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 sm:mb-12 opacity-90 px-2">
             Klimatická kríza ohrozuje naše mestá, domovy, pracovné miesta a zdravie. 
             Ak ju chceme zastaviť, musíme konať. Teraz.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-primary px-8 py-4 text-lg font-semibold rounded-none hover:bg-gray-100 transition-colors">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+            <button className="bg-white text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none hover:bg-gray-100 transition-colors w-full sm:w-auto">
               Zapojte sa do akcie
             </button>
-            <button className="border-2 border-white text-white px-8 py-4 text-lg font-semibold rounded-none hover:bg-white hover:text-primary transition-colors">
+            <button className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none hover:bg-white hover:text-primary transition-colors w-full sm:w-auto">
               Zdieľajte údaje
             </button>
           </div>
@@ -128,9 +128,9 @@ const Index = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 px-4">
+      <section className="py-12 sm:py-16 md:py-20 px-4">
         <div className="max-w-4xl mx-auto">
-          <h2 className="section-title text-center mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-center mb-8 sm:mb-12 md:mb-16">
             Často kladené otázky
           </h2>
           <FAQ />

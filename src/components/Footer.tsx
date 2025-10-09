@@ -30,13 +30,13 @@ const dataSources = [
 
 export function Footer() {
   return (
-    <footer className="bg-muted/50 border-t mt-16">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <footer className="bg-muted/50 border-t mt-8 sm:mt-12 md:mt-16">
+      <div className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Zdroje údajov a API</h3>
-            <div className="space-y-3">
-              <div className="text-sm">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Zdroje údajov a API</h3>
+            <div className="space-y-2 sm:space-y-3">
+              <div className="text-xs sm:text-sm">
                 <p className="font-medium mb-2">Živé údaje získané z:</p>
                 <ul className="space-y-1 text-muted-foreground">
                   <li>• World Bank API (emisie CO₂ na obyvateľa)</li>
@@ -48,20 +48,20 @@ export function Footer() {
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-4">Dozvedieť sa viac</h3>
-            <div className="grid gap-3">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Dozvedieť sa viac</h3>
+            <div className="grid gap-2 sm:gap-3">
               {dataSources.map((source, index) => (
                 <a
                   key={index}
                   href={source.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-start gap-2 text-sm hover:text-primary transition-colors"
+                  className="group flex items-start gap-2 text-xs sm:text-sm hover:text-primary transition-colors"
                 >
                   <ExternalLink size={14} className="flex-shrink-0 mt-0.5 opacity-60 group-hover:opacity-100" />
-                  <div>
-                    <span className="font-medium">{source.title}</span>
-                    <p className="text-xs text-muted-foreground">{source.description}</p>
+                  <div className="min-w-0">
+                    <span className="font-medium break-words">{source.title}</span>
+                    <p className="text-xs text-muted-foreground break-words">{source.description}</p>
                   </div>
                 </a>
               ))}
@@ -69,13 +69,13 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="border-t pt-8 mt-8 text-center text-sm text-muted-foreground space-y-2">
-          <p>
+        <div className="border-t pt-6 sm:pt-8 mt-6 sm:mt-8 text-center text-xs sm:text-sm text-muted-foreground space-y-2">
+          <p className="break-words px-2">
             <strong>Upozornenie k údajom:</strong> Informácie sú poskytované na vzdelávacie účely. 
             Zdroje údajov majú rôzne frekvencie aktualizácie a metodológie. 
             Pre politické alebo výskumné použitie konzultujte pôvodné zdroje priamo.
           </p>
-          <p className="flex items-center justify-center gap-2">
+          <p className="flex items-center justify-center gap-2 flex-wrap">
             Vytvorené s 
             <a href="https://lovable.dev" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
               Lovable

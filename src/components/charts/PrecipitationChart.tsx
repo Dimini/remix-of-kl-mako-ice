@@ -146,23 +146,23 @@ export function PrecipitationChart({ data }: PrecipitationChartProps) {
   };
 
   return (
-    <div className="w-full">
-      <div className="mb-4">
-        <h3 className="text-2xl font-bold text-foreground mb-2">
+    <div className="bg-white rounded-none border border-gray-200 p-4 sm:p-6 md:p-8">
+      <div className="mb-4 sm:mb-6">
+        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-1 sm:mb-2">
           Ročné zrážky na Slovensku
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Historický vývoj ročných zrážok s 5-ročným kĺzavým priemerom
         </p>
       </div>
       
-      <div style={{ height: '400px' }}>
+      <div className="h-56 sm:h-80 md:h-96">
         <Line data={chartData} options={options} />
       </div>
       
-      <div className="mt-4 text-xs text-muted-foreground">
-        <p>{data.note}</p>
-        <p className="mt-1">
+      <div className="mt-3 sm:mt-4 text-xs text-muted-foreground border-t pt-3 sm:pt-4 space-y-1">
+        <p className="break-words">{data.note}</p>
+        <p>
           Zdroj: Open-Meteo ERA5 Historical Weather API
         </p>
       </div>
