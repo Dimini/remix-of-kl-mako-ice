@@ -26,27 +26,27 @@ export function KPITile({ title, value, unit, description, tooltip, trend, color
   };
 
   return (
-    <div className={`bg-card rounded-lg border p-4 sm:p-6 transition-all hover:shadow-md ${colorClasses[color]}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="space-y-1 sm:space-y-2 flex-1 min-w-0">
-          <h3 className="font-semibold text-card-foreground text-sm sm:text-base">{title}</h3>
-          <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
-            <span className="text-2xl sm:text-3xl font-bold">{value}</span>
-            {unit && <span className="text-xs sm:text-sm text-muted-foreground">{unit}</span>}
+    <div className={`bg-card rounded-lg border p-2 sm:p-4 md:p-6 transition-all hover:shadow-md ${colorClasses[color]}`}>
+      <div className="flex items-start justify-between gap-1 sm:gap-2">
+        <div className="space-y-0.5 sm:space-y-1 md:space-y-2 flex-1 min-w-0">
+          <h3 className="font-semibold text-card-foreground text-[10px] sm:text-sm md:text-base leading-tight">{title}</h3>
+          <div className="flex items-baseline gap-0.5 sm:gap-1 md:gap-2 flex-wrap">
+            <span className="text-lg sm:text-2xl md:text-3xl font-bold leading-none">{value}</span>
+            {unit && <span className="text-[9px] sm:text-xs md:text-sm text-muted-foreground">{unit}</span>}
             {trend && (
-              <span className="text-base sm:text-lg" aria-label={`Trend: ${trend}`}>
+              <span className="text-sm sm:text-base md:text-lg" aria-label={`Trend: ${trend}`}>
                 {trendIndicator[trend]}
               </span>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>
+          <p className="text-[8px] sm:text-xs md:text-sm text-muted-foreground leading-tight hidden sm:block">{description}</p>
         </div>
         
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0">
-                <Info size={14} className="sm:w-4 sm:h-4 text-muted-foreground" />
+              <button className="p-0.5 sm:p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0">
+                <Info size={12} className="sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-muted-foreground" />
                 <span className="sr-only">About this metric</span>
               </button>
             </TooltipTrigger>

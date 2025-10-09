@@ -69,7 +69,7 @@ const Index = () => {
             Kľúčové klimatické ukazovatele
           </h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12 md:mb-16">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-8 sm:mb-12 md:mb-16">
             {co2Data && <KPITile title="CO₂ emisie" value={co2Data.latest.value.toFixed(1)} unit="t/osoba" description={`Emisie CO₂ na obyvateľa v roku ${co2Data.latest.year}`} tooltip="CO₂ emisie z fosílnych palív na obyvateľa - kľúčový ukazovateľ uhlíkovej stopy krajiny" trend={co2Data.timeSeries.length > 1 && co2Data.latest.value < co2Data.timeSeries[co2Data.timeSeries.length - 2].value ? 'down' : 'up'} color="co2" />}
 
             {electricityData && <KPITile title="Čistá elektrina" value={lowCarbonShare.toFixed(0)} unit="%" description="Podiel nízkouhlíkovej elektriny" tooltip="Percentuálny podiel elektriny z jadrových a obnoviteľných zdrojov" trend={lowCarbonShare > 80 ? 'up' : 'down'} color="success" />}
