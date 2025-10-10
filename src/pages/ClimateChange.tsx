@@ -30,7 +30,7 @@ export default function ClimateChange() {
         <div className="grid md:grid-cols-2 gap-8 mb-16">
           <div className="space-y-4">
             <p className="text-lg leading-relaxed text-foreground">
-              <strong>Súčasná klimatická zmena je způsobená činnosťou človeka</strong>. Tým sa výrazne líši od zmien klímy v minulosti. <strong>Spaľovanie uhlia, ropy a zemného plynu</strong> a niektoré ďalšie činnosti <strong>menia zloženie atmosféry</strong> a pridávajú do nej skleníkové plyny. Zosilnený skleníkový efekt potom spôsobuje otepľovanie s dôsledkami ako topenie ľadovcov, vzostup hladín oceánov, dlhodobé suchá alebo častejšie vlny horúčav a iné extrémne prejavy počasia.
+              <strong>Súčasná klimatická zmena je spôsobená činnosťou človeka</strong>. Tým sa výrazne líši od zmien klímy v minulosti. <strong>Spaľovanie uhlia, ropy a zemného plynu</strong> a niektoré ďalšie činnosti <strong>menia zloženie atmosféry</strong> a pridávajú do nej skleníkové plyny. Zosilnený skleníkový efekt potom spôsobuje otepľovanie s dôsledkami ako topenie ľadovcov, vzostup hladín oceánov, dlhodobé suchá alebo častejšie vlny horúčav a iné extrémne prejavy počasia.
             </p>
             <p className="text-lg leading-relaxed text-foreground">
               <strong>Dopady zmeny klímy</strong> na spoločnosť i prírodu, s ktorými sa budeme stretávať v nasledujúcich desaťročiach, <strong>budú priamo závislé na množstve skleníkových plynov, ktoré ešte do atmosféry vypustíme</strong>, či už spaľovaním fosílnych palív alebo inými aktivitami, pri ktorých vzniká veľké množstvo emisií.
@@ -99,7 +99,7 @@ export default function ClimateChange() {
 
         {/* In a Nutshell Section */}
         <section id="uvod" className="mb-16">
-          <h2 className="text-3xl font-bold mb-8">V kostce</h2>
+          <h2 className="text-3xl font-bold mb-8">V kocke</h2>
           <p className="text-lg mb-8 text-muted-foreground">
             Ako sa vyznať v zložitej problematike klímy a jej zmien? Pre začiatok je dobré vedieť, že:
           </p>
