@@ -1,13 +1,11 @@
 import { Thermometer, TrendingUp, Droplets, AlertTriangle } from "lucide-react";
-
 export default function ClimateChange() {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-12 sm:py-16">
-        <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-8">
-          Klimatická zmena
-        </h1>
+        <h1 className="text-4xl font-bold text-foreground mb-8 sm:text-5xl">Klimatická zmena (faktaoklimatu.cz)
+
+      </h1>
         
         {/* Navigation Tabs */}
         <nav className="flex flex-wrap gap-4 sm:gap-6 mb-12 border-b border-border pb-4">
@@ -253,14 +251,10 @@ export default function ClimateChange() {
 
         {/* Back to Home */}
         <div className="text-center pt-8 border-t border-border">
-          <a 
-            href="/"
-            className="inline-flex items-center gap-2 text-primary hover:underline"
-          >
+          <a href="/" className="inline-flex items-center gap-2 text-primary hover:underline">
             ← Späť na hlavnú stránku
           </a>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 }
