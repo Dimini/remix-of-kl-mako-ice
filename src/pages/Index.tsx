@@ -8,7 +8,15 @@ import { KPITileSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton';
 import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
 import { CO2Data, ElectricityData, TemperatureData, PrecipitationData, fetchCO2Data, fetchElectricityData, fetchTemperatureData, fetchPrecipitationData, calculateWarmingSince1950 } from '@/services/api';
-import { TrendingUp, TrendingDown, Activity, Zap, Thermometer, Leaf } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Zap, Thermometer, Leaf, Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 const Index = () => {
   const [co2Data, setCo2Data] = useState<CO2Data | null>(null);
   const [electricityData, setElectricityData] = useState<ElectricityData | null>(null);
@@ -45,7 +53,7 @@ const Index = () => {
             Klimatická kríza je definitívne tu. Sledujte kľúčové údaje o klíme Slovenska 
             a pozrite si, ako sa mení naša krajina v reálnom čase.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
             <button 
               onClick={() => document.getElementById('metrics')?.scrollIntoView({ behavior: 'smooth' })}
               className="bg-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary/90 w-full sm:w-auto"
@@ -58,6 +66,56 @@ const Index = () => {
             >
               Zistite viac
             </button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-none border-2 border-muted hover:border-primary transition-all"
+                  aria-label="Menu"
+                >
+                  <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-56 bg-card border shadow-lg z-50"
+              >
+                <DropdownMenuItem asChild>
+                  <a 
+                    href="/klimaticka-zmena"
+                    className="cursor-pointer font-medium"
+                  >
+                    Klimatická zmena
+                  </a>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem asChild>
+                  <a 
+                    href="https://klimatapotrebuje.sk/pridaj-sa-k-nam/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cursor-pointer"
+                  >
+                    Zapojte sa do akcie
+                  </a>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem asChild>
+                  <a 
+                    href="https://klimatapotrebuje.darujme.sk/podpor-nase-aktivity-klimatapotrebuje/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cursor-pointer"
+                  >
+                    Podporte tento projekt
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </section>
