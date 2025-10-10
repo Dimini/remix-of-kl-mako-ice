@@ -4,7 +4,7 @@ import { ElectricityMixChart } from '@/components/charts/ElectricityMixChart';
 import { TemperatureChart } from '@/components/charts/TemperatureChart';
 import { PrecipitationChart } from '@/components/charts/PrecipitationChart';
 import { KPITile } from '@/components/KPITile';
-import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { KPITileSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton';
 import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
 import { CO2Data, ElectricityData, TemperatureData, PrecipitationData, fetchCO2Data, fetchElectricityData, fetchTemperatureData, fetchPrecipitationData, calculateWarmingSince1950 } from '@/services/api';
@@ -14,31 +14,25 @@ const Index = () => {
   const [electricityData, setElectricityData] = useState<ElectricityData | null>(null);
   const [temperatureData, setTemperatureData] = useState<TemperatureData | null>(null);
   const [precipitationData, setPrecipitationData] = useState<PrecipitationData | null>(null);
-  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [co2, electricity, temperature, precipitation] = await Promise.all([
-          fetchCO2Data(), 
-          fetchElectricityData(), 
-          fetchTemperatureData(),
-          fetchPrecipitationData()
-        ]);
-        setCo2Data(co2);
-        setElectricityData(electricity);
-        setTemperatureData(temperature);
-        setPrecipitationData(precipitation);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    // Fetch data independently for progressive loading
+    fetchCO2Data()
+      .then(setCo2Data)
+      .catch(error => console.error('Error fetching CO2 data:', error));
+    
+    fetchElectricityData()
+      .then(setElectricityData)
+      .catch(error => console.error('Error fetching electricity data:', error));
+    
+    fetchTemperatureData()
+      .then(setTemperatureData)
+      .catch(error => console.error('Error fetching temperature data:', error));
+    
+    fetchPrecipitationData()
+      .then(setPrecipitationData)
+      .catch(error => console.error('Error fetching precipitation data:', error));
   }, []);
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
   const lowCarbonShare = electricityData ? electricityData.electricityMix.nuclear + electricityData.electricityMix.hydro + electricityData.electricityMix.wind + electricityData.electricityMix.solar + electricityData.electricityMix.other_renewables : 0;
   const warmingSince1950 = temperatureData ? calculateWarmingSince1950(temperatureData.timeSeries) : null;
   return <div className="min-h-screen bg-white">
@@ -76,11 +70,47 @@ const Index = () => {
           </h2>
           
           <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-8 sm:mb-12 md:mb-16">
-            {co2Data && <KPITile title="CO₂ emisie" value={co2Data.latest.value.toFixed(1)} unit="t/osoba" description={`Emisie CO₂ na obyvateľa v roku ${co2Data.latest.year}`} tooltip="CO₂ emisie z fosílnych palív na obyvateľa - kľúčový ukazovateľ uhlíkovej stopy krajiny" trend={co2Data.timeSeries.length > 1 && co2Data.latest.value < co2Data.timeSeries[co2Data.timeSeries.length - 2].value ? 'down' : 'up'} color="co2" />}
+            {co2Data ? (
+              <KPITile 
+                title="CO₂ emisie" 
+                value={co2Data.latest.value.toFixed(1)} 
+                unit="t/osoba" 
+                description={`Emisie CO₂ na obyvateľa v roku ${co2Data.latest.year}`} 
+                tooltip="CO₂ emisie z fosílnych palív na obyvateľa - kľúčový ukazovateľ uhlíkovej stopy krajiny" 
+                trend={co2Data.timeSeries.length > 1 && co2Data.latest.value < co2Data.timeSeries[co2Data.timeSeries.length - 2].value ? 'down' : 'up'} 
+                color="co2" 
+              />
+            ) : (
+              <KPITileSkeleton />
+            )}
 
-            {electricityData && <KPITile title="Čistá elektrina" value={lowCarbonShare.toFixed(0)} unit="%" description="Podiel nízkouhlíkovej elektriny" tooltip="Percentuálny podiel elektriny z jadrových a obnoviteľných zdrojov" trend={lowCarbonShare > 80 ? 'up' : 'down'} color="success" />}
+            {electricityData ? (
+              <KPITile 
+                title="Čistá elektrina" 
+                value={lowCarbonShare.toFixed(0)} 
+                unit="%" 
+                description="Podiel nízkouhlíkovej elektriny" 
+                tooltip="Percentuálny podiel elektriny z jadrových a obnoviteľných zdrojov" 
+                trend={lowCarbonShare > 80 ? 'up' : 'down'} 
+                color="success" 
+              />
+            ) : (
+              <KPITileSkeleton />
+            )}
 
-            {warmingSince1950 !== null && <KPITile title="Otepľovanie" value={warmingSince1950 > 0 ? `+${warmingSince1950}` : warmingSince1950.toString()} unit="°C" description="Zmena teploty od roku 1950" tooltip="Priemerná zmena teploty za posledných 5 rokov oproti 50. rokom" trend={warmingSince1950 > 0 ? 'up' : 'down'} color="warning" />}
+            {warmingSince1950 !== null ? (
+              <KPITile 
+                title="Otepľovanie" 
+                value={warmingSince1950 > 0 ? `+${warmingSince1950}` : warmingSince1950.toString()} 
+                unit="°C" 
+                description="Zmena teploty od roku 1950" 
+                tooltip="Priemerná zmena teploty za posledných 5 rokov oproti 50. rokom" 
+                trend={warmingSince1950 > 0 ? 'up' : 'down'} 
+                color="warning" 
+              />
+            ) : (
+              <KPITileSkeleton />
+            )}
           </div>
         </div>
       </section>
@@ -93,22 +123,22 @@ const Index = () => {
           </h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-12">
-            {co2Data && <div className="chart-container">
-                <CO2Chart data={co2Data} />
-              </div>}
+            <div className="chart-container">
+              {co2Data ? <CO2Chart data={co2Data} /> : <ChartSkeleton />}
+            </div>
             
-            {electricityData && <div className="chart-container">
-                <ElectricityMixChart data={electricityData} />
-              </div>}
+            <div className="chart-container">
+              {electricityData ? <ElectricityMixChart data={electricityData} /> : <ChartSkeleton />}
+            </div>
           </div>
           
-          {temperatureData && <div className="chart-container">
-              <TemperatureChart data={temperatureData} />
-            </div>}
+          <div className="chart-container">
+            {temperatureData ? <TemperatureChart data={temperatureData} /> : <ChartSkeleton />}
+          </div>
           
-          {precipitationData && <div className="chart-container mt-4 sm:mt-6 md:mt-8">
-              <PrecipitationChart data={precipitationData} />
-            </div>}
+          <div className="chart-container mt-4 sm:mt-6 md:mt-8">
+            {precipitationData ? <PrecipitationChart data={precipitationData} /> : <ChartSkeleton />}
+          </div>
         </div>
       </section>
 
