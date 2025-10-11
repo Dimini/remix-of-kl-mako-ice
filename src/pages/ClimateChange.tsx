@@ -1,28 +1,92 @@
-import { Thermometer, TrendingUp, Droplets, AlertTriangle } from "lucide-react";
+import { Thermometer, TrendingUp, Droplets, AlertTriangle, Menu } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 export default function ClimateChange() {
+  const { t } = useLanguage();
+  
   return <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-12 sm:py-16">
-        <h1 className="text-4xl font-bold text-foreground mb-8 sm:text-5xl">Klimatická zmena (faktaoklimatu.cz)
+        <div className="flex justify-between items-start mb-8">
+          <h1 className="text-4xl font-bold text-foreground sm:text-5xl">{t('climateChangeTitle')}
 
-      </h1>
+          </h1>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-12 w-12 rounded-none border-2 border-muted hover:border-primary transition-all"
+                aria-label="Menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-56 bg-card border shadow-lg z-50"
+            >
+              <DropdownMenuItem asChild>
+                <a 
+                  href="/"
+                  className="cursor-pointer font-medium"
+                >
+                  {t('backToHome')}
+                </a>
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem asChild>
+                <a 
+                  href="https://klimatapotrebuje.sk/pridaj-sa-k-nam/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cursor-pointer"
+                >
+                  {t('joinAction')}
+                </a>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem asChild>
+                <a 
+                  href="https://klimatapotrebuje.darujme.sk/podpor-nase-aktivity-klimatapotrebuje/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cursor-pointer"
+                >
+                  {t('supportProject')}
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         
         {/* Navigation Tabs */}
         <nav className="flex flex-wrap gap-4 sm:gap-6 mb-12 border-b border-border pb-4">
           <a href="#uvod" className="text-sm sm:text-base hover:text-primary transition-colors">
-            Úvod
+            {t('intro')}
           </a>
           <a href="#data" className="text-sm sm:text-base hover:text-primary transition-colors">
-            Dáta a pozorované zmeny
+            {t('data')}
           </a>
           <a href="#fyzika" className="text-sm sm:text-base hover:text-primary transition-colors">
-            Fyzikálne základy a princípy
+            {t('physics')}
           </a>
           <a href="#dopady" className="text-sm sm:text-base hover:text-primary transition-colors">
-            Dopady a budúci vývoj
+            {t('impacts')}
           </a>
           <a href="#extremy" className="text-sm sm:text-base hover:text-primary transition-colors">
-            Extrémne javy
+            {t('extremes')}
           </a>
         </nav>
 

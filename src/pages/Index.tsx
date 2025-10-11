@@ -8,7 +8,7 @@ import { KPITileSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton';
 import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
 import { CO2Data, ElectricityData, TemperatureData, PrecipitationData, fetchCO2Data, fetchElectricityData, fetchTemperatureData, fetchPrecipitationData, calculateWarmingSince1950 } from '@/services/api';
-import { TrendingUp, TrendingDown, Activity, Zap, Thermometer, Leaf, Menu } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Zap, Thermometer, Leaf, Menu, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,7 +17,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useLanguage } from '@/contexts/LanguageContext';
+
 const Index = () => {
+  const { t, language, setLanguage } = useLanguage();
   const [co2Data, setCo2Data] = useState<CO2Data | null>(null);
   const [electricityData, setElectricityData] = useState<ElectricityData | null>(null);
   const [temperatureData, setTemperatureData] = useState<TemperatureData | null>(null);
@@ -48,23 +51,22 @@ const Index = () => {
       <section className="relative min-h-[70vh] sm:min-h-screen flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20">
         <div className="absolute inset-0 bg-mosaic opacity-5"></div>
         <div className="relative z-10 max-w-5xl mx-auto">
-          <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter mb-6 sm:mb-8 text-balance">#klímaSlovenska</h1>
+          <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter mb-6 sm:mb-8 text-balance">{t('heroTitle')}</h1>
           <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 sm:mb-12 max-w-3xl mx-auto text-muted-foreground px-2">
-            Klimatická kríza je definitívne tu. Sledujte kľúčové údaje o klíme Slovenska 
-            a pozrite si, ako sa mení naša krajina v reálnom čase.
+            {t('heroDescription')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
             <button 
               onClick={() => document.getElementById('metrics')?.scrollIntoView({ behavior: 'smooth' })}
               className="bg-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary/90 w-full sm:w-auto"
             >
-              Pozrite si údaje
+              {t('viewData')}
             </button>
             <button 
               onClick={() => document.getElementById('cta')?.scrollIntoView({ behavior: 'smooth' })}
               className="border-2 border-primary text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary hover:text-primary-foreground w-full sm:w-auto"
             >
-              Zistite viac
+              {t('learnMore')}
             </button>
             
             <DropdownMenu>
@@ -87,7 +89,7 @@ const Index = () => {
                     href="/klimaticka-zmena"
                     className="cursor-pointer font-medium"
                   >
-                    Klimatická zmena
+                    {t('climateChange')}
                   </a>
                 </DropdownMenuItem>
                 
@@ -100,7 +102,7 @@ const Index = () => {
                     rel="noopener noreferrer"
                     className="cursor-pointer"
                   >
-                    Zapojte sa do akcie
+                    {t('joinAction')}
                   </a>
                 </DropdownMenuItem>
                 
@@ -111,7 +113,7 @@ const Index = () => {
                     rel="noopener noreferrer"
                     className="cursor-pointer"
                   >
-                    Podporte tento projekt
+                    {t('supportProject')}
                   </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -124,17 +126,17 @@ const Index = () => {
       <section id="metrics" className="py-12 sm:py-16 md:py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-center mb-8 sm:mb-12 md:mb-16">
-            Kľúčové klimatické ukazovatele
+            {t('keyIndicators')}
           </h2>
           
           <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-8 sm:mb-12 md:mb-16">
             {co2Data ? (
               <KPITile 
-                title="CO₂ emisie" 
+                title={t('co2Emissions')} 
                 value={co2Data.latest.value.toFixed(1)} 
-                unit="t/osoba" 
-                description={`Emisie CO₂ na obyvateľa v roku ${co2Data.latest.year}`} 
-                tooltip="CO₂ emisie z fosílnych palív na obyvateľa - kľúčový ukazovateľ uhlíkovej stopy krajiny" 
+                unit={t('co2Unit')} 
+                description={`${t('co2Description')} ${co2Data.latest.year}`} 
+                tooltip={t('co2Tooltip')} 
                 trend={co2Data.timeSeries.length > 1 && co2Data.latest.value < co2Data.timeSeries[co2Data.timeSeries.length - 2].value ? 'down' : 'up'} 
                 color="co2" 
               />
@@ -144,11 +146,11 @@ const Index = () => {
 
             {electricityData ? (
               <KPITile 
-                title="Čistá elektrina" 
+                title={t('cleanElectricity')} 
                 value={lowCarbonShare.toFixed(0)} 
                 unit="%" 
-                description="Podiel nízkouhlíkovej elektriny" 
-                tooltip="Percentuálny podiel elektriny z jadrových a obnoviteľných zdrojov" 
+                description={t('cleanElectricityDescription')} 
+                tooltip={t('cleanElectricityTooltip')} 
                 trend={lowCarbonShare > 80 ? 'up' : 'down'} 
                 color="success" 
               />
@@ -158,11 +160,11 @@ const Index = () => {
 
             {warmingSince1950 !== null ? (
               <KPITile 
-                title="Otepľovanie" 
+                title={t('warming')} 
                 value={warmingSince1950 > 0 ? `+${warmingSince1950}` : warmingSince1950.toString()} 
                 unit="°C" 
-                description="Zmena teploty od roku 1950" 
-                tooltip="Priemerná zmena teploty za posledných 5 rokov oproti 50. rokom" 
+                description={t('warmingDescription')} 
+                tooltip={t('warmingTooltip')} 
                 trend={warmingSince1950 > 0 ? 'up' : 'down'} 
                 color="warning" 
               />
@@ -177,7 +179,7 @@ const Index = () => {
       <section className="py-12 sm:py-16 md:py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-center mb-8 sm:mb-12 md:mb-16">
-            Analýza klimatických trendov
+            {t('trendsTitle')}
           </h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-12">
@@ -204,11 +206,10 @@ const Index = () => {
       <section id="cta" className="py-12 sm:py-16 md:py-20 px-4 bg-primary text-primary-foreground">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-6 sm:mb-8">
-            Kríza je tu, aký je váš plán?
+            {t('ctaTitle')}
           </h2>
           <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 sm:mb-12 opacity-90 px-2">
-            Klimatická kríza ohrozuje naše mestá, domovy, pracovné miesta a zdravie. 
-            Ak ju chceme zastaviť, musíme konať. Teraz.
+            {t('ctaDescription')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <a 
@@ -217,7 +218,7 @@ const Index = () => {
               rel="noopener noreferrer"
               className="bg-white text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none hover:bg-gray-100 transition-colors w-full sm:w-auto text-center"
             >
-              Zapojte sa do akcie
+              {t('joinAction')}
             </a>
             <a 
               href="https://klimatapotrebuje.darujme.sk/podpor-nase-aktivity-klimatapotrebuje/" 
@@ -225,7 +226,7 @@ const Index = () => {
               rel="noopener noreferrer"
               className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none hover:bg-white hover:text-primary transition-colors w-full sm:w-auto text-center"
             >
-              Podporte tento projekt
+              {t('supportProject')}
             </a>
           </div>
         </div>
@@ -235,9 +236,40 @@ const Index = () => {
       <section className="py-12 sm:py-16 md:py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-center mb-8 sm:mb-12 md:mb-16">
-            Často kladené otázky
+            {t('faqTitle')}
           </h2>
           <FAQ />
+        </div>
+      </section>
+
+      {/* Language Switcher */}
+      <section className="py-8 px-4 bg-gray-50 border-t">
+        <div className="max-w-7xl mx-auto flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="gap-2"
+              >
+                <Languages className="h-4 w-4" />
+                {t('language')}: {language === 'sk' ? 'Slovenčina' : 'English'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center">
+              <DropdownMenuItem 
+                onClick={() => setLanguage('sk')}
+                className={language === 'sk' ? 'bg-accent' : ''}
+              >
+                🇸🇰 Slovenčina
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setLanguage('en')}
+                className={language === 'en' ? 'bg-accent' : ''}
+              >
+                🇬🇧 English
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </section>
 
