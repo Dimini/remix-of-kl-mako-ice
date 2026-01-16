@@ -13,8 +13,8 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations = {
   sk: {
     // Hero section
-    heroTitle: '#klímaSlovenska',
-    heroDescription: 'Klimatická kríza je definitívne tu. Sledujte kľúčové údaje o klíme Slovenska a pozrite si, ako sa mení naša krajina v reálnom čase.',
+    heroTitle: '#klímaKošíc',
+    heroDescription: 'Klimatická kríza je definitívne tu. Sledujte kľúčové údaje o klíme Košíc a Košického kraja a pozrite si, ako sa mení náš región v reálnom čase.',
     viewData: 'Pozrite si údaje',
     learnMore: 'Zistite viac',
     
@@ -29,7 +29,7 @@ const translations = {
     co2Emissions: 'CO₂ emisie',
     co2Unit: 't/osoba',
     co2Description: 'Emisie CO₂ na obyvateľa v roku',
-    co2Tooltip: 'CO₂ emisie z fosílnych palív na obyvateľa - kľúčový ukazovateľ uhlíkovej stopy krajiny',
+    co2Tooltip: 'CO₂ emisie z fosílnych palív na obyvateľa - kľúčový ukazovateľ uhlíkovej stopy regiónu',
     cleanElectricity: 'Čistá elektrina',
     cleanElectricityDescription: 'Podiel nízkouhlíkovej elektriny',
     cleanElectricityTooltip: 'Percentuálny podiel elektriny z jadrových a obnoviteľných zdrojov',
@@ -42,7 +42,7 @@ const translations = {
     
     // CTA section
     ctaTitle: 'Kríza je tu, aký je váš plán?',
-    ctaDescription: 'Klimatická kríza ohrozuje naše mestá, domovy, pracovné miesta a zdravie. Ak ju chceme zastaviť, musíme konať. Teraz.',
+    ctaDescription: 'Klimatická kríza ohrozuje Košice, naše domovy, pracovné miesta a zdravie. Ak ju chceme zastaviť, musíme konať. Teraz.',
     
     // FAQ
     faqTitle: 'Často kladené otázky',
@@ -51,17 +51,21 @@ const translations = {
     language: 'Jazyk',
     
     // Climate Change page
-    climateChangeTitle: 'Klimatická zmena (faktaoklimatu.cz)',
+    climateChangeTitle: 'Klimatická zmena v Košickom kraji',
     intro: 'Úvod',
     data: 'Dáta a pozorované zmeny',
     physics: 'Fyzikálne základy a princípy',
     impacts: 'Dopady a budúci vývoj',
     extremes: 'Extrémne javy',
+    
+    // Region specific
+    regionName: 'Košický kraj',
+    cityName: 'Košice',
   },
   en: {
     // Hero section
-    heroTitle: '#climateSlovakia',
-    heroDescription: 'The climate crisis is definitely here. Track key climate data for Slovakia and see how our country is changing in real time.',
+    heroTitle: '#climateKosice',
+    heroDescription: 'The climate crisis is definitely here. Track key climate data for Košice and the Košice region and see how our region is changing in real time.',
     viewData: 'View the data',
     learnMore: 'Learn more',
     
@@ -76,7 +80,7 @@ const translations = {
     co2Emissions: 'CO₂ emissions',
     co2Unit: 't/capita',
     co2Description: 'CO₂ emissions per capita in',
-    co2Tooltip: 'CO₂ emissions from fossil fuels per capita - key indicator of country carbon footprint',
+    co2Tooltip: 'CO₂ emissions from fossil fuels per capita - key indicator of region carbon footprint',
     cleanElectricity: 'Clean electricity',
     cleanElectricityDescription: 'Share of low-carbon electricity',
     cleanElectricityTooltip: 'Percentage share of electricity from nuclear and renewable sources',
@@ -89,7 +93,7 @@ const translations = {
     
     // CTA section
     ctaTitle: 'The crisis is here, what is your plan?',
-    ctaDescription: 'The climate crisis threatens our cities, homes, jobs and health. If we want to stop it, we must act. Now.',
+    ctaDescription: 'The climate crisis threatens Košice, our homes, jobs and health. If we want to stop it, we must act. Now.',
     
     // FAQ
     faqTitle: 'Frequently Asked Questions',
@@ -98,12 +102,16 @@ const translations = {
     language: 'Language',
     
     // Climate Change page
-    climateChangeTitle: 'Climate Change (faktaoklimatu.cz)',
+    climateChangeTitle: 'Climate Change in Košice Region',
     intro: 'Introduction',
     data: 'Data and observed changes',
     physics: 'Physical foundations and principles',
     impacts: 'Impacts and future development',
     extremes: 'Extreme events',
+    
+    // Region specific
+    regionName: 'Košice Region',
+    cityName: 'Košice',
   },
 };
 

@@ -94,10 +94,10 @@ export default function ClimateChange() {
         <div className="grid md:grid-cols-2 gap-8 mb-16">
           <div className="space-y-4">
             <p className="text-lg leading-relaxed text-foreground">
-              <strong>Súčasná klimatická zmena je spôsobená činnosťou človeka</strong>. Tým sa výrazne líši od zmien klímy v minulosti. <strong>Spaľovanie uhlia, ropy a zemného plynu</strong> a niektoré ďalšie činnosti <strong>menia zloženie atmosféry</strong> a pridávajú do nej skleníkové plyny. Zosilnený skleníkový efekt potom spôsobuje otepľovanie s dôsledkami ako topenie ľadovcov, vzostup hladín oceánov, dlhodobé suchá alebo častejšie vlny horúčav a iné extrémne prejavy počasia.
+              <strong>Súčasná klimatická zmena je spôsobená činnosťou človeka</strong>. Tým sa výrazne líši od zmien klímy v minulosti. <strong>Spaľovanie uhlia, ropy a zemného plynu</strong> a niektoré ďalšie činnosti <strong>menia zloženie atmosféry</strong> a pridávajú do nej skleníkové plyny. Zosilnený skleníkový efekt potom spôsobuje otepľovanie s dôsledkami ako dlhodobé suchá, častejšie vlny horúčav a iné extrémne prejavy počasia.
             </p>
             <p className="text-lg leading-relaxed text-foreground">
-              <strong>Dopady zmeny klímy</strong> na spoločnosť i prírodu, s ktorými sa budeme stretávať v nasledujúcich desaťročiach, <strong>budú priamo závislé na množstve skleníkových plynov, ktoré ešte do atmosféry vypustíme</strong>, či už spaľovaním fosílnych palív alebo inými aktivitami, pri ktorých vzniká veľké množstvo emisií.
+              <strong>Dopady zmeny klímy</strong> na Košice a Košický kraj, s ktorými sa budeme stretávať v nasledujúcich desaťročiach, <strong>budú priamo závislé na množstve skleníkových plynov, ktoré ešte do atmosféry vypustíme</strong>, či už spaľovaním fosílnych palív alebo inými aktivitami, pri ktorých vzniká veľké množstvo emisií.
             </p>
           </div>
           <div className="flex items-center justify-center">
@@ -124,9 +124,9 @@ export default function ClimateChange() {
           </div>
           
           <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
-            <div className="text-3xl font-bold text-primary mb-2">+2,3 °C</div>
+            <div className="text-3xl font-bold text-primary mb-2">+2,5 °C</div>
             <div className="text-sm text-muted-foreground">
-              oteplenie Slovenska od roku 1960
+              oteplenie Košického kraja od roku 1960
             </div>
           </div>
         </div>
@@ -165,7 +165,7 @@ export default function ClimateChange() {
         <section id="uvod" className="mb-16">
           <h2 className="text-3xl font-bold mb-8">V kocke</h2>
           <p className="text-lg mb-8 text-muted-foreground">
-            Ako sa vyznať v zložitej problematike klímy a jej zmien? Pre začiatok je dobré vedieť, že:
+            Ako sa vyznať v zložitej problematike klímy a jej zmien v Košickom kraji? Pre začiatok je dobré vedieť, že:
           </p>
           
           <div className="grid md:grid-cols-3 gap-6">
@@ -175,7 +175,7 @@ export default function ClimateChange() {
                 Súčasná zmena klímy je <strong>séria príčin a následkov</strong>
               </h3>
               <p className="text-sm text-muted-foreground">
-                Ľudstvo mení zloženie atmosféry, čo zosilňuje skleníkový efekt. Ten potom spôsobuje otepľovanie, topenie ľadovcov a ďalšie javy.
+                Ľudstvo mení zloženie atmosféry, čo zosilňuje skleníkový efekt. Ten potom spôsobuje otepľovanie a ďalšie javy.
               </p>
             </div>
 
@@ -185,7 +185,7 @@ export default function ClimateChange() {
                 <strong>Čím viac skleníkových plynov</strong> ľudstvo vypustí do atmosféry, <strong>tým viac sa planéta oteplí</strong>
               </h3>
               <p className="text-sm text-muted-foreground">
-                Množstvo emisií priamo určuje rozsah zmien klímy a ich dopadov na spoločnosť i prírodu.
+                Množstvo emisií priamo určuje rozsah zmien klímy a ich dopadov na Košice a okolie.
               </p>
             </div>
 
@@ -195,7 +195,7 @@ export default function ClimateChange() {
                 Klimatická zmena sa neprejavuje všade stejne: <strong>rôzne oblasti sveta sa otepľujú rôzne rýchlo</strong>
               </h3>
               <p className="text-sm text-muted-foreground">
-                Slovensko sa otepľuje rýchlejšie než svetový priemer. Zmeny sa prejavujú v teplotách, zrážkach a extrémnych javoch.
+                Košický kraj sa otepľuje rýchlejšie než svetový priemer. Zmeny sa prejavujú v teplotách, zrážkach a extrémnych javoch.
               </p>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function ClimateChange() {
           <h2 className="text-3xl font-bold mb-6">Dáta a pozorované zmeny</h2>
           <div className="bg-card rounded-lg border p-6 sm:p-8">
             <p className="text-lg text-muted-foreground mb-4">
-              Merania ukazujú jednoznačné trendy otepľovania a zmien v zrážkových úhrnoch. Slovensko sa otepľuje rýchlejšie než svetový priemer.
+              Merania ukazujú jednoznačné trendy otepľovania a zmien v zrážkových úhrnoch. Košický kraj sa otepľuje rýchlejšie než svetový priemer.
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
@@ -214,7 +214,7 @@ export default function ClimateChange() {
                 <div>
                   <div className="font-semibold mb-1">Rast teplôt</div>
                   <div className="text-sm text-muted-foreground">
-                    Priemerná teplota na Slovensku vzrástla o viac ako 2°C od roku 1960
+                    Priemerná teplota v Košickom kraji vzrástla o viac ako 2,5°C od roku 1960
                   </div>
                 </div>
               </div>
@@ -223,7 +223,7 @@ export default function ClimateChange() {
                 <div>
                   <div className="font-semibold mb-1">Zmeny zrážok</div>
                   <div className="text-sm text-muted-foreground">
-                    Menia sa rozloženie a intenzita zrážok počas roka
+                    Menia sa rozloženie a intenzita zrážok počas roka v regióne
                   </div>
                 </div>
               </div>
@@ -260,7 +260,7 @@ export default function ClimateChange() {
           <h2 className="text-3xl font-bold mb-6">Dopady a budúci vývoj</h2>
           <div className="bg-card rounded-lg border p-6 sm:p-8">
             <p className="text-lg text-muted-foreground mb-6">
-              Dopady zmeny klímy na Slovensku zahŕňajú:
+              Dopady zmeny klímy v Košiciach a Košickom kraji zahŕňajú:
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
@@ -268,7 +268,7 @@ export default function ClimateChange() {
                 <div>
                   <div className="font-semibold mb-1">Extrémne horúčavy</div>
                   <div className="text-sm text-muted-foreground">
-                    Častejšie a intenzívnejšie vlny horúčav
+                    Častejšie a intenzívnejšie vlny horúčav v mestskej zástavbe
                   </div>
                 </div>
               </div>
@@ -277,7 +277,7 @@ export default function ClimateChange() {
                 <div>
                   <div className="font-semibold mb-1">Suchá</div>
                   <div className="text-sm text-muted-foreground">
-                    Dlhšie obdobia bez zrážok
+                    Dlhšie obdobia bez zrážok v Košickej kotline
                   </div>
                 </div>
               </div>
@@ -286,16 +286,16 @@ export default function ClimateChange() {
                 <div>
                   <div className="font-semibold mb-1">Povodne</div>
                   <div className="text-sm text-muted-foreground">
-                    Intenzívnejšie zrážky v krátkom čase
+                    Intenzívnejšie zrážky a povodne na riekach Hornád a Bodva
                   </div>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <TrendingUp className="w-5 h-5 text-destructive flex-shrink-0 mt-1" />
                 <div>
-                  <div className="font-semibold mb-1">Topenie ľadovcov</div>
+                  <div className="font-semibold mb-1">Mestské tepelné ostrovy</div>
                   <div className="text-sm text-muted-foreground">
-                    Zánik malých slovenských ľadovcov
+                    Zvýšené teploty v centre Košíc oproti okoliu
                   </div>
                 </div>
               </div>
@@ -308,7 +308,7 @@ export default function ClimateChange() {
           <h2 className="text-3xl font-bold mb-6">Extrémne javy</h2>
           <div className="bg-card rounded-lg border p-6 sm:p-8">
             <p className="text-lg text-muted-foreground">
-              Zmena klímy zvyšuje pravdepodobnosť a intenzitu extrémnych poveternostných javov. Na Slovensku to znamená častejšie horúčavy, intenzívnejšie búrky a dlhšie suchá.
+              Zmena klímy zvyšuje pravdepodobnosť a intenzitu extrémnych poveternostných javov. V Košickom kraji to znamená častejšie horúčavy, intenzívnejšie búrky a dlhšie suchá, ktoré majú priamy dopad na mestskú infraštruktúru a poľnohospodárstvo regiónu.
             </p>
           </div>
         </section>
