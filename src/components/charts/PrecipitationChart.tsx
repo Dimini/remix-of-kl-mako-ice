@@ -149,10 +149,10 @@ export function PrecipitationChart({ data }: PrecipitationChartProps) {
     <div className="bg-white rounded-none border border-gray-200 p-4 sm:p-6 md:p-8">
       <div className="mb-4 sm:mb-6">
         <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-1 sm:mb-2">
-          Ročné zrážky na Slovensku
+          Ročné zrážky v Košiciach
         </h3>
         <p className="text-xs sm:text-sm text-muted-foreground">
-          Historický vývoj ročných zrážok s 5-ročným kĺzavým priemerom
+          Historický vývoj ročných zrážok v Košickom kraji s 5-ročným kĺzavým priemerom
         </p>
       </div>
       

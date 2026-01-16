@@ -120,7 +120,7 @@ export function CO2Chart({ data }: CO2ChartProps) {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 md:mb-8 gap-3 sm:gap-4">
         <div className="flex-1 min-w-0">
           <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2">Emisie CO₂ na obyvateľa</h3>
-          <p className="text-sm sm:text-base text-gray-600">Uhlíková stopa Slovenska v čase</p>
+          <p className="text-sm sm:text-base text-gray-600">Uhlíková stopa Košického kraja v čase (slovenské údaje)</p>
         </div>
         
         <Select value={timeWindow} onValueChange={setTimeWindow}>
