@@ -201,11 +201,12 @@ export async function fetchElectricityData(): Promise<ElectricityData | null> {
 
 export async function fetchTemperatureData(): Promise<TemperatureData | null> {
   try {
-    // Fetch temperature data for Bratislava from Open-Meteo API (1950-2024)
+    // Fetch temperature data for Košice from Open-Meteo API (1950-2024)
     const startDate = '1950-01-01';
     const endDate = '2024-12-31';
-    const latitude = 48.1482;
-    const longitude = 17.1067;
+    // Košice coordinates
+    const latitude = 48.7164;
+    const longitude = 21.2611;
     
     const response = await fetchWithTimeout(
       `${OPEN_METEO_API}?latitude=${latitude}&longitude=${longitude}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_mean&timezone=Europe%2FBratislava`
@@ -242,20 +243,20 @@ export async function fetchTemperatureData(): Promise<TemperatureData | null> {
       return {
         timeSeries: monthlyTimeSeries,
         lastUpdated: new Date().toISOString(),
-        note: "Historické mesačné údaje pre Bratislavu z Open-Meteo ERA5 (1950-2024). Mestské údaje ako zástupca národného trendu."
+        note: "Historické mesačné údaje pre Košice z Open-Meteo ERA5 (1950-2024)."
       };
     }
     
     throw new Error('Invalid Open-Meteo API response');
   } catch (error) {
     console.error('Failed to fetch temperature data from Open-Meteo API:', error);
-    // Return realistic fallback temperature data for Bratislava
+    // Return realistic fallback temperature data for Košice
     const generateTemperatureData = () => {
       const data = [];
       for (let year = 1950; year <= 2024; year++) {
         for (let month = 1; month <= 12; month++) {
-          // Generate realistic seasonal temperature data with warming trend
-          const baseTemp = [0.2, 2.1, 6.8, 12.4, 17.8, 20.9, 22.8, 22.1, 17.8, 11.9, 5.9, 1.8][month - 1];
+          // Generate realistic seasonal temperature data for Košice with warming trend
+          const baseTemp = [-2.1, 0.3, 5.2, 11.1, 16.3, 19.4, 21.2, 20.5, 16.1, 10.4, 4.2, -0.2][month - 1];
           const warmingTrend = (year - 1950) * 0.02; // ~1.5°C warming since 1950
           const randomVariation = (Math.random() - 0.5) * 2;
           const value = baseTemp + warmingTrend + randomVariation;
@@ -272,7 +273,7 @@ export async function fetchTemperatureData(): Promise<TemperatureData | null> {
     return {
       timeSeries: generateTemperatureData(),
       lastUpdated: new Date().toISOString(),
-      note: "Syntetické údaje pre Bratislavu (použité pri výpadku API). Mestské údaje ako zástupca národného trendu."
+      note: "Syntetické údaje pre Košice (použité pri výpadku API)."
     };
   }
 }
@@ -318,11 +319,12 @@ export function calculateWarmingSince1950(data: Array<{ date: string; value: num
 
 export async function fetchPrecipitationData(): Promise<PrecipitationData | null> {
   try {
-    // Fetch precipitation data for Bratislava from Open-Meteo API (1950-2024)
+    // Fetch precipitation data for Košice from Open-Meteo API (1950-2024)
     const startDate = '1950-01-01';
     const endDate = '2024-12-31';
-    const latitude = 48.1482;
-    const longitude = 17.1067;
+    // Košice coordinates
+    const latitude = 48.7164;
+    const longitude = 21.2611;
     
     const response = await fetchWithTimeout(
       `${OPEN_METEO_API}?latitude=${latitude}&longitude=${longitude}&start_date=${startDate}&end_date=${endDate}&daily=precipitation_sum&timezone=Europe%2FBratislava`
@@ -356,21 +358,21 @@ export async function fetchPrecipitationData(): Promise<PrecipitationData | null
       return {
         timeSeries: yearlyTimeSeries,
         lastUpdated: new Date().toISOString(),
-        note: "Historické ročné údaje o zrážkach pre Bratislavu z Open-Meteo ERA5 (1950-2024)."
+        note: "Historické ročné údaje o zrážkach pre Košice z Open-Meteo ERA5 (1950-2024)."
       };
     }
     
     throw new Error('Invalid Open-Meteo API response');
   } catch (error) {
     console.error('Failed to fetch precipitation data from Open-Meteo API:', error);
-    // Return realistic fallback precipitation data for Bratislava
+    // Return realistic fallback precipitation data for Košice
     const generatePrecipitationData = () => {
       const data = [];
       for (let year = 1950; year <= 2024; year++) {
-        // Generate realistic annual precipitation data (around 600mm with variation)
-        const basePrecip = 580;
+        // Generate realistic annual precipitation data for Košice (around 620mm with variation)
+        const basePrecip = 620;
         const trend = (year - 1950) * 0.3; // Slight increase over time
-        const randomVariation = (Math.random() - 0.5) * 100;
+        const randomVariation = (Math.random() - 0.5) * 120;
         const value = basePrecip + trend + randomVariation;
         
         data.push({
@@ -384,7 +386,7 @@ export async function fetchPrecipitationData(): Promise<PrecipitationData | null
     return {
       timeSeries: generatePrecipitationData(),
       lastUpdated: new Date().toISOString(),
-      note: "Syntetické údaje o zrážkach pre Bratislavu (použité pri výpadku API)."
+      note: "Syntetické údaje o zrážkach pre Košice (použité pri výpadku API)."
     };
   }
 }

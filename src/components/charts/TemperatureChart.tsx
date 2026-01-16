@@ -182,8 +182,8 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
     <div className="bg-white rounded-none border border-gray-200 p-4 sm:p-6 md:p-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 md:mb-8 gap-3 sm:gap-4">
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2">Mesačná priemerná teplota</h3>
-          <p className="text-sm sm:text-base text-gray-600">Bratislava ako zástupca trendu Slovenska</p>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-1 sm:mb-2">Mesačná priemerná teplota v Košiciach</h3>
+          <p className="text-sm sm:text-base text-gray-600">Historický vývoj teploty v Košickom kraji s 12-mesačným kĺzavým priemerom</p>
         </div>
         
         <Select value={timeWindow} onValueChange={setTimeWindow}>
@@ -203,7 +203,7 @@ export function TemperatureChart({ data }: TemperatureChartProps) {
       </div>
       
       <div className="text-xs text-gray-500 border-t pt-3 sm:pt-4 space-y-1">
-        <p className="break-words">Zdroj údajov: Open-Meteo ERA5 Archive API • Súradnice Bratislavy: 48.15°N, 17.11°E</p>
+        <p className="break-words">Zdroj údajov: Open-Meteo ERA5 Archive API • Súradnice Košíc: 48.72°N, 21.26°E</p>
         <p className="italic break-words">{data.note}</p>
       </div>
     </div>

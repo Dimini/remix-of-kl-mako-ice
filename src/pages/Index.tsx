@@ -76,47 +76,56 @@ const Index = () => {
                   size="icon"
                   className="h-12 w-12 sm:h-14 sm:w-14 rounded-none border-2 border-muted hover:border-primary transition-all"
                   aria-label="Menu"
-                >
-                  <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="end" 
-                className="w-56 bg-card border shadow-lg z-50"
               >
-                <DropdownMenuItem asChild>
-                  <a 
-                    href="/klimaticka-zmena"
-                    className="cursor-pointer font-medium"
-                  >
-                    {t('climateChange')}
-                  </a>
-                </DropdownMenuItem>
-                
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuItem asChild>
-                  <a 
-                    href="https://klimatapotrebuje.sk/pridaj-sa-k-nam/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="cursor-pointer"
-                  >
-                    {t('joinAction')}
-                  </a>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem asChild>
-                  <a 
-                    href="https://klimatapotrebuje.darujme.sk/podpor-nase-aktivity-klimatapotrebuje/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="cursor-pointer"
-                  >
-                    {t('supportProject')}
-                  </a>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
+                <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-56 bg-card border shadow-lg z-50"
+            >
+              <DropdownMenuItem asChild>
+                <a 
+                  href="/klimaticka-zmena"
+                  className="cursor-pointer font-medium"
+                >
+                  {t('climateChange')}
+                </a>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem asChild>
+                <a 
+                  href="/volby"
+                  className="cursor-pointer font-medium"
+                >
+                  {language === 'sk' ? 'Voľby 2026' : 'Elections 2026'}
+                </a>
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem asChild>
+                <a 
+                  href="https://klimatapotrebuje.sk/pridaj-sa-k-nam/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cursor-pointer"
+                >
+                  {t('joinAction')}
+                </a>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem asChild>
+                <a 
+                  href="https://klimatapotrebuje.darujme.sk/podpor-nase-aktivity-klimatapotrebuje/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cursor-pointer"
+                >
+                  {t('supportProject')}
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
