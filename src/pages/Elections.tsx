@@ -1,4 +1,5 @@
 import { ArrowLeft, Check, X, AlertTriangle, ThumbsUp, ThumbsDown, Users, Building2, MapPin } from 'lucide-react';
+import climateHeroBg from '@/assets/climate-hero-bg.jpg';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Footer } from '@/components/Footer';
@@ -283,14 +284,15 @@ const Elections = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero with Parallax */}
-      <section className="relative min-h-[70vh] sm:min-h-screen flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20 bg-primary text-primary-foreground overflow-hidden">
+      <section className="relative min-h-[70vh] sm:min-h-screen flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20 text-white overflow-hidden">
         <div 
-          className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.08%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"
+          className="absolute inset-0 bg-cover bg-center"
           style={{ 
+            backgroundImage: `url(${climateHeroBg})`,
             backgroundAttachment: 'fixed',
-            backgroundSize: '60px 60px'
           }}
         />
+        <div className="absolute inset-0 bg-primary/75" />
         <div className="relative z-10 max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-6 sm:mb-8 text-balance">
             {language === 'sk' 
