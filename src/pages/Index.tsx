@@ -10,6 +10,7 @@ import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
 import { CO2Data, ElectricityData, TemperatureData, PrecipitationData, fetchCO2Data, fetchElectricityData, fetchTemperatureData, fetchPrecipitationData, calculateWarmingSince1950 } from '@/services/api';
 import { ArrowLeft, Menu, Languages } from 'lucide-react';
+import climateHeroBg from '@/assets/climate-hero-bg.jpg';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -64,24 +65,31 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative min-h-[50vh] sm:min-h-[60vh] flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20">
-        <div className="absolute inset-0 bg-mosaic opacity-5"></div>
-        <div className="relative z-10 max-w-5xl mx-auto">
+      {/* Hero Section with Parallax */}
+      <section className="relative min-h-[50vh] sm:min-h-[60vh] flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: `url(${climateHeroBg})`,
+            backgroundAttachment: 'fixed',
+          }}
+        />
+        <div className="absolute inset-0 bg-primary/70" />
+        <div className="relative z-10 max-w-5xl mx-auto text-white">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 sm:mb-8 text-balance">{t('heroTitle')}</h1>
-          <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 sm:mb-12 max-w-3xl mx-auto text-muted-foreground px-2">
+          <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 sm:mb-12 max-w-3xl mx-auto opacity-90 px-2">
             {t('heroDescription')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
             <button 
               onClick={() => document.getElementById('metrics')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary/90 w-full sm:w-auto"
+              className="bg-white text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-white/90 w-full sm:w-auto"
             >
               {t('viewData')}
             </button>
             <Link 
               to="/klimaticka-zmena"
-              className="border-2 border-primary text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary hover:text-primary-foreground w-full sm:w-auto text-center"
+              className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-white hover:text-primary w-full sm:w-auto text-center"
             >
               {t('climateChange')}
             </Link>
@@ -170,14 +178,15 @@ const Index = () => {
       </section>
 
       {/* Call to Action Section with Parallax */}
-      <section id="cta" className="relative py-12 sm:py-16 md:py-20 px-4 bg-primary text-primary-foreground overflow-hidden">
+      <section id="cta" className="relative py-12 sm:py-16 md:py-20 px-4 text-white overflow-hidden">
         <div 
-          className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.08%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"
+          className="absolute inset-0 bg-cover bg-center"
           style={{ 
+            backgroundImage: `url(${climateHeroBg})`,
             backgroundAttachment: 'fixed',
-            backgroundSize: '60px 60px'
           }}
         />
+        <div className="absolute inset-0 bg-primary/80" />
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-6 sm:mb-8">
             {t('ctaTitle')}
