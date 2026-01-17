@@ -282,35 +282,43 @@ const Elections = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link 
-            to="/" 
-            className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t('backToHome')}
-          </Link>
-          <h1 className="text-lg font-bold">
-            {language === 'sk' ? 'Voľby 2026' : 'Elections 2026'}
-          </h1>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 bg-gradient-to-b from-primary/5 to-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6">
+      {/* Hero with Parallax */}
+      <section className="relative min-h-[70vh] sm:min-h-screen flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20 bg-primary text-primary-foreground overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.08%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"
+          style={{ 
+            backgroundAttachment: 'fixed',
+            backgroundSize: '60px 60px'
+          }}
+        />
+        <div className="relative z-10 max-w-5xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-6 sm:mb-8 text-balance">
             {language === 'sk' 
-              ? 'Klimatický sprievodca voľbami' 
-              : 'Climate Election Guide'}
+              ? 'Voľby 2026' 
+              : 'Elections 2026'}
           </h1>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            {language === 'sk'
-              ? 'Hodnotíme kandidátov na základe ich postojov a činov v oblasti klimatickej zmeny. Vyberte si informovane pre budúcnosť Košíc.'
-              : 'We evaluate candidates based on their climate change positions and actions. Choose informed for the future of Košice.'}
+          <p className="text-lg sm:text-xl md:text-2xl leading-relaxed mb-4 max-w-3xl mx-auto opacity-90">
+            {language === 'sk' ? 'Košice & Košický kraj' : 'Košice & Košice Region'}
           </p>
+          <p className="text-base sm:text-lg leading-relaxed mb-8 sm:mb-12 max-w-2xl mx-auto opacity-80">
+            {language === 'sk'
+              ? 'Hodnotíme kandidátov na základe ich postojov a činov v oblasti klimatickej zmeny. Vyberte si informovane pre budúcnosť nášho regiónu.'
+              : 'We evaluate candidates based on their climate change positions and actions. Choose informed for the future of our region.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
+            <button 
+              onClick={() => document.getElementById('candidates')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-white text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-white/90 w-full sm:w-auto"
+            >
+              {language === 'sk' ? 'Pozrieť kandidátov' : 'View Candidates'}
+            </button>
+            <Link 
+              to="/klimaticke-data"
+              className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-white hover:text-primary w-full sm:w-auto text-center"
+            >
+              {language === 'sk' ? 'Klimatické dáta' : 'Climate Data'}
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -359,7 +367,7 @@ const Elections = () => {
       </section>
 
       {/* Candidates */}
-      <section className="py-12 sm:py-16 px-4">
+      <section id="candidates" className="py-12 sm:py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <Tabs defaultValue="primator" className="w-full">
             <TabsList className="w-full flex flex-wrap h-auto gap-2 bg-transparent mb-8 justify-center">

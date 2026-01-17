@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CO2Chart } from '@/components/charts/CO2Chart';
 import { ElectricityMixChart } from '@/components/charts/ElectricityMixChart';
 import { TemperatureChart } from '@/components/charts/TemperatureChart';
@@ -8,7 +9,7 @@ import { KPITileSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton';
 import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
 import { CO2Data, ElectricityData, TemperatureData, PrecipitationData, fetchCO2Data, fetchElectricityData, fetchTemperatureData, fetchPrecipitationData, calculateWarmingSince1950 } from '@/services/api';
-import { TrendingUp, TrendingDown, Activity, Zap, Thermometer, Leaf, Menu, Languages } from 'lucide-react';
+import { ArrowLeft, Menu, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -47,11 +48,27 @@ const Index = () => {
   const lowCarbonShare = electricityData ? electricityData.electricityMix.nuclear + electricityData.electricityMix.hydro + electricityData.electricityMix.wind + electricityData.electricityMix.solar + electricityData.electricityMix.other_renewables : 0;
   const warmingSince1950 = temperatureData ? calculateWarmingSince1950(temperatureData.timeSeries) : null;
   return <div className="min-h-screen bg-white">
-      {/* Hero Section - Klimatapotrebuje.sk inspired */}
-      <section className="relative min-h-[70vh] sm:min-h-screen flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20">
+      {/* Header */}
+      <header className="border-b bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {language === 'sk' ? 'Späť na voľby' : 'Back to elections'}
+          </Link>
+          <h1 className="text-lg font-bold">
+            {language === 'sk' ? 'Klimatické dáta' : 'Climate Data'}
+          </h1>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative min-h-[50vh] sm:min-h-[60vh] flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20">
         <div className="absolute inset-0 bg-mosaic opacity-5"></div>
         <div className="relative z-10 max-w-5xl mx-auto">
-          <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter mb-6 sm:mb-8 text-balance">{t('heroTitle')}</h1>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 sm:mb-8 text-balance">{t('heroTitle')}</h1>
           <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 sm:mb-12 max-w-3xl mx-auto text-muted-foreground px-2">
             {t('heroDescription')}
           </p>
@@ -62,71 +79,12 @@ const Index = () => {
             >
               {t('viewData')}
             </button>
-            <button 
-              onClick={() => document.getElementById('cta')?.scrollIntoView({ behavior: 'smooth' })}
-              className="border-2 border-primary text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary hover:text-primary-foreground w-full sm:w-auto"
+            <Link 
+              to="/klimaticka-zmena"
+              className="border-2 border-primary text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-primary hover:text-primary-foreground w-full sm:w-auto text-center"
             >
-              {t('learnMore')}
-            </button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-none border-2 border-muted hover:border-primary transition-all"
-                  aria-label="Menu"
-              >
-                <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align="end" 
-              className="w-56 bg-card border shadow-lg z-50"
-            >
-              <DropdownMenuItem asChild>
-                <a 
-                  href="/klimaticka-zmena"
-                  className="cursor-pointer font-medium"
-                >
-                  {t('climateChange')}
-                </a>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <a 
-                  href="/volby"
-                  className="cursor-pointer font-medium"
-                >
-                  {language === 'sk' ? 'Voľby 2026' : 'Elections 2026'}
-                </a>
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem asChild>
-                <a 
-                  href="https://klimatapotrebuje.sk/pridaj-sa-k-nam/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cursor-pointer"
-                >
-                  {t('joinAction')}
-                </a>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <a 
-                  href="https://klimatapotrebuje.darujme.sk/podpor-nase-aktivity-klimatapotrebuje/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cursor-pointer"
-                >
-                  {t('supportProject')}
-                </a>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-            </DropdownMenu>
+              {t('climateChange')}
+            </Link>
           </div>
         </div>
       </section>
@@ -211,9 +169,16 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Call to Action Section */}
-      <section id="cta" className="py-12 sm:py-16 md:py-20 px-4 bg-primary text-primary-foreground">
-        <div className="max-w-4xl mx-auto text-center">
+      {/* Call to Action Section with Parallax */}
+      <section id="cta" className="relative py-12 sm:py-16 md:py-20 px-4 bg-primary text-primary-foreground overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.08%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"
+          style={{ 
+            backgroundAttachment: 'fixed',
+            backgroundSize: '60px 60px'
+          }}
+        />
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-6 sm:mb-8">
             {t('ctaTitle')}
           </h2>
