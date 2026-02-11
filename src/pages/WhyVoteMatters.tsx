@@ -6,6 +6,7 @@ import climateHeroBg from '@/assets/climate-hero-bg.jpg';
 import { ImpactTable } from '@/components/elections/ImpactTable';
 import { ResponsibilitiesSection } from '@/components/elections/ResponsibilitiesSection';
 import { ActionChecklist } from '@/components/elections/ActionChecklist';
+import { BrochurePreview } from '@/components/elections/BrochurePreview';
 
 const WhyVoteMatters = () => {
   const { language } = useLanguage();
@@ -126,6 +127,21 @@ const WhyVoteMatters = () => {
             {sk ? 'Čo môžete UROBIŤ vy?' : 'What Can YOU Do?'}
           </h2>
           <ActionChecklist language={language} />
+        </div>
+      </section>
+
+      {/* Brochure Preview */}
+      <section className="py-12 sm:py-20 px-4 bg-muted/30 border-y">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight mb-3 text-center">
+            {sk ? 'Volebná brožúra na stiahnutie' : 'Printable Election Brochure'}
+          </h2>
+          <p className="text-muted-foreground text-center mb-10 max-w-xl mx-auto">
+            {sk
+              ? 'Prezrite si náš stručný sprievodca voľbami. Vytlačte ho a rozdajte vo svojom okolí.'
+              : 'Preview our concise election guide. Print it out and share it in your community.'}
+          </p>
+          <BrochurePreview language={language} />
         </div>
       </section>
 
