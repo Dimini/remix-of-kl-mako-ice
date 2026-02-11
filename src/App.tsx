@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import ClimateChange from "./pages/ClimateChange";
 import Elections from "./pages/Elections";
+import WhyVoteMatters from "./pages/WhyVoteMatters";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Elections />} />
+            <Route path="/preco-volit" element={<WhyVoteMatters />} />
             <Route path="/klimaticka-zmena" element={<ClimateChange />} />
             <Route path="/klimaticke-data" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
