@@ -315,10 +315,10 @@ const Elections = () => {
               {language === 'sk' ? 'Pozrieť kandidátov' : 'View Candidates'}
             </button>
             <Link 
-              to="/klimaticke-data"
+              to="/preco-volit"
               className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-white hover:text-primary w-full sm:w-auto text-center"
             >
-              {language === 'sk' ? 'Klimatické dáta' : 'Climate Data'}
+              {language === 'sk' ? 'Prečo voliť?' : 'Why Vote?'}
             </Link>
           </div>
         </div>
