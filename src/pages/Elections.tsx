@@ -1,4 +1,4 @@
-import { Check, X, AlertTriangle, Building2, MapPin } from 'lucide-react';
+import { ArrowLeft, Check, X, AlertTriangle, ThumbsUp, ThumbsDown, Building2, MapPin } from 'lucide-react';
 import climateHeroBg from '@/assets/climate-hero-bg.jpg';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -17,6 +17,7 @@ interface Candidate {
   climatePros: string[];
   climateCons: string[];
   description: string;
+  recommended?: boolean;
 }
 
 interface KrajData {
@@ -47,6 +48,7 @@ const krajeData: KrajData[] = [
         description: 'Aktuálny predseda Košického samosprávneho kraja od roku 2017.',
         climatePros: ['Spustil program „Zelená župa"', 'Podporil zatepľovanie krajských budov', 'Investície do regionálnej železničnej dopravy'],
         climateCons: ['Pomalý postup pri obnove lesov', 'Nedostatočná podpora pre ekologické poľnohospodárstvo', 'Krajské cesty stále uprednostňujú autá pred cyklistami'],
+        recommended: true,
       },
       {
         id: 'ke-z-2',
@@ -56,6 +58,7 @@ const krajeData: KrajData[] = [
         description: 'Skúsený komunálny politik, bývalý dlhoročný primátor Michaloviec.',
         climatePros: ['Skúsenosti s riadením samosprávy', 'Podporuje rozvoj turizmu v prírode'],
         climateCons: ['Slabý klimatický program', 'Podporoval rozvoj automobilovej infraštruktúry', 'Nejasný postoj k obnoviteľným zdrojom'],
+        recommended: false,
       },
     ],
     primatorCandidates: [
@@ -67,6 +70,7 @@ const krajeData: KrajData[] = [
         description: 'Súčasný primátor Košíc, ktorý sa zameriava na rozvoj mesta a modernizáciu infraštruktúry.',
         climatePros: ['Podporil rozšírenie cyklotrás v meste', 'Inicioval projekt zelených striech na mestských budovách', 'Podporuje elektrifikáciu mestskej dopravy'],
         climateCons: ['Pomalý postup pri znižovaní emisií z teplárenstva', 'Nedostatočná podpora solárnych panelov', 'Obmedzená ochrana mestskej zelene pri nových projektoch'],
+        recommended: true,
       },
       {
         id: 'ke-p-2',
@@ -76,6 +80,7 @@ const krajeData: KrajData[] = [
         description: 'Poslanec parlamentu s dlhoročnými skúsenosťami v regionálnej politike.',
         climatePros: ['Podporuje modernizáciu verejnej dopravy', 'Sľubuje investície do čistenia ovzdušia'],
         climateCons: ['Nejasný postoj k uhoľnej teplárni', 'Nepodporuje obmedzenie automobilovej dopravy v centre', 'Slabá história v oblasti klimatických opatrení'],
+        recommended: false,
       },
       {
         id: 'ke-p-3',
@@ -85,6 +90,7 @@ const krajeData: KrajData[] = [
         description: 'Dlhoročná environmentálna aktivistka a vedkyňa z Technickej univerzity v Košiciach.',
         climatePros: ['Jasný klimatický plán pre mesto', 'Podporuje úplný prechod na obnoviteľné zdroje do 2035', 'Plán na 100 km nových cyklotrás', 'Zavedenie nízkoemisných zón'],
         climateCons: ['Obmedzené politické skúsenosti', 'Niektoré návrhy môžu byť finančne náročné'],
+        recommended: true,
       },
     ],
   },
@@ -319,15 +325,27 @@ const krajeData: KrajData[] = [
 ];
 
 const CandidateCard = ({ candidate, language }: { candidate: Candidate; language: string }) => {
+  const hasRecommendation = candidate.recommended !== undefined;
+  const borderClass = hasRecommendation
+    ? candidate.recommended ? 'border-green-500 bg-green-50/30' : 'border-red-300 bg-red-50/20'
+    : 'border-border';
+
   return (
-    <Card className="rounded-none border-2 border-border">
+    <Card className={`rounded-none border-2 ${borderClass}`}>
       <CardHeader className="pb-3">
-        <div>
-          <CardTitle className="text-lg sm:text-xl font-bold">{candidate.name}</CardTitle>
-          <CardDescription className="text-sm mt-1">{candidate.party}</CardDescription>
-          <Badge variant="outline" className="mt-2 rounded-none">
-            {candidate.position}
-          </Badge>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="text-lg sm:text-xl font-bold">{candidate.name}</CardTitle>
+            <CardDescription className="text-sm mt-1">{candidate.party}</CardDescription>
+            <Badge variant="outline" className="mt-2 rounded-none">
+              {candidate.position}
+            </Badge>
+          </div>
+          {hasRecommendation && (
+            <div className={`p-2 rounded-full ${candidate.recommended ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+              {candidate.recommended ? <ThumbsUp className="h-5 w-5" /> : <ThumbsDown className="h-5 w-5" />}
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -364,6 +382,28 @@ const CandidateCard = ({ candidate, language }: { candidate: Candidate; language
             </ul>
           </div>
         </div>
+
+        {hasRecommendation && (
+          <div className={`p-3 rounded-none ${candidate.recommended ? 'bg-green-100 border-l-4 border-green-500' : 'bg-red-100 border-l-4 border-red-500'}`}>
+            <div className="flex items-center gap-2 font-semibold">
+              {candidate.recommended ? (
+                <>
+                  <ThumbsUp className="h-4 w-4 text-green-600" />
+                  <span className="text-green-700">
+                    {language === 'sk' ? 'Odporúčaný z klimatického hľadiska' : 'Recommended for climate'}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <span className="text-red-700">
+                    {language === 'sk' ? 'Neodporúčaný z klimatického hľadiska' : 'Not recommended for climate'}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
