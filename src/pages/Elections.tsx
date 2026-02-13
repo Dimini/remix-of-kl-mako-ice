@@ -23,6 +23,7 @@ interface KrajData {
   id: string;
   name: string;
   nameEn: string;
+  abbreviation: string;
   capitalName: string;
   capitalNameEn: string;
   zupanCandidates: Candidate[];
@@ -34,6 +35,7 @@ const krajeData: KrajData[] = [
     id: 'kosicky',
     name: 'Košický kraj',
     nameEn: 'Košice Region',
+    abbreviation: 'KSK',
     capitalName: 'Košice',
     capitalNameEn: 'Košice',
     zupanCandidates: [
@@ -90,6 +92,7 @@ const krajeData: KrajData[] = [
     id: 'presovsky',
     name: 'Prešovský kraj',
     nameEn: 'Prešov Region',
+    abbreviation: 'PSK',
     capitalName: 'Prešov',
     capitalNameEn: 'Prešov',
     zupanCandidates: [
@@ -128,6 +131,7 @@ const krajeData: KrajData[] = [
     id: 'bratislavsky',
     name: 'Bratislavský kraj',
     nameEn: 'Bratislava Region',
+    abbreviation: 'BSK',
     capitalName: 'Bratislava',
     capitalNameEn: 'Bratislava',
     zupanCandidates: [
@@ -166,6 +170,7 @@ const krajeData: KrajData[] = [
     id: 'trnavsky',
     name: 'Trnavský kraj',
     nameEn: 'Trnava Region',
+    abbreviation: 'TTSK',
     capitalName: 'Trnava',
     capitalNameEn: 'Trnava',
     zupanCandidates: [
@@ -195,6 +200,7 @@ const krajeData: KrajData[] = [
     id: 'trenciansky',
     name: 'Trenčiansky kraj',
     nameEn: 'Trenčín Region',
+    abbreviation: 'TSK',
     capitalName: 'Trenčín',
     capitalNameEn: 'Trenčín',
     zupanCandidates: [
@@ -224,6 +230,7 @@ const krajeData: KrajData[] = [
     id: 'nitriansky',
     name: 'Nitriansky kraj',
     nameEn: 'Nitra Region',
+    abbreviation: 'NSK',
     capitalName: 'Nitra',
     capitalNameEn: 'Nitra',
     zupanCandidates: [
@@ -253,6 +260,7 @@ const krajeData: KrajData[] = [
     id: 'zilinsky',
     name: 'Žilinský kraj',
     nameEn: 'Žilina Region',
+    abbreviation: 'ŽSK',
     capitalName: 'Žilina',
     capitalNameEn: 'Žilina',
     zupanCandidates: [
@@ -282,6 +290,7 @@ const krajeData: KrajData[] = [
     id: 'banskobystricky',
     name: 'Banskobystrický kraj',
     nameEn: 'Banská Bystrica Region',
+    abbreviation: 'BBSK',
     capitalName: 'Banská Bystrica',
     capitalNameEn: 'Banská Bystrica',
     zupanCandidates: [
@@ -466,19 +475,15 @@ const Elections = () => {
                 value="zupan"
                 className="flex items-center gap-2 rounded-none border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2"
               >
-                <MapPin className="h-5 w-5" />
-                {language === 'sk'
-                  ? `Predseda ${currentKraj.name.replace(' kraj', 'ého kraja').replace('Košický', 'Košického').replace('Prešovský', 'Prešovského').replace('Bratislavský', 'Bratislavského').replace('Trnavský', 'Trnavského').replace('Trenčiansky', 'Trenčianskeho').replace('Nitriansky', 'Nitrianskeho').replace('Žilinský', 'Žilinského').replace('Banskobystrický', 'Banskobystrického')}`
-                  : `${currentKraj.nameEn} Chairman`}
+              <MapPin className="h-4 w-4" />
+                {`${currentKraj.abbreviation} – ${language === 'sk' ? 'Župan' : 'Chairman'}`}
               </TabsTrigger>
               <TabsTrigger 
                 value="primator"
                 className="flex items-center gap-2 rounded-none border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2"
               >
-                <Building2 className="h-5 w-5" />
-                {language === 'sk'
-                  ? `Primátor – ${currentKraj.capitalName}`
-                  : `Mayor – ${currentKraj.capitalNameEn}`}
+                <Building2 className="h-4 w-4" />
+                {`${currentKraj.capitalName} – ${language === 'sk' ? 'Primátor' : 'Mayor'}`}
               </TabsTrigger>
             </TabsList>
 
