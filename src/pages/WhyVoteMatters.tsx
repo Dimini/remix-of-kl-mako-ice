@@ -28,13 +28,13 @@ const WhyVoteMatters = () => {
           </Link>
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 text-balance">
             {sk
-              ? 'Prečo sú voľby dôležité pre vašu klímu, zdravie a peňaženku?'
-              : 'Why Do Elections Matter for Your Climate, Health, and Wallet?'}
+              ? 'Prečo sú komunálne voľby dôležité pre vaše zdravie, peňaženku a klímu?'
+              : 'Why Are Local Elections Important for Your Health, Wallet and Climate?'}
           </h1>
           <p className="text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto opacity-90">
             {sk
-              ? 'Vedeli ste, že miestni politici v Košiciach rozhodujú o veciach, ktoré priamo ovplyvňujú vaše zdravie, vašu peňaženku a vzduch, ktorý dýchate?'
-              : 'Did you know that local politicians in Košice decide on things that directly affect your health, your wallet, and the air you breathe?'}
+              ? 'Komunálne a župné voľby rozhodujú o tom, kto riadi rozpočty, infraštruktúru a politiky vo vašom regióne.'
+              : 'Local and regional elections determine who controls budgets, infrastructure, and policies in your region.'}
           </p>
         </div>
       </section>
@@ -48,13 +48,18 @@ const WhyVoteMatters = () => {
           <div className="space-y-4 text-muted-foreground leading-relaxed">
             <p className="text-base sm:text-lg">
               {sk
-                ? 'Komunálne a regionálne voľby v Košiciach rozhodujú o tom, kto riadi rozpočty, infraštruktúru a politiky v oblasti kvality ovzdušia, zelených plôch, verejnej dopravy a energetickej efektívnosti.'
-                : 'Local and regional elections in Košice determine who controls budgets, infrastructure, and policies for air quality, green spaces, public transport, and energy efficiency.'}
+                ? 'Komunálne a župné voľby rozhodujú o tom, kto riadi rozpočty, infraštruktúru a politiky v oblasti kvality ovzdušia, zelených plôch, verejnej dopravy a energetickej efektívnosti.'
+                : 'Local and regional elections determine who controls budgets, infrastructure, and policies for air quality, green spaces, public transport, and energy efficiency.'}
             </p>
             <p className="text-base sm:text-lg">
               {sk
-                ? 'Na rozdiel od parlamentných volieb, miestni lídri majú priamy vplyv na životné prostredie a kvalitu života v Košiciach. Primátor rozhoduje o cyklotrasách, župan o regionálnych cestách, starosta o parkoch vo vašej štvrti.'
-                : 'Unlike national elections, local leaders have direct power over Košice\'s environment and quality of life. The mayor decides on bike lanes, the regional chairman on regional roads, and district mayors on parks in your neighborhood.'}
+                ? 'Na rozdiel od parlamentných volieb, miestni lídri majú priamy vplyv na životné prostredie a kvalitu života vo vašom regióne. Primátor rozhoduje o cyklotrasách, župan o regionálnych cestách, starosta o parkoch vo vašej štvrti.'
+                : 'Unlike national elections, local leaders have direct power over the environment and quality of life in your region. The mayor decides on bike lanes, the regional chairman on regional roads, and district mayors on parks in your neighborhood.'}
+            </p>
+            <p className="text-base sm:text-lg">
+              {sk
+                ? 'V komunálnych voľbách máte v rukách niekoľko hlasovacích lístkov naraz — pre župana, primátora aj poslancov mestského zastupiteľstva. Každý z nich je príležitosť ovplyvniť, ako bude váš kraj a mesto vyzerať najbližšie štyri roky.'
+                : 'In local elections, you hold several ballots at once — for the regional chairman, mayor, and city council members. Each one is an opportunity to shape how your region and city will look for the next four years.'}
             </p>
           </div>
 
