@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, X, AlertTriangle, ThumbsUp, ThumbsDown, Building2, MapPin } from 'lucide-react';
+import { Check, X, AlertTriangle, Building2, MapPin } from 'lucide-react';
 import climateHeroBg from '@/assets/climate-hero-bg.jpg';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -17,7 +17,7 @@ interface Candidate {
   climatePros: string[];
   climateCons: string[];
   description: string;
-  recommended?: boolean;
+  climateScore: number;
 }
 
 interface KrajData {
@@ -48,7 +48,7 @@ const krajeData: KrajData[] = [
         description: 'Aktuálny predseda Košického samosprávneho kraja od roku 2017.',
         climatePros: ['Spustil program „Zelená župa"', 'Podporil zatepľovanie krajských budov', 'Investície do regionálnej železničnej dopravy'],
         climateCons: ['Pomalý postup pri obnove lesov', 'Nedostatočná podpora pre ekologické poľnohospodárstvo', 'Krajské cesty stále uprednostňujú autá pred cyklistami'],
-        recommended: true,
+        climateScore: 62,
       },
       {
         id: 'ke-z-2',
@@ -58,7 +58,7 @@ const krajeData: KrajData[] = [
         description: 'Skúsený komunálny politik, bývalý dlhoročný primátor Michaloviec.',
         climatePros: ['Skúsenosti s riadením samosprávy', 'Podporuje rozvoj turizmu v prírode'],
         climateCons: ['Slabý klimatický program', 'Podporoval rozvoj automobilovej infraštruktúry', 'Nejasný postoj k obnoviteľným zdrojom'],
-        recommended: false,
+        climateScore: 28,
       },
     ],
     primatorCandidates: [
@@ -70,7 +70,7 @@ const krajeData: KrajData[] = [
         description: 'Súčasný primátor Košíc, ktorý sa zameriava na rozvoj mesta a modernizáciu infraštruktúry.',
         climatePros: ['Podporil rozšírenie cyklotrás v meste', 'Inicioval projekt zelených striech na mestských budovách', 'Podporuje elektrifikáciu mestskej dopravy'],
         climateCons: ['Pomalý postup pri znižovaní emisií z teplárenstva', 'Nedostatočná podpora solárnych panelov', 'Obmedzená ochrana mestskej zelene pri nových projektoch'],
-        recommended: true,
+        climateScore: 58,
       },
       {
         id: 'ke-p-2',
@@ -80,7 +80,7 @@ const krajeData: KrajData[] = [
         description: 'Poslanec parlamentu s dlhoročnými skúsenosťami v regionálnej politike.',
         climatePros: ['Podporuje modernizáciu verejnej dopravy', 'Sľubuje investície do čistenia ovzdušia'],
         climateCons: ['Nejasný postoj k uhoľnej teplárni', 'Nepodporuje obmedzenie automobilovej dopravy v centre', 'Slabá história v oblasti klimatických opatrení'],
-        recommended: false,
+        climateScore: 31,
       },
       {
         id: 'ke-p-3',
@@ -90,7 +90,7 @@ const krajeData: KrajData[] = [
         description: 'Dlhoročná environmentálna aktivistka a vedkyňa z Technickej univerzity v Košiciach.',
         climatePros: ['Jasný klimatický plán pre mesto', 'Podporuje úplný prechod na obnoviteľné zdroje do 2035', 'Plán na 100 km nových cyklotrás', 'Zavedenie nízkoemisných zón'],
         climateCons: ['Obmedzené politické skúsenosti', 'Niektoré návrhy môžu byť finančne náročné'],
-        recommended: true,
+        climateScore: 82,
       },
     ],
   },
@@ -103,249 +103,204 @@ const krajeData: KrajData[] = [
     capitalNameEn: 'Prešov',
     zupanCandidates: [
       {
-        id: 'po-z-1',
-        name: 'Milan Majerský',
-        party: 'KDH',
-        position: 'Súčasný predseda PSK',
+        id: 'po-z-1', name: 'Milan Majerský', party: 'KDH', position: 'Súčasný predseda PSK',
         description: 'Aktuálny predseda Prešovského samosprávneho kraja.',
         climatePros: ['Podporil zatepľovanie krajských budov', 'Investície do cykloturistických trás'],
         climateCons: ['Obmedzená podpora obnoviteľných zdrojov', 'Nedostatočné riešenie odpadového hospodárstva'],
+        climateScore: 48,
       },
       {
-        id: 'po-z-2',
-        name: 'Michal Kaliňák',
-        party: 'SMER-SD',
-        position: 'Politický analytik',
+        id: 'po-z-2', name: 'Michal Kaliňák', party: 'SMER-SD', position: 'Politický analytik',
         description: 'Známy politický komentátor a bývalý štátny tajomník.',
         climatePros: ['Skúsenosti s riadením verejných financií'],
         climateCons: ['Nejasný klimatický program', 'Bez skúseností v regionálnej samospráve'],
+        climateScore: 22,
       },
     ],
     primatorCandidates: [
       {
-        id: 'po-p-1',
-        name: 'František Oľha',
-        party: 'Nezávislý',
-        position: 'Súčasný primátor Prešova',
+        id: 'po-p-1', name: 'František Oľha', party: 'Nezávislý', position: 'Súčasný primátor Prešova',
         description: 'Aktuálny primátor mesta Prešov.',
         climatePros: ['Podporil revitalizáciu mestských parkov', 'Investície do elektrobusov'],
         climateCons: ['Pomalá realizácia cykloinfraštruktúry', 'Nedostatočná ochrana zelených plôch'],
+        climateScore: 45,
       },
     ],
   },
   {
-    id: 'bratislavsky',
-    name: 'Bratislavský kraj',
-    nameEn: 'Bratislava Region',
-    abbreviation: 'BSK',
-    capitalName: 'Bratislava',
-    capitalNameEn: 'Bratislava',
+    id: 'bratislavsky', name: 'Bratislavský kraj', nameEn: 'Bratislava Region', abbreviation: 'BSK',
+    capitalName: 'Bratislava', capitalNameEn: 'Bratislava',
     zupanCandidates: [
       {
-        id: 'ba-z-1',
-        name: 'Juraj Droba',
-        party: 'SaS, PS',
-        position: 'Súčasný predseda BSK',
+        id: 'ba-z-1', name: 'Juraj Droba', party: 'SaS, PS', position: 'Súčasný predseda BSK',
         description: 'Aktuálny predseda Bratislavského samosprávneho kraja.',
         climatePros: ['Silná podpora cyklistickej dopravy', 'Integrovaný dopravný systém', 'Zelené investície do krajských budov'],
         climateCons: ['Pomalá realizácia niektorých projektov'],
+        climateScore: 71,
       },
     ],
     primatorCandidates: [
       {
-        id: 'ba-p-1',
-        name: 'Matúš Vallo',
-        party: 'Team Vallo',
-        position: 'Súčasný primátor',
+        id: 'ba-p-1', name: 'Matúš Vallo', party: 'Team Vallo', position: 'Súčasný primátor',
         description: 'Architekt a súčasný primátor Bratislavy známy progresívnym prístupom k mestu.',
         climatePros: ['Klimatický plán Bratislavy 2030', 'Rozsiahla výsadba stromov', 'Pešie zóny a cyklotrasy', 'Modernizácia MHD'],
         climateCons: ['Kontroverzné parkovacie politiky'],
+        climateScore: 85,
       },
       {
-        id: 'ba-p-2',
-        name: 'Rudolf Kusý',
-        party: 'SMER-SD, HLAS-SD',
-        position: 'Bývalý starosta Nového Mesta',
+        id: 'ba-p-2', name: 'Rudolf Kusý', party: 'SMER-SD, HLAS-SD', position: 'Bývalý starosta Nového Mesta',
         description: 'Dlhoročný komunálny politik z bratislavského Nového Mesta.',
         climatePros: ['Skúsenosti so správou mestskej časti', 'Podporuje verejnú dopravu'],
         climateCons: ['Slabší klimatický program', 'Uprednostňuje automobilovú infraštruktúru'],
+        climateScore: 35,
       },
     ],
   },
   {
-    id: 'trnavsky',
-    name: 'Trnavský kraj',
-    nameEn: 'Trnava Region',
-    abbreviation: 'TTSK',
-    capitalName: 'Trnava',
-    capitalNameEn: 'Trnava',
+    id: 'trnavsky', name: 'Trnavský kraj', nameEn: 'Trnava Region', abbreviation: 'TTSK',
+    capitalName: 'Trnava', capitalNameEn: 'Trnava',
     zupanCandidates: [
       {
-        id: 'tt-z-1',
-        name: 'Jozef Viskupič',
-        party: 'OĽaNO, Nezávislí',
-        position: 'Súčasný predseda TTSK',
+        id: 'tt-z-1', name: 'Jozef Viskupič', party: 'OĽaNO, Nezávislí', position: 'Súčasný predseda TTSK',
         description: 'Predseda Trnavského samosprávneho kraja od roku 2017.',
         climatePros: ['Program „Zelený kraj"', 'Podpora cyklotrás v regióne'],
         climateCons: ['Obmedzené investície do obnoviteľných zdrojov'],
+        climateScore: 55,
       },
     ],
     primatorCandidates: [
       {
-        id: 'tt-p-1',
-        name: 'Peter Bročka',
-        party: 'KDH, NOVA',
-        position: 'Súčasný primátor Trnavy',
+        id: 'tt-p-1', name: 'Peter Bročka', party: 'KDH, NOVA', position: 'Súčasný primátor Trnavy',
         description: 'Dlhoročný primátor mesta Trnava.',
         climatePros: ['Podpora pešej zóny v centre', 'Zelené verejné priestranstvá'],
         climateCons: ['Nedostatočná cyklistická infraštruktúra'],
+        climateScore: 52,
       },
     ],
   },
   {
-    id: 'trenciansky',
-    name: 'Trenčiansky kraj',
-    nameEn: 'Trenčín Region',
-    abbreviation: 'TSK',
-    capitalName: 'Trenčín',
-    capitalNameEn: 'Trenčín',
+    id: 'trenciansky', name: 'Trenčiansky kraj', nameEn: 'Trenčín Region', abbreviation: 'TSK',
+    capitalName: 'Trenčín', capitalNameEn: 'Trenčín',
     zupanCandidates: [
       {
-        id: 'tn-z-1',
-        name: 'Jaroslav Baška',
-        party: 'SMER-SD',
-        position: 'Súčasný predseda TSK',
+        id: 'tn-z-1', name: 'Jaroslav Baška', party: 'SMER-SD', position: 'Súčasný predseda TSK',
         description: 'Predseda Trenčianskeho samosprávneho kraja.',
         climatePros: ['Investície do regionálnych ciest'],
         climateCons: ['Slabá podpora obnoviteľných zdrojov', 'Nedostatočný klimatický program'],
+        climateScore: 25,
       },
     ],
     primatorCandidates: [
       {
-        id: 'tn-p-1',
-        name: 'Richard Rybníček',
-        party: 'Nezávislý',
-        position: 'Súčasný primátor Trenčína',
+        id: 'tn-p-1', name: 'Richard Rybníček', party: 'Nezávislý', position: 'Súčasný primátor Trenčína',
         description: 'Primátor Trenčína známy projektom „Trenčín si ty".',
         climatePros: ['Revitalizácia nábrežia Váhu', 'Podpora mestskej zelene', 'Pešia zóna v centre'],
         climateCons: ['Pomalý postup pri cyklistickej infraštruktúre'],
+        climateScore: 68,
       },
     ],
   },
   {
-    id: 'nitriansky',
-    name: 'Nitriansky kraj',
-    nameEn: 'Nitra Region',
-    abbreviation: 'NSK',
-    capitalName: 'Nitra',
-    capitalNameEn: 'Nitra',
+    id: 'nitriansky', name: 'Nitriansky kraj', nameEn: 'Nitra Region', abbreviation: 'NSK',
+    capitalName: 'Nitra', capitalNameEn: 'Nitra',
     zupanCandidates: [
       {
-        id: 'nr-z-1',
-        name: 'Branislav Becík',
-        party: 'SMER-SD, SNS',
-        position: 'Súčasný predseda NSK',
+        id: 'nr-z-1', name: 'Branislav Becík', party: 'SMER-SD, SNS', position: 'Súčasný predseda NSK',
         description: 'Predseda Nitrianskeho samosprávneho kraja.',
         climatePros: ['Podpora agroturizmu'],
         climateCons: ['Slabý klimatický program', 'Nedostatočná podpora verejnej dopravy'],
+        climateScore: 20,
       },
     ],
     primatorCandidates: [
       {
-        id: 'nr-p-1',
-        name: 'Marek Hattas',
-        party: 'PS, SPOLU',
-        position: 'Súčasný primátor Nitry',
+        id: 'nr-p-1', name: 'Marek Hattas', party: 'PS, SPOLU', position: 'Súčasný primátor Nitry',
         description: 'Primátor Nitry od roku 2018.',
         climatePros: ['Podpora cykloinfraštruktúry', 'Revitalizácia mestských parkov', 'Modernizácia verejného osvetlenia'],
         climateCons: ['Obmedzené zdroje na väčšie klimatické projekty'],
+        climateScore: 65,
       },
     ],
   },
   {
-    id: 'zilinsky',
-    name: 'Žilinský kraj',
-    nameEn: 'Žilina Region',
-    abbreviation: 'ŽSK',
-    capitalName: 'Žilina',
-    capitalNameEn: 'Žilina',
+    id: 'zilinsky', name: 'Žilinský kraj', nameEn: 'Žilina Region', abbreviation: 'ŽSK',
+    capitalName: 'Žilina', capitalNameEn: 'Žilina',
     zupanCandidates: [
       {
-        id: 'za-z-1',
-        name: 'Erika Jurinová',
-        party: 'OĽaNO',
-        position: 'Súčasná predsedníčka ŽSK',
+        id: 'za-z-1', name: 'Erika Jurinová', party: 'OĽaNO', position: 'Súčasná predsedníčka ŽSK',
         description: 'Predsedníčka Žilinského samosprávneho kraja.',
         climatePros: ['Podpora turistických cyklotrás', 'Zatepľovanie krajských budov'],
         climateCons: ['Obmedzená podpora mestskej verejnej dopravy'],
+        climateScore: 50,
       },
     ],
     primatorCandidates: [
       {
-        id: 'za-p-1',
-        name: 'Peter Fiabáne',
-        party: 'Nezávislý',
-        position: 'Súčasný primátor Žiliny',
+        id: 'za-p-1', name: 'Peter Fiabáne', party: 'Nezávislý', position: 'Súčasný primátor Žiliny',
         description: 'Primátor Žiliny so zameraním na modernizáciu mesta.',
         climatePros: ['Podpora elektrobusov', 'Rozšírenie mestskej zelene'],
         climateCons: ['Pomalá realizácia cykloinfraštruktúry', 'Kontroverzné stavebné projekty'],
+        climateScore: 46,
       },
     ],
   },
   {
-    id: 'banskobystricky',
-    name: 'Banskobystrický kraj',
-    nameEn: 'Banská Bystrica Region',
-    abbreviation: 'BBSK',
-    capitalName: 'Banská Bystrica',
-    capitalNameEn: 'Banská Bystrica',
+    id: 'banskobystricky', name: 'Banskobystrický kraj', nameEn: 'Banská Bystrica Region', abbreviation: 'BBSK',
+    capitalName: 'Banská Bystrica', capitalNameEn: 'Banská Bystrica',
     zupanCandidates: [
       {
-        id: 'bb-z-1',
-        name: 'Ondrej Lunter',
-        party: 'Nezávislý',
-        position: 'Súčasný predseda BBSK',
+        id: 'bb-z-1', name: 'Ondrej Lunter', party: 'Nezávislý', position: 'Súčasný predseda BBSK',
         description: 'Predseda Banskobystrického samosprávneho kraja.',
         climatePros: ['Silná podpora regionálneho turizmu', 'Ochrana prírodného dedičstva', 'Zatepľovanie škôl a nemocníc'],
         climateCons: ['Obmedzené investície do verejnej dopravy'],
+        climateScore: 70,
       },
     ],
     primatorCandidates: [
       {
-        id: 'bb-p-1',
-        name: 'Ján Nosko',
-        party: 'Nezávislý',
-        position: 'Súčasný primátor B. Bystrice',
+        id: 'bb-p-1', name: 'Ján Nosko', party: 'Nezávislý', position: 'Súčasný primátor B. Bystrice',
         description: 'Dlhoročný primátor Banskej Bystrice.',
         climatePros: ['Podpora mestskej zelene', 'Revitalizácia verejných priestranstiev'],
         climateCons: ['Nedostatočná cyklistická infraštruktúra', 'Pomalá modernizácia MHD'],
+        climateScore: 44,
       },
     ],
   },
 ];
 
+const getScoreBarColor = (score: number): string => {
+  if (score >= 70) return '#66BB6A';
+  if (score >= 40) return '#FFA726';
+  return '#EF5350';
+};
+
 const CandidateCard = ({ candidate, language }: { candidate: Candidate; language: string }) => {
-  const hasRecommendation = candidate.recommended !== undefined;
-  const borderClass = hasRecommendation
-    ? candidate.recommended ? 'border-green-500 bg-green-50/30' : 'border-red-300 bg-red-50/20'
-    : 'border-border';
+  const barColor = getScoreBarColor(candidate.climateScore);
 
   return (
-    <Card className={`rounded-none border-2 ${borderClass}`}>
+    <Card className="rounded-none" style={{ border: '2px solid #E0E0E0' }}>
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <CardTitle className="text-lg sm:text-xl font-bold">{candidate.name}</CardTitle>
-            <CardDescription className="text-sm mt-1">{candidate.party}</CardDescription>
-            <Badge variant="outline" className="mt-2 rounded-none">
-              {candidate.position}
-            </Badge>
+        <div>
+          <CardTitle className="text-lg sm:text-xl font-bold">{candidate.name}</CardTitle>
+          <CardDescription className="text-sm mt-1">{candidate.party}</CardDescription>
+          <Badge variant="outline" className="mt-2 rounded-none">
+            {candidate.position}
+          </Badge>
+        </div>
+        {/* Climate Score */}
+        <div className="mt-4 pt-3 border-t">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            {language === 'sk' ? 'Klimatické skóre' : 'Climate Score'}
+          </p>
+          <p className="text-2xl font-bold" style={{ color: barColor }}>
+            {candidate.climateScore} / 100
+          </p>
+          <div className="w-full h-2 rounded-full mt-2" style={{ backgroundColor: '#E0E0E0' }}>
+            <div
+              className="h-2 rounded-full transition-all"
+              style={{ width: `${candidate.climateScore}%`, backgroundColor: barColor }}
+            />
           </div>
-          {hasRecommendation && (
-            <div className={`p-2 rounded-full ${candidate.recommended ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-              {candidate.recommended ? <ThumbsUp className="h-5 w-5" /> : <ThumbsDown className="h-5 w-5" />}
-            </div>
-          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -382,28 +337,6 @@ const CandidateCard = ({ candidate, language }: { candidate: Candidate; language
             </ul>
           </div>
         </div>
-
-        {hasRecommendation && (
-          <div className={`p-3 rounded-none ${candidate.recommended ? 'bg-green-100 border-l-4 border-green-500' : 'bg-red-100 border-l-4 border-red-500'}`}>
-            <div className="flex items-center gap-2 font-semibold">
-              {candidate.recommended ? (
-                <>
-                  <ThumbsUp className="h-4 w-4 text-green-600" />
-                  <span className="text-green-700">
-                    {language === 'sk' ? 'Odporúčaný z klimatického hľadiska' : 'Recommended for climate'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                  <span className="text-red-700">
-                    {language === 'sk' ? 'Neodporúčaný z klimatického hľadiska' : 'Not recommended for climate'}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -433,8 +366,8 @@ const Elections = () => {
           </p>
           <p className="text-base sm:text-lg leading-relaxed mb-8 sm:mb-12 max-w-2xl mx-auto opacity-80">
             {language === 'sk'
-              ? 'Hodnotíme kandidátov na základe ich postojov a činov v oblasti klimatickej zmeny. Vyberte si informovane pre budúcnosť vášho regiónu.'
-              : 'We evaluate candidates based on their climate change positions and actions. Choose informed for the future of your region.'}
+              ? 'Prinášame klimatické skóre kandidátov na základe verejne dostupných dát. Informujte sa pred voľbami.'
+              : 'We provide climate scores for candidates based on publicly available data. Get informed before voting.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
             <button 
@@ -508,6 +441,13 @@ const Elections = () => {
             </Select>
           </div>
 
+          {/* Legal Disclaimer Banner */}
+          <div className="mb-8 w-full p-4 italic text-sm" style={{ backgroundColor: '#FFF8E1', borderLeft: '4px solid #F9A825' }}>
+            {language === 'sk'
+              ? 'Toto hodnotenie slúži výlučne na informovanie voličov a vychádza z verejne dostupných dát. Klíma ťa potrebuje nikoho neodporúča ani neodmieta.'
+              : 'This evaluation is solely for informing voters and is based on publicly available data. Klíma ťa potrebuje does not recommend or reject anyone.'}
+          </div>
+
           {/* Tabs for župan / primátor */}
           <Tabs defaultValue="zupan" className="w-full">
             <TabsList className="w-full flex h-auto gap-2 bg-transparent mb-8 justify-center">
@@ -571,8 +511,8 @@ const Elections = () => {
               </h3>
               <p className="text-sm text-yellow-700">
                 {language === 'sk'
-                  ? 'Toto hodnotenie je založené na verejne dostupných informáciách a vyjadreniach kandidátov. Údaje slúžia len na informačné účely a nepredstavujú oficiálne odporúčanie. Pred voľbami si overte aktuálne postoje kandidátov. Táto stránka používa ilustračné údaje.'
-                  : 'This evaluation is based on publicly available information and candidate statements. Data is for informational purposes only and does not represent an official recommendation. Verify current candidate positions before voting. This page uses illustrative data.'}
+                  ? 'Toto hodnotenie je založené na verejne dostupných informáciách a vyjadreniach kandidátov. Údaje slúžia len na informačné účely. Pred voľbami si overte aktuálne postoje kandidátov. Táto stránka používa ilustračné údaje.'
+                  : 'This evaluation is based on publicly available information and candidate statements. Data is for informational purposes only. Verify current candidate positions before voting. This page uses illustrative data.'}
               </p>
             </div>
           </div>
