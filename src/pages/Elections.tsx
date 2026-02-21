@@ -1,4 +1,4 @@
-import { Check, X, AlertTriangle, Building2, MapPin } from 'lucide-react';
+import { Check, X, AlertTriangle, Building2, MapPin, Users, CalendarDays, Landmark } from 'lucide-react';
 import climateHeroBg from '@/assets/climate-hero-bg.jpg';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -6,7 +6,6 @@ import { Footer } from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState } from 'react';
 
 interface Candidate {
@@ -350,7 +349,7 @@ const Elections = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero with Parallax */}
+      {/* Hero */}
       <section className="relative min-h-[70vh] sm:min-h-screen flex flex-col justify-center items-center text-center px-4 py-12 sm:py-20 text-white overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -359,88 +358,91 @@ const Elections = () => {
         <div className="absolute inset-0 bg-primary/75" />
         <div className="relative z-10 max-w-5xl mx-auto">
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-6 sm:mb-8 text-balance">
-            {language === 'sk' ? 'Voľby 2026' : 'Elections 2026'}
+            Tvoj kraj. Tvoje voľby. Tvoja klíma.
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl leading-relaxed mb-4 max-w-3xl mx-auto opacity-90">
-            {language === 'sk' ? 'Slovensko' : 'Slovakia'}
-          </p>
-          <p className="text-base sm:text-lg leading-relaxed mb-8 sm:mb-12 max-w-2xl mx-auto opacity-80">
-            {language === 'sk'
-              ? 'Prinášame klimatické skóre kandidátov na základe verejne dostupných dát. Informujte sa pred voľbami.'
-              : 'We provide climate scores for candidates based on publicly available data. Get informed before voting.'}
+          <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 sm:mb-12 max-w-2xl mx-auto opacity-90">
+            Zistite, ako kandidáti na župana a primátora plánujú riešiť ovzdušie, energetiku a zelenú infraštruktúru vo vašom regióne.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
             <button 
-              onClick={() => document.getElementById('candidates')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.getElementById('kraj-select')?.scrollIntoView({ behavior: 'smooth' })}
               className="bg-white text-primary px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-white/90 w-full sm:w-auto"
             >
-              {language === 'sk' ? 'Pozrieť kandidátov' : 'View Candidates'}
+              Nájdi svojich kandidátov
             </button>
             <Link 
               to="/preco-volit"
               className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-none transition-all duration-200 hover:bg-white hover:text-primary w-full sm:w-auto text-center"
             >
-              {language === 'sk' ? 'Prečo voliť?' : 'Why Vote?'}
+              Prečo na tom záleží?
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Election Types Info */}
-      <section className="py-8 px-4 bg-gray-50 border-y">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-xl font-bold mb-4 text-center">
-            {language === 'sk' ? 'Typy volieb' : 'Types of elections'}
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="p-4 bg-white border">
-              <div className="flex items-center gap-2 font-semibold mb-2">
-                <MapPin className="h-5 w-5 text-primary" />
-                {language === 'sk' ? 'Župan (predseda VÚC)' : 'Regional Chairman'}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {language === 'sk'
-                  ? 'Predseda samosprávneho kraja - riadi regionálne cesty, stredné školy a sociálne služby.'
-                  : 'Chairman of the self-governing region - manages regional roads, secondary schools and social services.'}
-              </p>
+      {/* Stats Bar */}
+      <section className="py-10 px-4" style={{ backgroundColor: '#F5F5F5' }}>
+        <div className="max-w-5xl mx-auto grid gap-6 sm:grid-cols-3">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-full" style={{ backgroundColor: '#E8F5E9' }}>
+              <Landmark className="h-6 w-6" style={{ color: '#2E7D32' }} />
             </div>
-            <div className="p-4 bg-white border">
-              <div className="flex items-center gap-2 font-semibold mb-2">
-                <Building2 className="h-5 w-5 text-primary" />
-                {language === 'sk' ? 'Primátor krajského mesta' : 'Regional Capital Mayor'}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {language === 'sk'
-                  ? 'Vedúci krajského mesta s rozhodovacou právomocou v oblasti dopravy, životného prostredia a rozvoja.'
-                  : 'Leader of the regional capital with decision power over transport, environment and development.'}
-              </p>
+            <div>
+              <p className="text-2xl font-black">8 županov</p>
+              <p className="text-sm text-muted-foreground">rozhoduje o miliardách eur z eurofondov ročne</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-full" style={{ backgroundColor: '#E8F5E9' }}>
+              <Users className="h-6 w-6" style={{ color: '#2E7D32' }} />
+            </div>
+            <div>
+              <p className="text-2xl font-black">8 primátorov</p>
+              <p className="text-sm text-muted-foreground">riadi dopravu, zeleň a energetiku krajských miest</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-full" style={{ backgroundColor: '#E8F5E9' }}>
+              <CalendarDays className="h-6 w-6" style={{ color: '#2E7D32' }} />
+            </div>
+            <div>
+              <p className="text-2xl font-black">25. október 2026</p>
+              <p className="text-sm text-muted-foreground">deň, keď môžeš ovplyvniť nasledujúce 4 roky</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Kraj Selector + Candidates */}
+      {/* Region Cards */}
+      <section id="kraj-select" className="py-12 sm:py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8">Vyberte váš kraj</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {krajeData.map((kraj) => (
+              <button
+                key={kraj.id}
+                onClick={() => {
+                  setSelectedKraj(kraj.id);
+                  setTimeout(() => document.getElementById('candidates')?.scrollIntoView({ behavior: 'smooth' }), 100);
+                }}
+                className={`p-4 border-2 text-left transition-all duration-200 hover:border-green-600 hover:shadow-md ${
+                  selectedKraj === kraj.id ? 'border-green-600 bg-green-50' : ''
+                }`}
+                style={{ borderColor: selectedKraj === kraj.id ? '#2E7D32' : '#E0E0E0' }}
+              >
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 shrink-0" style={{ color: '#2E7D32' }} />
+                  <span className="font-semibold text-sm sm:text-base">{kraj.name}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Candidates */}
       <section id="candidates" className="py-12 sm:py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          {/* Kraj Selector */}
-          <div className="mb-8 max-w-md mx-auto">
-            <label className="block text-sm font-semibold mb-2 text-center">
-              {language === 'sk' ? 'Vyberte kraj' : 'Select Region'}
-            </label>
-            <Select value={selectedKraj} onValueChange={setSelectedKraj}>
-              <SelectTrigger className="rounded-none">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-none">
-                {krajeData.map((kraj) => (
-                  <SelectItem key={kraj.id} value={kraj.id}>
-                    {language === 'sk' ? kraj.name : kraj.nameEn}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Legal Disclaimer Banner */}
           <div className="mb-8 w-full p-4 italic text-sm" style={{ backgroundColor: '#FFF8E1', borderLeft: '4px solid #F9A825' }}>
             {language === 'sk'
@@ -455,7 +457,7 @@ const Elections = () => {
                 value="zupan"
                 className="flex items-center gap-2 rounded-none border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2"
               >
-              <MapPin className="h-4 w-4" />
+                <MapPin className="h-4 w-4" />
                 {`${currentKraj.abbreviation} – ${language === 'sk' ? 'Župan' : 'Chairman'}`}
               </TabsTrigger>
               <TabsTrigger 
