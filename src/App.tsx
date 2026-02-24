@@ -9,6 +9,7 @@ import ClimateChange from "./pages/ClimateChange";
 import Elections from "./pages/Elections";
 import WhyVoteMatters from "./pages/WhyVoteMatters";
 import NotFound from "./pages/NotFound";
+import Metodologia from "./pages/Metodologia";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/preco-volit" element={<WhyVoteMatters />} />
             <Route path="/klimaticka-zmena" element={<ClimateChange />} />
             <Route path="/klimaticke-data" element={<Index />} />
+            <Route path="/metodologia" element={<Metodologia />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

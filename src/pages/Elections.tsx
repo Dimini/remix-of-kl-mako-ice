@@ -443,6 +443,18 @@ const Elections = () => {
       {/* Candidates */}
       <section id="candidates" className="py-12 sm:py-16 px-4">
         <div className="max-w-6xl mx-auto">
+          {/* Methodology Summary Box */}
+          <div className="mb-6 p-4 text-sm" style={{ backgroundColor: '#F5F5F5' }}>
+            <p className="text-muted-foreground">
+              {language === 'sk'
+                ? 'Skóre vychádza z programu kandidáta, jeho odpovedí na náš dotazník, hlasovaní v zastupiteľstve a online komunikácie. Váhy: Program 25 % | Dotazník 30 % | Hlasovanie 40 % | Online 5 %'
+                : 'Score is based on candidate program, questionnaire responses, council votes and online communication. Weights: Program 25% | Questionnaire 30% | Voting 40% | Online 5%'}
+            </p>
+            <Link to="/metodologia" className="text-primary font-medium hover:underline mt-2 inline-block">
+              {language === 'sk' ? 'Celá metodológia →' : 'Full methodology →'}
+            </Link>
+          </div>
+
           {/* Legal Disclaimer Banner */}
           <div className="mb-8 w-full p-4 italic text-sm" style={{ backgroundColor: '#FFF8E1', borderLeft: '4px solid #F9A825' }}>
             {language === 'sk'
