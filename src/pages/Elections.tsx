@@ -1,4 +1,4 @@
-import { Check, X, AlertTriangle, Building2, MapPin, Users, CalendarDays, Landmark } from 'lucide-react';
+import { Check, AlertTriangle, Building2, MapPin, Users, CalendarDays, Landmark } from 'lucide-react';
 import climateHeroBg from '@/assets/climate-hero-bg.jpg';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -7,6 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
+
+interface ScoreBreakdown {
+  program: number;
+  dotaznik: number | null; // null = did not respond
+  hlasovanie: number;
+  online: number;
+}
 
 interface Candidate {
   id: string;
@@ -17,6 +24,7 @@ interface Candidate {
   climateCons: string[];
   description: string;
   climateScore: number;
+  scoreBreakdown: ScoreBreakdown;
 }
 
 interface KrajData {
@@ -40,80 +48,61 @@ const krajeData: KrajData[] = [
     capitalNameEn: 'Košice',
     zupanCandidates: [
       {
-        id: 'ke-z-1',
-        name: 'Rastislav Trnka',
-        party: 'KDH, Aliancia, SPOLU',
-        position: 'Súčasný predseda KSK',
+        id: 'ke-z-1', name: 'Rastislav Trnka', party: 'KDH, Aliancia, SPOLU', position: 'Súčasný predseda KSK',
         description: 'Aktuálny predseda Košického samosprávneho kraja od roku 2017.',
         climatePros: ['Spustil program „Zelená župa"', 'Podporil zatepľovanie krajských budov', 'Investície do regionálnej železničnej dopravy'],
         climateCons: ['Pomalý postup pri obnove lesov', 'Nedostatočná podpora pre ekologické poľnohospodárstvo', 'Krajské cesty stále uprednostňujú autá pred cyklistami'],
-        climateScore: 62,
+        climateScore: 62, scoreBreakdown: { program: 70, dotaznik: 55, hlasovanie: 65, online: 40 },
       },
       {
-        id: 'ke-z-2',
-        name: 'Viliam Zahorčák',
-        party: 'SMER-SD, SNS',
-        position: 'Bývalý primátor Michaloviec',
+        id: 'ke-z-2', name: 'Viliam Zahorčák', party: 'SMER-SD, SNS', position: 'Bývalý primátor Michaloviec',
         description: 'Skúsený komunálny politik, bývalý dlhoročný primátor Michaloviec.',
         climatePros: ['Skúsenosti s riadením samosprávy', 'Podporuje rozvoj turizmu v prírode'],
         climateCons: ['Slabý klimatický program', 'Podporoval rozvoj automobilovej infraštruktúry', 'Nejasný postoj k obnoviteľným zdrojom'],
-        climateScore: 28,
+        climateScore: 28, scoreBreakdown: { program: 20, dotaznik: null, hlasovanie: 30, online: 15 },
       },
     ],
     primatorCandidates: [
       {
-        id: 'ke-p-1',
-        name: 'Jaroslav Polaček',
-        party: 'KDH, SPOLU, Za ľudí',
-        position: 'Súčasný primátor',
+        id: 'ke-p-1', name: 'Jaroslav Polaček', party: 'KDH, SPOLU, Za ľudí', position: 'Súčasný primátor',
         description: 'Súčasný primátor Košíc, ktorý sa zameriava na rozvoj mesta a modernizáciu infraštruktúry.',
         climatePros: ['Podporil rozšírenie cyklotrás v meste', 'Inicioval projekt zelených striech na mestských budovách', 'Podporuje elektrifikáciu mestskej dopravy'],
         climateCons: ['Pomalý postup pri znižovaní emisií z teplárenstva', 'Nedostatočná podpora solárnych panelov', 'Obmedzená ochrana mestskej zelene pri nových projektoch'],
-        climateScore: 58,
+        climateScore: 58, scoreBreakdown: { program: 60, dotaznik: 50, hlasovanie: 60, online: 45 },
       },
       {
-        id: 'ke-p-2',
-        name: 'Martin Smetanka',
-        party: 'SMER-SD, HLAS-SD',
-        position: 'Poslanec NR SR',
+        id: 'ke-p-2', name: 'Martin Smetanka', party: 'SMER-SD, HLAS-SD', position: 'Poslanec NR SR',
         description: 'Poslanec parlamentu s dlhoročnými skúsenosťami v regionálnej politike.',
         climatePros: ['Podporuje modernizáciu verejnej dopravy', 'Sľubuje investície do čistenia ovzdušia'],
         climateCons: ['Nejasný postoj k uhoľnej teplárni', 'Nepodporuje obmedzenie automobilovej dopravy v centre', 'Slabá história v oblasti klimatických opatrení'],
-        climateScore: 31,
+        climateScore: 31, scoreBreakdown: { program: 25, dotaznik: null, hlasovanie: 35, online: 20 },
       },
       {
-        id: 'ke-p-3',
-        name: 'Lucia Kováčová',
-        party: 'Nezávislá kandidátka',
-        position: 'Environmentálna aktivistka',
+        id: 'ke-p-3', name: 'Lucia Kováčová', party: 'Nezávislá kandidátka', position: 'Environmentálna aktivistka',
         description: 'Dlhoročná environmentálna aktivistka a vedkyňa z Technickej univerzity v Košiciach.',
         climatePros: ['Jasný klimatický plán pre mesto', 'Podporuje úplný prechod na obnoviteľné zdroje do 2035', 'Plán na 100 km nových cyklotrás', 'Zavedenie nízkoemisných zón'],
         climateCons: ['Obmedzené politické skúsenosti', 'Niektoré návrhy môžu byť finančne náročné'],
-        climateScore: 82,
+        climateScore: 82, scoreBreakdown: { program: 95, dotaznik: 90, hlasovanie: 0, online: 85 },
       },
     ],
   },
   {
-    id: 'presovsky',
-    name: 'Prešovský kraj',
-    nameEn: 'Prešov Region',
-    abbreviation: 'PSK',
-    capitalName: 'Prešov',
-    capitalNameEn: 'Prešov',
+    id: 'presovsky', name: 'Prešovský kraj', nameEn: 'Prešov Region', abbreviation: 'PSK',
+    capitalName: 'Prešov', capitalNameEn: 'Prešov',
     zupanCandidates: [
       {
         id: 'po-z-1', name: 'Milan Majerský', party: 'KDH', position: 'Súčasný predseda PSK',
         description: 'Aktuálny predseda Prešovského samosprávneho kraja.',
         climatePros: ['Podporil zatepľovanie krajských budov', 'Investície do cykloturistických trás'],
         climateCons: ['Obmedzená podpora obnoviteľných zdrojov', 'Nedostatočné riešenie odpadového hospodárstva'],
-        climateScore: 48,
+        climateScore: 48, scoreBreakdown: { program: 50, dotaznik: 40, hlasovanie: 50, online: 30 },
       },
       {
         id: 'po-z-2', name: 'Michal Kaliňák', party: 'SMER-SD', position: 'Politický analytik',
         description: 'Známy politický komentátor a bývalý štátny tajomník.',
         climatePros: ['Skúsenosti s riadením verejných financií'],
         climateCons: ['Nejasný klimatický program', 'Bez skúseností v regionálnej samospráve'],
-        climateScore: 22,
+        climateScore: 22, scoreBreakdown: { program: 15, dotaznik: null, hlasovanie: 0, online: 10 },
       },
     ],
     primatorCandidates: [
@@ -122,7 +111,7 @@ const krajeData: KrajData[] = [
         description: 'Aktuálny primátor mesta Prešov.',
         climatePros: ['Podporil revitalizáciu mestských parkov', 'Investície do elektrobusov'],
         climateCons: ['Pomalá realizácia cykloinfraštruktúry', 'Nedostatočná ochrana zelených plôch'],
-        climateScore: 45,
+        climateScore: 45, scoreBreakdown: { program: 45, dotaznik: 40, hlasovanie: 48, online: 30 },
       },
     ],
   },
@@ -135,7 +124,7 @@ const krajeData: KrajData[] = [
         description: 'Aktuálny predseda Bratislavského samosprávneho kraja.',
         climatePros: ['Silná podpora cyklistickej dopravy', 'Integrovaný dopravný systém', 'Zelené investície do krajských budov'],
         climateCons: ['Pomalá realizácia niektorých projektov'],
-        climateScore: 71,
+        climateScore: 71, scoreBreakdown: { program: 75, dotaznik: 70, hlasovanie: 72, online: 55 },
       },
     ],
     primatorCandidates: [
@@ -144,14 +133,14 @@ const krajeData: KrajData[] = [
         description: 'Architekt a súčasný primátor Bratislavy známy progresívnym prístupom k mestu.',
         climatePros: ['Klimatický plán Bratislavy 2030', 'Rozsiahla výsadba stromov', 'Pešie zóny a cyklotrasy', 'Modernizácia MHD'],
         climateCons: ['Kontroverzné parkovacie politiky'],
-        climateScore: 85,
+        climateScore: 85, scoreBreakdown: { program: 90, dotaznik: 85, hlasovanie: 85, online: 75 },
       },
       {
         id: 'ba-p-2', name: 'Rudolf Kusý', party: 'SMER-SD, HLAS-SD', position: 'Bývalý starosta Nového Mesta',
         description: 'Dlhoročný komunálny politik z bratislavského Nového Mesta.',
         climatePros: ['Skúsenosti so správou mestskej časti', 'Podporuje verejnú dopravu'],
         climateCons: ['Slabší klimatický program', 'Uprednostňuje automobilovú infraštruktúru'],
-        climateScore: 35,
+        climateScore: 35, scoreBreakdown: { program: 30, dotaznik: null, hlasovanie: 38, online: 20 },
       },
     ],
   },
@@ -164,7 +153,7 @@ const krajeData: KrajData[] = [
         description: 'Predseda Trnavského samosprávneho kraja od roku 2017.',
         climatePros: ['Program „Zelený kraj"', 'Podpora cyklotrás v regióne'],
         climateCons: ['Obmedzené investície do obnoviteľných zdrojov'],
-        climateScore: 55,
+        climateScore: 55, scoreBreakdown: { program: 60, dotaznik: 50, hlasovanie: 55, online: 40 },
       },
     ],
     primatorCandidates: [
@@ -173,7 +162,7 @@ const krajeData: KrajData[] = [
         description: 'Dlhoročný primátor mesta Trnava.',
         climatePros: ['Podpora pešej zóny v centre', 'Zelené verejné priestranstvá'],
         climateCons: ['Nedostatočná cyklistická infraštruktúra'],
-        climateScore: 52,
+        climateScore: 52, scoreBreakdown: { program: 55, dotaznik: 48, hlasovanie: 52, online: 35 },
       },
     ],
   },
@@ -186,7 +175,7 @@ const krajeData: KrajData[] = [
         description: 'Predseda Trenčianskeho samosprávneho kraja.',
         climatePros: ['Investície do regionálnych ciest'],
         climateCons: ['Slabá podpora obnoviteľných zdrojov', 'Nedostatočný klimatický program'],
-        climateScore: 25,
+        climateScore: 25, scoreBreakdown: { program: 15, dotaznik: null, hlasovanie: 28, online: 10 },
       },
     ],
     primatorCandidates: [
@@ -195,7 +184,7 @@ const krajeData: KrajData[] = [
         description: 'Primátor Trenčína známy projektom „Trenčín si ty".',
         climatePros: ['Revitalizácia nábrežia Váhu', 'Podpora mestskej zelene', 'Pešia zóna v centre'],
         climateCons: ['Pomalý postup pri cyklistickej infraštruktúre'],
-        climateScore: 68,
+        climateScore: 68, scoreBreakdown: { program: 72, dotaznik: 65, hlasovanie: 68, online: 55 },
       },
     ],
   },
@@ -208,7 +197,7 @@ const krajeData: KrajData[] = [
         description: 'Predseda Nitrianskeho samosprávneho kraja.',
         climatePros: ['Podpora agroturizmu'],
         climateCons: ['Slabý klimatický program', 'Nedostatočná podpora verejnej dopravy'],
-        climateScore: 20,
+        climateScore: 20, scoreBreakdown: { program: 10, dotaznik: null, hlasovanie: 22, online: 5 },
       },
     ],
     primatorCandidates: [
@@ -217,7 +206,7 @@ const krajeData: KrajData[] = [
         description: 'Primátor Nitry od roku 2018.',
         climatePros: ['Podpora cykloinfraštruktúry', 'Revitalizácia mestských parkov', 'Modernizácia verejného osvetlenia'],
         climateCons: ['Obmedzené zdroje na väčšie klimatické projekty'],
-        climateScore: 65,
+        climateScore: 65, scoreBreakdown: { program: 68, dotaznik: 60, hlasovanie: 66, online: 50 },
       },
     ],
   },
@@ -230,7 +219,7 @@ const krajeData: KrajData[] = [
         description: 'Predsedníčka Žilinského samosprávneho kraja.',
         climatePros: ['Podpora turistických cyklotrás', 'Zatepľovanie krajských budov'],
         climateCons: ['Obmedzená podpora mestskej verejnej dopravy'],
-        climateScore: 50,
+        climateScore: 50, scoreBreakdown: { program: 52, dotaznik: 45, hlasovanie: 52, online: 35 },
       },
     ],
     primatorCandidates: [
@@ -239,7 +228,7 @@ const krajeData: KrajData[] = [
         description: 'Primátor Žiliny so zameraním na modernizáciu mesta.',
         climatePros: ['Podpora elektrobusov', 'Rozšírenie mestskej zelene'],
         climateCons: ['Pomalá realizácia cykloinfraštruktúry', 'Kontroverzné stavebné projekty'],
-        climateScore: 46,
+        climateScore: 46, scoreBreakdown: { program: 48, dotaznik: 42, hlasovanie: 47, online: 30 },
       },
     ],
   },
@@ -252,7 +241,7 @@ const krajeData: KrajData[] = [
         description: 'Predseda Banskobystrického samosprávneho kraja.',
         climatePros: ['Silná podpora regionálneho turizmu', 'Ochrana prírodného dedičstva', 'Zatepľovanie škôl a nemocníc'],
         climateCons: ['Obmedzené investície do verejnej dopravy'],
-        climateScore: 70,
+        climateScore: 70, scoreBreakdown: { program: 75, dotaznik: 68, hlasovanie: 70, online: 55 },
       },
     ],
     primatorCandidates: [
@@ -261,7 +250,7 @@ const krajeData: KrajData[] = [
         description: 'Dlhoročný primátor Banskej Bystrice.',
         climatePros: ['Podpora mestskej zelene', 'Revitalizácia verejných priestranstiev'],
         climateCons: ['Nedostatočná cyklistická infraštruktúra', 'Pomalá modernizácia MHD'],
-        climateScore: 44,
+        climateScore: 44, scoreBreakdown: { program: 42, dotaznik: 40, hlasovanie: 46, online: 30 },
       },
     ],
   },
@@ -275,6 +264,7 @@ const getScoreBarColor = (score: number): string => {
 
 const CandidateCard = ({ candidate, language }: { candidate: Candidate; language: string }) => {
   const barColor = getScoreBarColor(candidate.climateScore);
+  const bd = candidate.scoreBreakdown;
 
   return (
     <Card className="rounded-none" style={{ border: '2px solid #E0E0E0' }}>
@@ -301,20 +291,45 @@ const CandidateCard = ({ candidate, language }: { candidate: Candidate; language
             />
           </div>
         </div>
+        {/* Score Breakdown */}
+        <div className="mt-3 text-xs text-muted-foreground">
+          <div className="grid grid-cols-2 gap-x-4">
+            <div className="flex justify-between py-1 border-b" style={{ borderColor: '#F0F0F0' }}>
+              <span>Program</span>
+              <span className="font-medium text-foreground">{bd.program} %</span>
+            </div>
+            <div className="flex justify-between py-1 border-b" style={{ borderColor: '#F0F0F0' }}>
+              <span>Dotazník</span>
+              {bd.dotaznik !== null ? (
+                <span className="font-medium text-foreground">{bd.dotaznik} %</span>
+              ) : (
+                <span className="italic text-muted-foreground">Neodpovedal/a</span>
+              )}
+            </div>
+            <div className="flex justify-between py-1 border-b" style={{ borderColor: '#F0F0F0' }}>
+              <span>Hlasovanie</span>
+              <span className="font-medium text-foreground">{bd.hlasovanie} %</span>
+            </div>
+            <div className="flex justify-between py-1 border-b" style={{ borderColor: '#F0F0F0' }}>
+              <span>Online</span>
+              <span className="font-medium text-foreground">{bd.online} %</span>
+            </div>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">{candidate.description}</p>
         
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <h4 className="font-semibold text-green-700 flex items-center gap-2 mb-2">
+            <h4 className="font-semibold flex items-center gap-2 mb-2" style={{ color: '#2E7D32' }}>
               <Check className="h-4 w-4" />
-              {language === 'sk' ? 'Klimatické pozitíva' : 'Climate Pros'}
+              {language === 'sk' ? 'Proklimatické kroky' : 'Pro-climate actions'}
             </h4>
             <ul className="space-y-1">
               {candidate.climatePros.map((pro, index) => (
                 <li key={index} className="text-sm flex items-start gap-2">
-                  <Check className="h-3 w-3 text-green-600 mt-1 shrink-0" />
+                  <Check className="h-3 w-3 mt-1 shrink-0" style={{ color: '#66BB6A' }} />
                   <span>{pro}</span>
                 </li>
               ))}
@@ -322,18 +337,30 @@ const CandidateCard = ({ candidate, language }: { candidate: Candidate; language
           </div>
           
           <div>
-            <h4 className="font-semibold text-red-700 flex items-center gap-2 mb-2">
-              <X className="h-4 w-4" />
-              {language === 'sk' ? 'Klimatické negatíva' : 'Climate Cons'}
+            <h4 className="font-semibold flex items-center gap-2 mb-2" style={{ color: '#E65100' }}>
+              <AlertTriangle className="h-4 w-4" />
+              {language === 'sk' ? 'Oblasti na zlepšenie' : 'Areas for improvement'}
             </h4>
             <ul className="space-y-1">
               {candidate.climateCons.map((con, index) => (
                 <li key={index} className="text-sm flex items-start gap-2">
-                  <X className="h-3 w-3 text-red-600 mt-1 shrink-0" />
+                  <AlertTriangle className="h-3 w-3 mt-1 shrink-0" style={{ color: '#FFA726' }} />
                   <span>{con}</span>
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+
+        {/* Sources */}
+        <div className="pt-3 border-t" style={{ borderColor: '#F0F0F0' }}>
+          <p className="text-xs text-muted-foreground mb-1 font-medium">
+            {language === 'sk' ? 'Hodnotenie vychádza z:' : 'Assessment based on:'}
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="underline cursor-pointer hover:text-foreground">Zápisnica zastupiteľstva [2024]</span>
+            <span className="underline cursor-pointer hover:text-foreground">Volebný program</span>
+            <span className="underline cursor-pointer hover:text-foreground">Odpoveď na dotazník</span>
           </div>
         </div>
       </CardContent>
