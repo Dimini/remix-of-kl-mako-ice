@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ArrowLeft, Wind, Trees, Bus, Zap, Recycle, Heart, Wallet, Building2, MapPin, CheckCircle, MessageSquare, Share2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -11,6 +12,10 @@ import { BrochurePreview } from '@/components/elections/BrochurePreview';
 const WhyVoteMatters = () => {
   const { language } = useLanguage();
   const sk = language === 'sk';
+
+  useEffect(() => {
+    document.title = sk ? 'Prečo voliť? | Volím klímu 2026' : 'Why Vote? | Volím klímu 2026';
+  }, [sk]);
 
   return (
     <div className="min-h-screen bg-background">

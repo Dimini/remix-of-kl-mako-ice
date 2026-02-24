@@ -1,12 +1,13 @@
+import { useEffect, useState } from 'react';
 import { Check, AlertTriangle, Building2, MapPin, Users, CalendarDays, Landmark } from 'lucide-react';
 import climateHeroBg from '@/assets/climate-hero-bg.jpg';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Footer } from '@/components/Footer';
+import { DisclaimerBar } from '@/components/DisclaimerBar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
 
 interface ScoreBreakdown {
   program: number;
@@ -372,6 +373,10 @@ const Elections = () => {
   const { language } = useLanguage();
   const [selectedKraj, setSelectedKraj] = useState('kosicky');
 
+  useEffect(() => {
+    document.title = language === 'sk' ? 'Kandidáti | Volím klímu 2026' : 'Candidates | Volím klímu 2026';
+  }, [language]);
+
   const currentKraj = krajeData.find(k => k.id === selectedKraj) || krajeData[0];
 
   return (
@@ -561,6 +566,7 @@ const Elections = () => {
       </section>
 
       <Footer />
+      <DisclaimerBar />
     </div>
   );
 };

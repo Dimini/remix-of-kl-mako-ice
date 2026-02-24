@@ -11,23 +11,32 @@ export function Footer() {
           <Link to="/preco-volit" className="hover:text-primary transition-colors font-medium">
             Prečo voliť?
           </Link>
-          <Link to="/klimaticka-zmena" className="hover:text-primary transition-colors font-medium">
-            Klimatická zmena
-          </Link>
-          <Link to="/klimaticke-data" className="hover:text-primary transition-colors font-medium">
-            Klimatické dáta
-          </Link>
           <Link to="/metodologia" className="hover:text-primary transition-colors font-medium">
             Metodológia
           </Link>
+          <Link to="/klimaticka-zmena" className="hover:text-primary transition-colors font-medium">
+            Klimatická zmena
+          </Link>
+          <a href="https://klimatapotrebuje.sk" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors font-medium">
+            O projekte
+          </a>
+          <a href="https://klimatapotrebuje.sk/kontakt" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors font-medium">
+            Kontakt
+          </a>
         </div>
         
-        <div className="text-center text-xs sm:text-sm text-muted-foreground">
-          <p className="flex items-center justify-center gap-2">
-            Vytvorené s 
-            <a href="https://lovable.dev" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
-              Lovable
+        <div className="text-center text-xs sm:text-sm text-muted-foreground space-y-2">
+          <p>
+            <a href="https://klimatapotrebuje.sk" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+              Klíma ťa potrebuje
             </a>
+            {' | '}
+            <a href="https://klimatapotrebuje.sk" target="_blank" rel="noopener noreferrer" className="hover:underline">
+              klimatapotrebuje.sk
+            </a>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            © 2026 Klíma ťa potrebuje. Všetky hodnotenia sú nezávislé a nefinancované kandidátmi.
           </p>
         </div>
       </div>
