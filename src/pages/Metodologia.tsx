@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, FileText, Mail, Vote, Smartphone } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -32,6 +33,10 @@ const dataSources = [
 
 const Metodologia = () => {
   const { language } = useLanguage();
+
+  useEffect(() => {
+    document.title = 'Metodológia | Volím klímu 2026';
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
