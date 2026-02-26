@@ -14,7 +14,7 @@ const translations = {
   sk: {
     // Hero section
     heroTitle: '#klímaKošíc',
-    heroDescription: 'Klimatická kríza je definitívne tu. Sledujte kľúčové údaje o klíme Košíc a Košického kraja a pozrite si, ako sa mení náš región v reálnom čase.',
+    heroDescription: 'Záplavy, horúce letá, drahé teplo — to nie sú vzdialené problémy. Sú to rozhodnutia ľudí, ktorých volíte 25. októbra.',
     viewData: 'Pozrite si údaje',
     learnMore: 'Zistite viac',
     
@@ -65,7 +65,7 @@ const translations = {
   en: {
     // Hero section
     heroTitle: '#climateKosice',
-    heroDescription: 'The climate crisis is definitely here. Track key climate data for Košice and the Košice region and see how our region is changing in real time.',
+    heroDescription: 'Floods, hot summers, expensive heating — these are not distant problems. They are decisions of the people you vote for on October 25.',
     viewData: 'View the data',
     learnMore: 'Learn more',
     
