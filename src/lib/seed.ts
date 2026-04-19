@@ -1,4 +1,4 @@
-import { db } from "@/lib/db/dexie";
+import { db, generateUuid } from "@/lib/db/dexie";
 import { MOCK_CANDIDATES } from "@/lib/mockCandidates";
 import { toCandidateRecord } from "@/lib/repository/adminCandidates";
 
@@ -15,7 +15,9 @@ export async function seedFromMock(): Promise<{ inserted: number; skipped: numbe
       skipped++;
       continue;
     }
-    await db.candidates.put(toCandidateRecord(c));
+    const record = toCandidateRecord(c);
+    record.questionnaireUuid = generateUuid();
+    await db.candidates.put(record);
     inserted++;
   }
   return { inserted, skipped };
@@ -24,4 +26,6 @@ export async function seedFromMock(): Promise<{ inserted: number; skipped: numbe
 export async function clearAllAdminData(): Promise<void> {
   await db.candidates.clear();
   await db.evidence.clear();
+  await db.auditLog.clear();
+  await db.questionnaireResponses.clear();
 }
