@@ -3,9 +3,13 @@ import { Link, useParams } from "react-router-dom";
 import { candidatesRepo } from "@/lib/repository/candidates";
 import { getKraj } from "@/lib/krajs";
 import type { Candidate } from "@/types/domain";
+import {
+  CandidateBadge,
+  PillarBar,
+  ScoreBreakdown,
+  CitationList,
+} from "@/components/klima";
 
-// Placeholder candidate detail. Phase 6 will replace with full scorecard
-// (header, badge, pillar bars, breakdown, citations, methodology link).
 export default function CandidateDetail() {
   const { id = "" } = useParams();
   const [candidate, setCandidate] = useState<Candidate | null | undefined>(undefined);
@@ -21,9 +25,7 @@ export default function CandidateDetail() {
     return (
       <main className="container py-12">
         <h1 className="text-2xl font-bold mb-4">Kandidát nenájdený</h1>
-        <Link to="/" className="text-primary underline">
-          Späť na úvod
-        </Link>
+        <Link to="/" className="text-primary underline">Späť na úvod</Link>
       </main>
     );
   }
@@ -44,28 +46,41 @@ export default function CandidateDetail() {
         <span>{candidate.name}</span>
       </nav>
 
-      <header className="mb-8">
-        <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-          {positionLabel}
-          {candidate.city && ` — ${candidate.city}`}
+      <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+            {positionLabel}
+            {candidate.city && ` — ${candidate.city}`}
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2">
+            {candidate.name}
+          </h1>
+          <div className="text-muted-foreground">{candidate.party}</div>
         </div>
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2">
-          {candidate.name}
-        </h1>
-        <div className="text-muted-foreground">{candidate.party}</div>
+        <CandidateBadge
+          badge={candidate.score.badge}
+          score={candidate.score.total}
+          subtype={candidate.score.badgeSubtype}
+          size="lg"
+        />
       </header>
 
       <section className="rounded-lg border bg-card p-6 mb-6">
-        <div className="text-sm text-muted-foreground mb-1">Klimatické skóre</div>
-        <div className="text-5xl font-black">
-          {candidate.score.total !== null ? `${candidate.score.total}/100` : "—"}
-        </div>
-        <div className="text-sm text-muted-foreground mt-2">
-          SLOVÁ: {candidate.score.slova ?? "—"} · SKUTKY: {candidate.score.skutky ?? "—"}
-        </div>
+        <h2 className="text-sm font-bold tracking-wide mb-4">Klimatické skóre</h2>
+        <PillarBar slova={candidate.score.slova} skutky={candidate.score.skutky} />
       </section>
 
-      <p className="text-xs text-muted-foreground">
+      <section className="mb-6">
+        <h2 className="text-sm font-bold tracking-wide mb-3">Detailný rozpis</h2>
+        <ScoreBreakdown
+          score={candidate.score}
+          questionnaireResponded={candidate.questionnaireResponded}
+        />
+      </section>
+
+      <CitationList citations={candidate.citations} className="mb-6" />
+
+      <p className="text-xs text-muted-foreground border-t pt-4">
         Toto hodnotenie nie je odporúčaním na hlasovanie. Hodnotenie sociálnych
         sietí bude doplnené v ďalšej fáze.
       </p>

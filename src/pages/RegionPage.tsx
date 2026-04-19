@@ -3,9 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { candidatesRepo } from "@/lib/repository/candidates";
 import { getKraj } from "@/lib/krajs";
 import type { Candidate } from "@/types/domain";
+import { CandidateBadge } from "@/components/klima";
 
-// Placeholder region page. Phase 6 will rebuild with full layout, badges,
-// pillar bars, and source citations. Handles variable candidate counts per position.
 export default function RegionPage() {
   const { krajId = "" } = useParams();
   const kraj = getKraj(krajId);
@@ -20,9 +19,7 @@ export default function RegionPage() {
     return (
       <main className="container py-12">
         <h1 className="text-2xl font-bold mb-4">Kraj nenájdený</h1>
-        <Link to="/" className="text-primary underline">
-          Späť na úvod
-        </Link>
+        <Link to="/" className="text-primary underline">Späť na úvod</Link>
       </main>
     );
   }
@@ -33,9 +30,7 @@ export default function RegionPage() {
   return (
     <main className="container py-10">
       <nav className="mb-6 text-sm text-muted-foreground">
-        <Link to="/" className="hover:text-primary">
-          Slovensko
-        </Link>
+        <Link to="/" className="hover:text-primary">Slovensko</Link>
         <span className="mx-2">/</span>
         <span>{kraj.name}</span>
       </nav>
@@ -68,6 +63,14 @@ function PositionSection({
   title: string;
   candidates: Candidate[];
 }) {
+  // Sort: scored candidates first (by score desc), grey at the end.
+  const sorted = [...candidates].sort((a, b) => {
+    if (a.score.total === null && b.score.total === null) return 0;
+    if (a.score.total === null) return 1;
+    if (b.score.total === null) return -1;
+    return b.score.total - a.score.total;
+  });
+
   return (
     <section className="mb-12">
       <h2 className="text-2xl font-bold mb-4">
@@ -76,52 +79,36 @@ function PositionSection({
           ({candidates.length})
         </span>
       </h2>
-      {candidates.length === 0 ? (
+      {sorted.length === 0 ? (
         <p className="text-muted-foreground">Žiadni kandidáti.</p>
       ) : (
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {candidates.map((c) => (
-            <li
-              key={c.id}
-              className="rounded-lg border bg-card p-4 hover:shadow-md transition-shadow"
-            >
-              <Link to={`/kandidat/${c.id}`} className="block">
-                <div className="flex items-start justify-between gap-3">
+          {sorted.map((c) => (
+            <li key={c.id}>
+              <Link
+                to={`/kandidat/${c.id}`}
+                className="block rounded-lg border bg-card p-4 hover:shadow-md hover:border-primary/40 transition-all"
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <div className="font-bold text-lg">{c.name}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="font-bold text-lg leading-tight">{c.name}</div>
+                    <div className="text-sm text-muted-foreground mt-0.5">
                       {c.party}
                       {c.incumbent && " · súčasný"}
                     </div>
                   </div>
-                  <BadgeChip badge={c.score.badge} score={c.score.total} />
                 </div>
+                <CandidateBadge
+                  badge={c.score.badge}
+                  score={c.score.total}
+                  subtype={c.score.badgeSubtype}
+                  size="sm"
+                />
               </Link>
             </li>
           ))}
         </ul>
       )}
     </section>
-  );
-}
-
-function BadgeChip({
-  badge,
-  score,
-}: {
-  badge: Candidate["score"]["badge"];
-  score: number | null;
-}) {
-  const cls = {
-    green: "bg-badge-green text-badge-green-foreground",
-    yellow: "bg-badge-yellow text-badge-yellow-foreground",
-    orange: "bg-badge-orange text-badge-orange-foreground",
-    red: "bg-badge-red text-badge-red-foreground",
-    grey: "bg-badge-grey text-badge-grey-foreground",
-  }[badge];
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${cls}`}>
-      {score !== null ? `${score}/100` : "—"}
-    </span>
   );
 }
