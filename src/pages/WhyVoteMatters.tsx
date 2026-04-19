@@ -109,7 +109,7 @@ const WhyVoteMatters = () => {
       <section className="py-12 sm:py-20 px-4 bg-muted/30 border-y">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight mb-8">
-            {sk ? 'Ako košickí politici ovplyvňujú váš každodenný život' : 'How Košice Politicians Affect Your Daily Life'}
+            {sk ? 'Ako župan a primátor ovplyvňujú váš každodenný život' : 'How Your Regional Chairman and Mayor Affect Your Daily Life'}
           </h2>
           <ImpactTable language={language} />
         </div>

@@ -12,8 +12,8 @@ const rows: ImpactRow[] = [
     icon: <Wind className="h-5 w-5" />,
     issue: { sk: 'Kvalita ovzdušia', en: 'Air Quality' },
     influence: {
-      sk: 'Regulácia priemyselných emisií (U.S. Steel), podpora čistej dopravy, presadzovanie noriem EÚ pre ovzdušie',
-      en: 'Regulate industrial emissions (U.S. Steel), promote clean transport, enforce EU air standards',
+      sk: 'Regulácia priemyselných emisií, podpora čistej dopravy, presadzovanie noriem EÚ pre ovzdušie',
+      en: 'Regulate industrial emissions, promote clean transport, enforce EU air standards',
     },
     matters: {
       sk: 'Zlé ovzdušie = vyššie náklady na zdravotnú starostlivosť, respiračné ochorenia, nižšia dĺžka života',
