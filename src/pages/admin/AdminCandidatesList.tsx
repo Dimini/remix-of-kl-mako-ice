@@ -1,6 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { Link } from "react-router-dom";
-import { adminCandidatesRepo } from "@/lib/repository/adminCandidates";
 import { db } from "@/lib/db/dexie";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

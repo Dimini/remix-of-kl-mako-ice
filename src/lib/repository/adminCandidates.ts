@@ -43,8 +43,7 @@ class DexieCandidatesRepo implements AdminCandidatesRepository {
     return db.candidates.count();
   }
   countApproved() {
-    return db.candidates.where("isApproved").equals(1 as unknown as boolean).count()
-      .catch(() => db.candidates.filter((c) => c.isApproved).count());
+    return db.candidates.filter((c) => c.isApproved).count();
   }
 }
 
