@@ -1,215 +1,195 @@
-# Codebase Audit: remix-of-kl-mako-ice
-**Date:** 2026-04-15  
-**Stack found:** React 18 + TypeScript + Vite + Tailwind + shadcn/ui  
-**Product:** Klíma ťa potrebuje — Slovak komunálne voľby 2026 climate benchmarking platform
+# Klima Kompas — v5 Requirements Audit
+
+**Date:** 2026-04-19 | **Branch:** `claude/audit-v5-requirements-e8ovz`
 
 ---
 
-## WHAT EXISTS — SUMMARY
+## 1. CURRENT STATE
 
-The POC is a public-facing, frontend-only React SPA ("Klíma ťa potrebuje") with no backend database, no Supabase integration, and no admin functionality. It ships six static pages: a candidates list (`/` → Elections.tsx), a climate data dashboard (`/klimaticke-data`), an education page (`/klimaticka-zmena`), a "why vote" advocacy page (`/preco-volit`), a methodology page (`/metodologia`), and a 404. All candidate data — 28 candidates across 8 regions — is hardcoded as TypeScript objects inside `Elections.tsx`. Climate metrics (CO₂, electricity mix, temperature, precipitation) are fetched from public APIs (World Bank, Our World In Data, Open-Meteo) via a CORS proxy with an Express.js caching layer. There is no SVG region map, no candidate detail page, no comparison view, no admin dashboard, no Supabase schema, no authentication, and no AI agent pipeline.
+The repo is a **frontend-only React 18 + TypeScript + Vite + Tailwind + shadcn/ui SPA** — zero Supabase, zero backend, zero admin functionality. It is essentially a civic-awareness prototype, not the scoring platform described in requirements.
 
----
+**Routes (6 total):**
 
-## ALIGNMENT SCORE
+| Path | Component | Purpose |
+|------|-----------|---------|
+| `/` | `Elections.tsx` | Candidate list w/ hardcoded data |
+| `/klimaticke-data` | `Index.tsx` | CO₂/temperature/electricity charts |
+| `/klimaticka-zmena` | `ClimateChange.tsx` | Climate education page |
+| `/preco-volit` | `WhyVoteMatters.tsx` | Voter advocacy |
+| `/metodologia` | `Metodologia.tsx` | Methodology stub |
+| `*` | `NotFound.tsx` | 404 |
 
-| Area | Score | Notes |
-|------|-------|-------|
-| Page structure & routing | 2/5 | 6 routes exist but missing: candidate detail, comparison, admin |
-| Slovakia region map | 1/5 | Dropdown/tab selection only — no interactive SVG map |
-| Candidate card component | 2/5 | Cards exist in Elections.tsx but no standalone detail page; no citations, no verbatim questionnaire |
-| Badge/scoring display | 2/5 | 3-colour system (green/orange/red) vs required 5 (Green/Yellow/Orange/Red/Grey); formula weights differ |
-| Admin review dashboard | 1/5 | Does not exist |
-| Supabase schema | 1/5 | Does not exist; no Supabase dependency at all |
-| Data model alignment | 1/5 | Hardcoded TS objects; missing 6 of 8 required tables |
-| Slovak language & tone | 4/5 | Primary UI is Slovak with full i18n context; English toggle present |
-| Mobile responsiveness | 4/5 | Tailwind mobile-first, responsive breakpoints throughout |
-| Legal disclaimer | 3/5 | DisclaimerBar exists with correct spirit; wording differs from spec; not on every scorecard |
-
----
-
-## COMPONENT-BY-COMPONENT VERDICT
-
-### Pages
-
-| Path | What it does | Verdict | Reason |
-|------|-------------|---------|--------|
-| `src/pages/Elections.tsx` | Hardcoded candidate list, region tabs, score bars, climate pros/cons | REFACTOR | Structure and UI patterns are solid but data must come from Supabase; scoring formula, badge colours, and missing detail/comparison routes must all change |
-| `src/pages/Index.tsx` | Climate data dashboard (CO₂, temp, precip charts) | KEEP | Useful supplementary page; not required by spec but adds context; no changes needed for v1 |
-| `src/pages/Metodologia.tsx` | Methodology documentation | REFACTOR | Content is directionally correct but scoring weights listed (25/30/40/5) contradict the required spec (40/35/25); rewrite copy |
-| `src/pages/ClimateChange.tsx` | Educational climate background | KEEP | Out-of-scope for core product but harmless; keep as-is |
-| `src/pages/WhyVoteMatters.tsx` | Voter advocacy / call-to-action | KEEP | Good supporting content; no changes needed |
-| `src/pages/NotFound.tsx` | 404 page | KEEP | Fine as-is |
-
-### Components
-
-| Path | What it does | Verdict | Reason |
-|------|-------------|---------|--------|
-| `src/components/DisclaimerBar.tsx` | Sticky bottom disclaimer, sessionStorage dismiss | REFACTOR | Copy and positioning are right; must also become a per-scorecard inline component to satisfy "every candidate scorecard must include a disclaimer" |
-| `src/components/Footer.tsx` | Site footer with navigation links | KEEP | Solid; update hrefs when new routes are added |
-| `src/components/InfoCard.tsx` | Reusable icon + title + bullets card | KEEP | Generic, reusable as-is |
-| `src/components/KPITile.tsx` | Metric tile with trend indicator | KEEP | Useful for climate data page |
-| `src/components/LoadingSkeleton.tsx` | Skeleton loaders (generic + KPI + chart variants) | KEEP | Needed for async Supabase data; extend for candidate cards |
-| `src/components/FAQ.tsx` | Accordion FAQ | KEEP | Reuse pattern for methodology page FAQs |
-| `src/components/charts/TemperatureChart.tsx` | Line chart, rolling average, ERA5 data | KEEP | Well-built; not central to core product |
-| `src/components/charts/CO2Chart.tsx` | CO₂ bar chart (World Bank data) | KEEP | Same |
-| `src/components/charts/ElectricityMixChart.tsx` | Electricity mix chart (OWID data) | KEEP | Same |
-| `src/components/charts/PrecipitationChart.tsx` | Precipitation chart (ERA5 data) | KEEP | Same |
-| `src/components/elections/ImpactTable.tsx` | Policy area × official type matrix | KEEP | Directly relevant supporting content |
-| `src/components/elections/ResponsibilitiesSection.tsx` | Župan vs primátor breakdown | KEEP | Keep verbatim |
-| `src/components/elections/ActionChecklist.tsx` | Voter action guide with share | KEEP | Good supporting UX |
-| `src/components/elections/BrochurePreview.tsx` | Download brochure component | KEEP | Low priority but harmless |
-| `src/components/ui/*` (40+ files) | Full shadcn/ui primitive library | KEEP | Use extensively for new pages (Card, Badge, Progress, Tabs, Dialog, Sheet) |
-| `src/contexts/LanguageContext.tsx` | SK/EN i18n via context + t() | KEEP | Well-structured; extend translation keys for new copy |
-| `src/services/api.ts` | External climate API fetching with fallbacks | KEEP | Needed for climate data page; no changes |
-| `src/lib/utils.ts` | `cn()` classname helper | KEEP | Standard shadcn utility |
-| `src/hooks/use-mobile.tsx` | Mobile breakpoint detection hook | KEEP | Used throughout |
-
-### Config / Infrastructure
-
-| Path | Verdict | Reason |
-|------|---------|--------|
-| `tailwind.config.ts` | KEEP | Climate colour tokens already defined; add badge colour tokens |
-| `vite.config.ts` | KEEP | Fine as-is |
-| `tsconfig.app.json` | REFACTOR | Enable `strict: true` before serious development |
-| `server.js` / `start.js` | REPLACE | Express cache layer becomes unnecessary once Supabase handles data |
-| `package.json` | REFACTOR | Add `@supabase/supabase-js`; remove `node-fetch`, `csv-parser`, `express` once Supabase is wired |
-
----
-
-## WHAT'S ACTUALLY USEFUL
-
-These files/patterns can be used verbatim or near-verbatim:
-
-- **`src/components/ui/*`** — full shadcn/ui library; use `Card`, `Badge`, `Progress`, `Tabs`, `Dialog`, `Sheet` for new pages
-- **`src/components/DisclaimerBar.tsx`** — extract disclaimer text + styling; reuse inline per scorecard
-- **`src/components/Footer.tsx`** — update nav links only
-- **`src/components/InfoCard.tsx`**, **`KPITile.tsx`**, **`LoadingSkeleton.tsx`**, **`FAQ.tsx`** — reuse as-is
-- **`src/contexts/LanguageContext.tsx`** — extend with new translation keys; do not rewrite
-- **`src/lib/utils.ts`** — standard `cn()` helper
-- **`src/hooks/use-mobile.tsx`** — mobile detection
-- **`tailwind.config.ts`** — climate colour palette; add `badge-green`, `badge-yellow`, `badge-orange`, `badge-red`, `badge-grey` tokens
-- **`src/App.tsx`** routing skeleton — extend with new routes
-- **`src/components/elections/ImpactTable.tsx`**, **`ResponsibilitiesSection.tsx`** — content pages
-- **`src/pages/ClimateChange.tsx`**, **`WhyVoteMatters.tsx`**, **`Index.tsx`** — keep as supplementary pages
-- **React Query** (`@tanstack/react-query`) — already installed; wire up for all Supabase queries
-- **`src/services/api.ts`** — keep only for climate data charts
-
----
-
-## WHAT NEEDS TO BE REBUILT
-
-Priority order (highest impact first):
-
-1. **Supabase project + all 8 DB tables** — The entire data layer is missing. Must create: `candidates`, `scores`, `programs`, `votes`, `social_posts`, `questionnaire_responses`, `review_queue`, `source_citations`. Hardcoded `krajeData` in `Elections.tsx` must be migrated to seeded DB rows. **Blocking everything else.**
-
-2. **Interactive SVG map of Slovakia's 8 regions** — Homepage must show a tappable map. No map asset or component exists. Requires an SVG (or library like `react-simple-maps`) with region hit areas keyed to `kraj` IDs. High UX impact; replaces current tab/dropdown region selector.
-
-3. **Candidate detail / scorecard page** (`/kandidat/:id`) — No standalone detail page exists. Needs: overall score, three pillar bars (Slová 40%, Skutky 35%, Komunikácia 25%), verbatim questionnaire response, source citations list, inline legal disclaimer. This is the core product deliverable.
-
-4. **Scoring formula realignment** — Current weights (25% program / 30% dotaznik / 40% hlasovanie / 5% online) differ from the spec (40% Slová / 35% Skutky / 25% Komunikácia). Badge thresholds also differ (current 3-colour vs required 5-colour Green/Yellow/Orange/Red/Grey). Must be fixed in DB schema and all display components.
-
-5. **Admin dashboard** (`/admin`) — Supabase Auth-protected route with review queue UI: list of pending AI-generated scores, approve/adjust controls, `approved_by` and `approved_at` write-back. Does not exist at all.
-
-6. **Candidate comparison view** — Side-by-side two candidate scorecards. No comparison page or component exists.
-
-7. **Supabase Auth** — No auth at all. Needed for admin dashboard protection.
-
-8. **Supabase Edge Functions** — AI agent pipeline (Claude Sonnet 4) for ingesting programs, voting records, and social posts and writing to `programs`, `votes`, `social_posts`, `review_queue`. Entirely absent.
-
-9. **Source citations component** — `source_citations` table required by spec; no citation display component exists anywhere.
-
----
-
-## DATA MODEL GAP ANALYSIS
-
-### Current state
-All candidate data is a TypeScript in-memory object:
+**Data structures (all in-memory, zero DB):**
 ```typescript
-interface Candidate {
-  id: string; name: string; party: string; position: string;
-  climatePros: string[]; climateCons: string[];
-  description: string; climateScore: number;
-  scoreBreakdown: { program, dotaznik, hlasovanie, online }
-}
+// Elections.tsx — 100% hardcoded
+interface Candidate { id, name, party, position, climatePros[], climateCons[],
+  description, climateScore, scoreBreakdown: { program, dotaznik, hlasovanie, online } }
+interface KrajData { id, name, abbreviation, capitalName,
+  zupanCandidates[], primatorCandidates[] }
+// 28 candidate objects across 8 regions — all illustrative, explicitly labelled as fake
 ```
-No Supabase client, no migrations, no schema files anywhere in the repo.
 
-### Required vs existing — table by table
-
-| Required Table | Status | Gap |
-|----------------|--------|-----|
-| `candidates` | PARTIAL (TS object only) | Missing: `photo_url`, `city`, `is_independent`, `year`; no DB persistence |
-| `scores` | MISSING | `pillar1/2/3_score`, `badge`, `is_approved`, `approved_at/by` — none exist |
-| `programs` | MISSING | `source_url`, `raw_text`, `citations_json`, `agent_version`, `confidence`, `requires_review` — none |
-| `votes` | MISSING | `date`, `topic`, `vote_direction`, `relevance_score`, `source_url` — none |
-| `social_posts` | MISSING | `platform`, `date`, `text`, `climate_relevance`, `score` — none |
-| `questionnaire_responses` | MISSING | `sent_at`, `responded_at`, `response_json`, `pillar1_contribution` — none |
-| `review_queue` | MISSING | `ai_suggestion`, `status`, `reviewer_notes`, `adjustments_json` — none |
-| `source_citations` | MISSING | `pillar`, `source_type`, `url`, `quote`, `date_accessed` — none |
-
-### Scoring formula mismatch
-| | POC (current) | Spec (required) |
-|--|---------------|-----------------|
-| Pillar 1 | Program — 25% | Slová (program) — **40%** |
-| Pillar 2 | Dotazník — 30% | Skutky (voting record) — **35%** |
-| Pillar 3 | Hlasovanie — 40% | Komunikácia (social media) — **25%** |
-| Pillar 4 | Online — 5% | *(not a separate pillar)* |
-
-### Badge threshold mismatch
-| Colour | POC threshold | Spec threshold |
-|--------|---------------|----------------|
-| Green | ≥70% | **≥80%** |
-| Yellow | *(does not exist)* | **≥55%** |
-| Orange | ≥40% | **≥30%** |
-| Red | <40% | **<30%** |
-| Grey | *(does not exist)* | **null / low confidence** |
-
-### AI agent pipeline blockers
-Edge Functions need to write to: `programs.citations_json` (JSONB), `programs.agent_version`, `programs.confidence`, `review_queue.ai_suggestion`, `review_queue.adjustments_json`. None of these columns or tables exist.
+**Missing entirely:** Supabase schema, auth, Edge Functions, admin dashboard, candidate detail page, SVG region map, questionnaire system, scoring engine, AI agents, source citations, review queue, `/region/:krajId`, `/kandidat/:region/:position/:slug`, `/dotaznik/:uuid`.
 
 ---
 
-## BIGGEST RISKS
+## 2. SCORING MODEL CONFLICT
 
-1. **Total data layer absence.** There is no Supabase project, no schema, no auth, no edge functions. Every product requirement that touches live data (scoring, admin approval, AI ingestion, citations) is blocked until the Supabase schema is created and seeded. Building more frontend before the schema is locked risks a second full rewrite of all data-binding code.
+Every single dimension of the formula is wrong.
 
-2. **Scoring formula and badge system are wrong.** The POC's formula (25/30/40/5) and badge thresholds (3 colours) are baked into `Elections.tsx` display logic, `Metodologia.tsx` copy, and the implicit mental model of the hardcoded data. If the team ships more features before correcting the formula to (40/35/25) and the 5-colour badge system, every score-display component and all seeded test data will need to be redone.
+| Dimension | Existing codebase | Required (CLAUDE.md + CAP-07) | Discrepancy |
+|-----------|-----------------|-------------------------------|-------------|
+| **Top-level structure** | 4 flat pillars summed | `SLOVÁ × 0.40 + SKUTKY × 0.60` | ❌ Architecture is completely different |
+| **Program weight** | 25% of total | 20% of total (0.50 × SLOVÁ × 0.40) | ❌ Off by 5 pp |
+| **Dotazník weight** | 30% of total | 20% of total (0.50 × SLOVÁ × 0.40) | ❌ Off by 10 pp |
+| **Hlasovanie weight** | 40% of total | 25% of total (0.417 × SKUTKY × 0.60) | ❌ Off by 15 pp |
+| **Online weight** | 5% of total | **NULL in MVP** (Phase 2 only) | ❌ Must not exist in MVP |
+| **Documented actions** | Not modelled at all | 35% of total (0.583 × SKUTKY × 0.60) | ❌ Pillar entirely absent |
+| **Normalisation** | None — raw integers 0–100 | Carter min/max clamp, NRSR rubric, designed caps | ❌ No normalisation implemented |
+| **Scoring source** | Hardcoded TypeScript objects | Supabase `scoring_config` table, computed in Edge Function | ❌ All hardcoded |
+| **Badge thresholds** | Green ≥ 70, Orange 40–70, Red < 40 (3 colours) | Green ≥ 80, Yellow ≥ 55, Orange ≥ 30, Red < 30, Grey = insufficient data (5 colours) | ❌ Wrong thresholds, missing 2 badge types |
+| **Grey badge** | Not modelled | `GREY_NO_DATA`, `GREY_REFUSED`, `GREY_NEW_CANDIDATE`, `GREY_LOW_CONFIDENCE` | ❌ Completely absent |
+| **Votes-null fallback** | Not modelled | When `votes_norm` is null → `SKUTKY = actions_norm` | ❌ Absent |
+| **Tier 3 exclusion** | Not modelled | Tier 3 items excluded from all score computation in CAP-07 | ❌ Absent |
+| **formula_version** | Not tracked | Must be stored in `scoring_config` and stamped on every `scores` row | ❌ Absent |
 
-3. **Hardcoded data in Elections.tsx is a maintenance trap.** With 28 candidates embedded in a 574-line TSX file, adding a candidate, adjusting a score, or correcting a badge requires a developer deploy. Any new Supabase-backed component that fetches real data will conflict with the static render until the hardcoded array is fully removed. The longer these coexist, the more confusing the codebase becomes.
+**Summary:** The formula needs a full replacement — not a patch. It's not an off-by-one; it's a different paradigm (flat vs. pillar-weighted, unnormalised vs. Carter normalisation, 3-badge vs 5-badge).
 
 ---
 
-## RECOMMENDED NEXT STEPS
+## 3. SCHEMA CONFLICT
 
-| # | Action | Tool | Effort | Dependency |
-|---|--------|------|--------|------------|
-| 1 | Create Supabase project; write and run all 8 migration files; add RLS policies; generate TypeScript types via `supabase gen types` | Manual (Supabase dashboard) + Claude Code | 4–6 h | None — first action |
-| 2 | Correct scoring formula (to 40/35/25) and 5-colour badge system (Green/Yellow/Orange/Red/Grey with correct thresholds); update `Metodologia.tsx` copy; add badge colour tokens to `tailwind.config.ts`; replace hardcoded `getScoreBarColor()` with a `getBadge()` utility | Claude Code | 2 h | Step 1 (needs badge enum from DB types) |
-| 3 | Migrate hardcoded `krajeData` (28 candidates) into Supabase seed SQL; wire `Elections.tsx` to Supabase query via React Query; delete static TypeScript data array | Claude Code | 3 h | Step 1 |
-| 4 | Build interactive Slovakia SVG map component for homepage — tappable 8-region map navigating to `/region/:krajId`; source or create SVG with correct kraj boundaries | Lovable (initial scaffold) + Claude Code (data binding) | 4–6 h | Step 3 |
-| 5 | Build candidate detail page (`/kandidat/:id`) with: overall score, three pillar progress bars, verbatim questionnaire response, source citations list, inline legal disclaimer | Lovable (UI scaffold) + Claude Code (Supabase wiring) | 4–6 h | Steps 1–3 |
+**There is no Supabase schema.** The `/supabase/` directory does not exist. No migrations, no seed files, no Edge Functions, no RLS policies.
+
+Required tables vs. what exists:
+
+| Required table | Exists? | Notes |
+|----------------|---------|-------|
+| `candidates` | ❌ | Hardcoded TS objects only |
+| `scores` | ❌ | — |
+| `programs` | ❌ | — |
+| `questionnaire_responses` | ❌ | — |
+| `votes` | ❌ | — |
+| `documented_actions` | ❌ | — |
+| `source_citations` | ❌ | — |
+| `review_queue` | ❌ | — |
+| `scoring_config` | ❌ | — |
+| `jurisdictions` (CAP-03) | ❌ | — |
+
+Nothing to drop or migrate — the schema must be built from scratch in `/supabase/migrations/`.
+
+**RLS** is entirely absent. All required policies (`public_read_approved`, `public_read_candidates`, `researcher_write`) must be created.
 
 ---
 
-## BUILD-ON-TOP OR START FRESH?
+## 4. COMPONENTS TO KEEP
 
-**Recommendation: BUILD ON TOP — with a hard prerequisite cleanup sprint before adding any new features.**
+Files worth keeping **verbatim or with minor changes only:**
 
-**Rationale:** The UI foundation is genuinely useful. The shadcn/ui library, Tailwind config, i18n context, mobile-first layout, Router v6 skeleton, React Query installation, and several supporting components (DisclaimerBar, Footer, election content components) are all production-quality. Rebuilding from scratch would cost 2–3 days of UI scaffolding for no net gain.
+| Path | Keep status | Notes |
+|------|------------|-------|
+| `src/components/ui/**` (47 shadcn files) | ✅ Keep verbatim | Full shadcn/ui library — standard primitives needed by all new features |
+| `src/lib/utils.ts` | ✅ Keep verbatim | `cn()` helper, standard Tailwind merge |
+| `src/hooks/use-toast.ts` | ✅ Keep verbatim | |
+| `src/hooks/use-mobile.tsx` | ✅ Keep verbatim | |
+| `src/components/Footer.tsx` | ✅ Minor update | Update nav hrefs when new routes are added |
+| `src/components/InfoCard.tsx` | ✅ Keep verbatim | Generic reusable card |
+| `src/components/LoadingSkeleton.tsx` | ✅ Keep verbatim | Skeleton states needed throughout |
+| `src/components/FAQ.tsx` | ✅ Keep verbatim | Supplementary content |
+| `src/components/DisclaimerBar.tsx` | ✅ Minor update | Wording must match spec exactly: "Toto hodnotenie nie je odporúčaním na hlasovanie." |
+| `src/components/charts/*.tsx` (4 chart files) | ✅ Keep verbatim | Used by `/klimaticke-data` supplementary page |
+| `src/components/elections/ImpactTable.tsx` | ✅ Keep verbatim | Used by WhyVoteMatters — good bilingual table component |
+| `src/components/elections/ResponsibilitiesSection.tsx` | ✅ Keep verbatim | Supplementary |
+| `src/components/elections/ActionChecklist.tsx` | ✅ Keep verbatim | Supplementary |
+| `src/components/elections/BrochurePreview.tsx` | ✅ Keep verbatim | Supplementary |
+| `src/components/KPITile.tsx` | ✅ Keep verbatim | Used by Index.tsx climate dashboard |
+| `src/pages/ClimateChange.tsx` | ✅ Keep verbatim | Out-of-scope but harmless supplementary content |
+| `src/pages/WhyVoteMatters.tsx` | ✅ Keep verbatim | Good advocacy page |
+| `src/pages/NotFound.tsx` | ✅ Keep verbatim | Fine as-is |
+| `src/pages/Index.tsx` | ✅ Keep as `/klimaticke-data` | Good climate data dashboard; stays as supplementary page |
+| `src/services/api.ts` | ✅ Keep as-is | Used only by Index.tsx; no Supabase needed here |
+| `src/contexts/LanguageContext.tsx` | ✅ Keep, expand | Add translation keys for new UI (badge labels, disclaimer text, CAP-08 form labels) |
+| `tailwind.config.ts` | ✅ Minor update | Add badge colour tokens (green/yellow/orange/red/grey) as semantic colours |
+| `package.json` | ✅ Keep, add deps | Add `@supabase/supabase-js`; remove `express`, `cors`, `csv-parser` (server-side artefacts) |
+| `components.json` | ✅ Keep verbatim | shadcn/ui config |
 
-However, the codebase is **not ready for feature development yet**. Three things must be resolved first:
+---
 
-1. **Supabase schema** (Step 1 above) — do not add a single new page until the DB is running and typed.
-2. **Scoring formula + badge correction** (Step 2) — lock the formula and badge system in code before any score data is seeded or displayed.
-3. **Remove hardcoded `krajeData`** (Step 3) — once real Supabase queries exist, delete the static array entirely. Do not let them coexist.
+## 5. COMPONENTS TO REPLACE
 
-**If a fresh start were chosen (not recommended), these assets should be copied over first:**
-- `src/components/ui/*` (entire shadcn library)
-- `src/contexts/LanguageContext.tsx`
-- `src/components/DisclaimerBar.tsx`
-- `src/components/Footer.tsx`
-- `tailwind.config.ts`
-- `src/lib/utils.ts`
-- `src/services/api.ts`
-- Supporting pages: `ClimateChange.tsx`, `WhyVoteMatters.tsx`, `Index.tsx`
+Files that must be rebuilt because structural assumptions are irreconcilable:
+
+| Path | Verdict | Why |
+|------|---------|-----|
+| `src/pages/Elections.tsx` | 🔴 Replace | Hardcoded candidate data; wrong formula display; wrong badge colours; missing `/region/:krajId` and `/kandidat/...` routing; no Supabase integration; no citations; no detail page |
+| `src/pages/Metodologia.tsx` | 🔴 Replace | Content lists wrong formula weights (25/30/40/5); missing full KLIMA_SCORE formula, badge table, Climate Relevance Framework, normalisation worked example, Carter et al. cap sources |
+| `src/App.tsx` | 🔴 Replace | Routes must change: add `/region/:krajId`, `/kandidat/:region/:position/:slug`, `/dotaznik/:uuid`; remove routes that become supplementary |
+| `src/types/chart.d.ts` | 🔴 Replace | Add domain types: `Candidate`, `Score`, `SourceCitation`, `EvidenceItem`, `Badge`, `ReviewQueueItem`, `ClimateRelevanceTier` |
+| **NEW: `supabase/migrations/001_init.sql`** | 🔴 Build | All 10 required tables, RLS, `scoring_config` seed |
+| **NEW: `supabase/functions/scoring-engine/`** | 🔴 Build | CAP-07 Edge Function with correct formula |
+| **NEW: `src/pages/RegionPage.tsx`** | 🔴 Build | `/region/:krajId` — 2 candidate rows per region |
+| **NEW: `src/pages/CandidateDetail.tsx`** | 🔴 Build | `/kandidat/:region/:position/:slug` — full scorecard |
+| **NEW: `src/pages/QuestionnaireForm.tsx`** | 🔴 Build | `/dotaznik/:uuid` — CAP-05 submission form |
+| **NEW: `src/components/CandidateBadge.tsx`** | 🔴 Build | 5-colour badge with grey sub-types |
+| **NEW: `src/components/PillarBar.tsx`** | 🔴 Build | SLOVÁ/SKUTKY progress bars |
+| **NEW: `src/components/CitationList.tsx`** | 🔴 Build | Source citations with Tier 2 reviewer_note display |
+| **NEW: `src/lib/supabase.ts`** | 🔴 Build | Supabase client init |
+| **NEW: `src/lib/scoring.ts`** | 🔴 Build | Client-side formula utility (mirrors CAP-07 for display) |
+| **NEW: `src/pages/admin/`** | 🔴 Build | CAP-06 review dashboard, CAP-08 evidence entry form |
+| **NEW: `supabase/functions/cap-02-program-agent/`** | 🔴 Build | AI program analysis |
+| **NEW: `supabase/functions/cap-05-questionnaire/`** | 🔴 Build | UUID generation + submission handler |
+
+---
+
+## 6. FIRST 5 ACTIONS
+
+These are the minimum prerequisite actions before any new feature is added. Do them in order.
+
+**Action 1 — Create Supabase schema (foundation for everything)**
+- **What:** Write `/supabase/migrations/001_init.sql` with all 10 tables, correct column types, RLS policies, and `scoring_config` seed values from REQUIREMENTS.md
+- **Tool:** Claude Code (backend/agents ownership per CLAUDE.md)
+- **Estimated time:** 2–3 hours
+- **Dependency:** None — can start immediately
+- **Critical fields:** `climate_relevance_tier SMALLINT NOT NULL CHECK (tier IN (1,2,3))`, `reviewer_note TEXT` (enforced non-null when tier=2 at app layer), `is_approved BOOLEAN DEFAULT false`, `formula_version` in scoring_config
+
+**Action 2 — Fix App.tsx routing**
+- **What:** Replace current 6-route config with spec-compliant routing: `/` → `RegionMap` (homepage with SVG map), `/region/:krajId`, `/kandidat/:region/:position/:slug`, `/dotaznik/:uuid`, `/metodologia`, `/admin/*`; retain supplementary routes at `/klimaticke-data`, `/klimaticka-zmena`, `/preco-volit`
+- **Tool:** Lovable (frontend, owns `/src/pages/`)
+- **Estimated time:** 30 minutes
+- **Dependency:** Needs Action 1 complete so route guards can check auth
+
+**Action 3 — Fix Metodologia.tsx content**
+- **What:** Replace formula section weights (currently 25/30/40/5) with correct KLIMA_SCORE formula; add badge threshold table; add Climate Relevance Framework with Tier definitions and worked example; add Carter et al. normalisation example; add non-endorsement statement
+- **Tool:** Lovable (frontend)
+- **Estimated time:** 1–2 hours
+- **Dependency:** Independent; can run parallel to Action 1
+
+**Action 4 — Build CAP-07 scoring Edge Function**
+- **What:** Create `supabase/functions/cap-07-scoring-engine/index.ts` implementing the exact formula from REQUIREMENTS.md: Tier 3 exclusion filter → component normalisation → SLOVÁ/SKUTKY pillar calc → KLIMA_SCORE → badge assignment → write to `scores` table; triggered by DB webhook
+- **Tool:** Claude Code (backend/agents ownership)
+- **Estimated time:** 3–4 hours
+- **Dependency:** Action 1 (needs tables to exist)
+
+**Action 5 — Build the public candidate list page (replaces Elections.tsx)**
+- **What:** New `Elections.tsx` (or `RegionPage.tsx`) that reads from Supabase `candidates` + `scores` (WHERE `is_approved = true`), shows correct 5-colour badge, SLOVÁ/SKUTKY pillar bars, legal disclaimer on every card; all 16 Phase 1 candidates always visible regardless of Grey status; link to candidate detail
+- **Tool:** Lovable (frontend, owns `/src/pages/`)
+- **Estimated time:** 3–4 hours
+- **Dependency:** Actions 1 + 4 (needs DB + scoring engine to have data to display)
+
+---
+
+## 7. VERDICT
+
+**Build on top — do not start fresh.**
+
+The existing repo is a good scaffold: the Tailwind + shadcn/ui setup, the i18n context, the mobile-first responsive patterns, the supplementary content pages (climate education, advocacy), the chart infrastructure, and the complete shadcn primitive library are all production-quality and directly reusable. Rebuilding them from zero would cost 1–2 weeks for no product gain.
+
+**Minimum cleanup before adding new features (in addition to the 5 actions above):**
+
+1. Remove `server.js` and `start.js` from the repo root — they are Express.js CORS proxy artefacts that belong to a different architecture; they create confusion and security surface.
+2. Add `@supabase/supabase-js` to `package.json`; remove `express`, `cors`, `csv-parser` (unused once Supabase is in place).
+3. Add badge semantic colour tokens to `tailwind.config.ts`: `badge-green`, `badge-yellow`, `badge-orange`, `badge-red`, `badge-grey` — use these consistently across all new components rather than arbitrary hex strings.
+4. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to `.env.example` (never commit actual values).
+5. Remove the hardcoded disclaimer in `Elections.tsx` bottom section — it explicitly says "Táto stránka používa ilustračné údaje" which cannot appear in production.
+
+The existing `Elections.tsx` hardcoded data can be used as **seed data only** — to pre-populate the `candidates` table via a one-off migration script while real candidate data is being collected. Its TypeScript interface structure (`Candidate`, `KrajData`) should not be carried forward; replace with the domain types from the schema.
