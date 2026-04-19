@@ -84,36 +84,70 @@ export default function AdminCandidatesList() {
             <p className="mt-2 text-xs">(Phase B pridáva CRUD formuláre.)</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-muted-foreground">
-              <tr>
-                <th className="text-left px-4 py-2 font-medium">Meno</th>
-                <th className="text-left px-4 py-2 font-medium">Pozícia</th>
-                <th className="text-left px-4 py-2 font-medium">Kraj</th>
-                <th className="text-left px-4 py-2 font-medium">Stav</th>
-                <th className="text-left px-4 py-2 font-medium">Schválené</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Mobile: card list */}
+            <ul className="md:hidden divide-y">
               {candidates?.map((c) => {
                 const kraj = getKraj(c.krajId);
                 return (
-                  <tr key={c.id} className="border-t hover:bg-accent/30">
-                    <td className="px-4 py-2">
-                      <Link to={`/admin/candidate/${c.id}`} className="text-primary hover:underline">
-                        {c.name}
-                      </Link>
-                      <div className="text-xs text-muted-foreground">{c.party}</div>
-                    </td>
-                    <td className="px-4 py-2">{c.position === "zupan" ? "Župan" : "Primátor"}</td>
-                    <td className="px-4 py-2">{kraj?.name ?? c.krajId}</td>
-                    <td className="px-4 py-2"><span className="text-xs">{STATE_LABELS[c.state]}</span></td>
-                    <td className="px-4 py-2">{c.isApproved ? "✓" : "—"}</td>
-                  </tr>
+                  <li key={c.id} className="p-4 hover:bg-accent/30">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <Link
+                          to={`/admin/candidate/${c.id}`}
+                          className="text-primary hover:underline font-medium block truncate"
+                        >
+                          {c.name}
+                        </Link>
+                        <div className="text-xs text-muted-foreground truncate">{c.party}</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {c.position === "zupan" ? "Župan" : "Primátor"} · {kraj?.name ?? c.krajId}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-xs text-muted-foreground">{STATE_LABELS[c.state]}</div>
+                        <div className="text-sm mt-1">{c.isApproved ? "✓" : "—"}</div>
+                      </div>
+                    </div>
+                  </li>
                 );
               })}
-            </tbody>
-          </table>
+            </ul>
+
+            {/* Desktop: table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-muted-foreground">
+                  <tr>
+                    <th className="text-left px-4 py-2 font-medium">Meno</th>
+                    <th className="text-left px-4 py-2 font-medium">Pozícia</th>
+                    <th className="text-left px-4 py-2 font-medium">Kraj</th>
+                    <th className="text-left px-4 py-2 font-medium">Stav</th>
+                    <th className="text-left px-4 py-2 font-medium">Schválené</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {candidates?.map((c) => {
+                    const kraj = getKraj(c.krajId);
+                    return (
+                      <tr key={c.id} className="border-t hover:bg-accent/30">
+                        <td className="px-4 py-2">
+                          <Link to={`/admin/candidate/${c.id}`} className="text-primary hover:underline">
+                            {c.name}
+                          </Link>
+                          <div className="text-xs text-muted-foreground">{c.party}</div>
+                        </td>
+                        <td className="px-4 py-2">{c.position === "zupan" ? "Župan" : "Primátor"}</td>
+                        <td className="px-4 py-2">{kraj?.name ?? c.krajId}</td>
+                        <td className="px-4 py-2"><span className="text-xs">{STATE_LABELS[c.state]}</span></td>
+                        <td className="px-4 py-2">{c.isApproved ? "✓" : "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </Card>
     </div>
