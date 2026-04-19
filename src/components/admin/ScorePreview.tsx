@@ -44,6 +44,12 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
 
   async function handleSave() {
     await adminCandidatesRepo.update(candidateId, { score });
+    await logAudit({
+      candidateId,
+      reviewer: reviewer || "neznámy",
+      action: "SCORE_SAVED",
+      note: `total=${score.total ?? "—"} badge=${score.badge}`,
+    });
     toast({
       title: "Skóre uložené",
       description: `Total: ${score.total ?? "—"} / 100 · ${score.badge.toUpperCase()}`,
