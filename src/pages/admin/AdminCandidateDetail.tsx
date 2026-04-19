@@ -46,6 +46,7 @@ import { toast } from "@/hooks/use-toast";
 import { EvidenceSection } from "@/components/admin/EvidenceSection";
 import { ScorePreview } from "@/components/admin/ScorePreview";
 import { AuditLogPanel } from "@/components/admin/AuditLogPanel";
+import { QuestionnaireLinkPanel } from "@/components/admin/QuestionnaireLinkPanel";
 import { logAudit } from "@/lib/audit";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
@@ -413,6 +414,7 @@ export default function AdminCandidateDetail() {
         </Form>
       </Card>
 
+      {!isNew && existing && <QuestionnaireLinkPanel candidateId={existing.id} />}
       {!isNew && existing && <ScorePreview candidateId={existing.id} />}
       {!isNew && existing && <EvidenceSection candidateId={existing.id} />}
       {!isNew && existing && <AuditLogPanel candidateId={existing.id} />}
