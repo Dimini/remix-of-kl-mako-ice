@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
 import { EvidenceSection } from "@/components/admin/EvidenceSection";
+import { ScorePreview } from "@/components/admin/ScorePreview";
 
 const candidateSchema = z.object({
   name: z.string().trim().min(2, "Min. 2 znaky").max(120),
@@ -401,6 +402,7 @@ export default function AdminCandidateDetail() {
         </Form>
       </Card>
 
+      {!isNew && existing && <ScorePreview candidateId={existing.id} />}
       {!isNew && existing && <EvidenceSection candidateId={existing.id} />}
     </div>
   );

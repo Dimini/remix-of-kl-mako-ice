@@ -14,6 +14,7 @@ export interface AdminCandidatesRepository {
   list(): Promise<CandidateRecord[]>;
   getById(id: string): Promise<CandidateRecord | null>;
   upsert(candidate: CandidateRecord): Promise<void>;
+  update(id: string, patch: Partial<CandidateRecord>): Promise<void>;
   remove(id: string): Promise<void>;
   countAll(): Promise<number>;
   countApproved(): Promise<number>;
@@ -34,6 +35,9 @@ class DexieCandidatesRepo implements AdminCandidatesRepository {
   }
   async upsert(candidate: CandidateRecord) {
     await db.candidates.put(candidate);
+  }
+  async update(id: string, patch: Partial<CandidateRecord>) {
+    await db.candidates.update(id, { ...patch, updatedAt: new Date().toISOString() });
   }
   async remove(id: string) {
     await db.candidates.delete(id);
