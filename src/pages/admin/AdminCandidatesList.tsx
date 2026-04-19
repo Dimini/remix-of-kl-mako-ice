@@ -1,12 +1,43 @@
+import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Link } from "react-router-dom";
 import { db } from "@/lib/db/dexie";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles, Trash2 } from "lucide-react";
+import { seedFromMock, clearAllAdminData } from "@/lib/seed";
+import { STATE_LABELS } from "@/lib/stateMachine";
+import { getKraj } from "@/lib/krajs";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminCandidatesList() {
+  const [busy, setBusy] = useState(false);
+
+  async function handleSeed() {
+    setBusy(true);
+    try {
+      const { inserted, skipped } = await seedFromMock();
+      toast({
+        title: "Seed dokončený",
+        description: `Pridaných ${inserted}, preskočených ${skipped} (už existujú).`,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleClear() {
+    if (!confirm("Vymazať VŠETKÝCH kandidátov a dôkazy z lokálnej evidencie?")) return;
+    setBusy(true);
+    try {
+      await clearAllAdminData();
+      toast({ title: "Vymazané", description: "Lokálna evidencia je prázdna." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const candidates = useLiveQuery(() => db.candidates.toArray(), [], []);
   const total = candidates?.length ?? 0;
   const approved = candidates?.filter((c) => c.isApproved).length ?? 0;
@@ -21,9 +52,19 @@ export default function AdminCandidatesList() {
             Lokálna evidencia kandidátov. Po uzávierke registrácie a schválení sa publikujú na verejnú stránku.
           </p>
         </div>
-        <Button asChild>
-          <Link to="/admin/candidate/new"><Plus className="w-4 h-4 mr-1" /> Nový kandidát</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleSeed} disabled={busy}>
+            <Sparkles className="w-4 h-4 mr-1" /> Seed z mock dát
+          </Button>
+          {total > 0 && (
+            <Button variant="ghost" onClick={handleClear} disabled={busy} className="text-destructive">
+              <Trash2 className="w-4 h-4 mr-1" /> Vyčistiť
+            </Button>
+          )}
+          <Button asChild>
+            <Link to="/admin/candidate/new"><Plus className="w-4 h-4 mr-1" /> Nový kandidát</Link>
+          </Button>
+        </div>
       </div>
 
       <Card className="p-4">
@@ -54,19 +95,23 @@ export default function AdminCandidatesList() {
               </tr>
             </thead>
             <tbody>
-              {candidates?.map((c) => (
-                <tr key={c.id} className="border-t hover:bg-accent/30">
-                  <td className="px-4 py-2">
-                    <Link to={`/admin/candidate/${c.id}`} className="text-primary hover:underline">
-                      {c.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2">{c.position}</td>
-                  <td className="px-4 py-2">{c.krajId}</td>
-                  <td className="px-4 py-2"><span className="text-xs font-mono">{c.state}</span></td>
-                  <td className="px-4 py-2">{c.isApproved ? "✓" : "—"}</td>
-                </tr>
-              ))}
+              {candidates?.map((c) => {
+                const kraj = getKraj(c.krajId);
+                return (
+                  <tr key={c.id} className="border-t hover:bg-accent/30">
+                    <td className="px-4 py-2">
+                      <Link to={`/admin/candidate/${c.id}`} className="text-primary hover:underline">
+                        {c.name}
+                      </Link>
+                      <div className="text-xs text-muted-foreground">{c.party}</div>
+                    </td>
+                    <td className="px-4 py-2">{c.position === "zupan" ? "Župan" : "Primátor"}</td>
+                    <td className="px-4 py-2">{kraj?.name ?? c.krajId}</td>
+                    <td className="px-4 py-2"><span className="text-xs">{STATE_LABELS[c.state]}</span></td>
+                    <td className="px-4 py-2">{c.isApproved ? "✓" : "—"}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

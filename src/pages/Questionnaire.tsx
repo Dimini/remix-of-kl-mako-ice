@@ -91,7 +91,7 @@ const SCALE_QUESTIONS: ScaleQuestion[] = [
 ];
 
 const scaleEnum = z.enum(["1", "2", "3", "4", "5"], {
-  required_error: "Vyberte odpoveď na škále 1–5.",
+  message: "Vyberte odpoveď na škále 1–5.",
 });
 
 const formSchema = z.object({
@@ -120,14 +120,10 @@ const formSchema = z.object({
     .optional()
     .or(z.literal("")),
   consentPublish: z.literal(true, {
-    errorMap: () => ({
-      message: "Pre odoslanie je potrebný súhlas so zverejnením odpovedí.",
-    }),
+    message: "Pre odoslanie je potrebný súhlas so zverejnením odpovedí.",
   }),
   consentTruthful: z.literal(true, {
-    errorMap: () => ({
-      message: "Potvrďte, prosím, pravdivosť uvedených údajov.",
-    }),
+    message: "Potvrďte, prosím, pravdivosť uvedených údajov.",
   }),
 });
 
