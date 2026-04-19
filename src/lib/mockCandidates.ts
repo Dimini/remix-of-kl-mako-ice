@@ -111,7 +111,7 @@ function buildCitations(rng: () => number, hasData: boolean): SourceCitation[] {
       sourceType: "program",
       url: "https://example.sk/program.pdf",
       citationText:
-        "„Podporíme výstavbu cyklotrás a rozšírenie MHD s cieľom znížiť emisie CO₂ v krajskom meste."",
+        "Podporíme výstavbu cyklotrás a rozšírenie MHD s cieľom znížiť emisie CO₂ v krajskom meste.",
       climateRelevanceTier: 1,
       dateAccessed: "2026-09-15",
       confidence: 0.9,
