@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { candidatesRepo } from "@/lib/repository/candidates";
 import { getKraj } from "@/lib/krajs";
 import type { Badge, Candidate } from "@/types/domain";
-import { CandidateBadge, PillarBar } from "@/components/klima";
+import { CandidateBadge } from "@/components/klima";
 import { ArrowLeft, AlertTriangle, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +44,17 @@ export default function RegionPage() {
     });
   }, [kraj]);
 
+  const filtered = useMemo(
+    () => (badgeFilter === "all" ? candidates : candidates.filter((c) => c.score.badge === badgeFilter)),
+    [candidates, badgeFilter],
+  );
+
+  const badgeCounts = useMemo(() => {
+    const counts: Record<Badge, number> = { green: 0, yellow: 0, orange: 0, red: 0, grey: 0 };
+    for (const c of candidates) counts[c.score.badge]++;
+    return counts;
+  }, [candidates]);
+
   if (!kraj) {
     return (
       <main className="container py-12">
@@ -53,19 +64,8 @@ export default function RegionPage() {
     );
   }
 
-  const filtered = useMemo(
-    () => (badgeFilter === "all" ? candidates : candidates.filter((c) => c.score.badge === badgeFilter)),
-    [candidates, badgeFilter],
-  );
-
   const zupani = filtered.filter((c) => c.position === "zupan");
   const primatori = filtered.filter((c) => c.position === "primator");
-
-  const badgeCounts = useMemo(() => {
-    const counts: Record<Badge, number> = { green: 0, yellow: 0, orange: 0, red: 0, grey: 0 };
-    for (const c of candidates) counts[c.score.badge]++;
-    return counts;
-  }, [candidates]);
 
   return (
     <main className="container py-8 md:py-12 max-w-6xl">
@@ -278,9 +278,9 @@ function CandidateCard({ candidate: c }: { candidate: Candidate }) {
       </div>
 
       {c.score.total !== null ? (
-        <div className="space-y-2">
-          <PillarBar label="Slová" value={c.score.slova} weight={40} compact />
-          <PillarBar label="Skutky" value={c.score.skutky} weight={60} compact />
+        <div className="space-y-1.5">
+          <CompactPillar label="Slová" weight="40%" value={c.score.slova} />
+          <CompactPillar label="Skutky" weight="60%" value={c.score.skutky} />
         </div>
       ) : (
         <div className="text-xs text-muted-foreground italic">
