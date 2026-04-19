@@ -72,7 +72,7 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
       </div>
 
       <div className="flex items-center gap-4 flex-wrap">
-        <CandidateBadge badge={score.badge} subtype={score.badgeSubtype} size="lg" />
+        <CandidateBadge badge={score.badge} score={score.total} subtype={score.badgeSubtype} size="lg" />
         <div>
           <div className="text-3xl font-bold tabular-nums">
             {score.total !== null ? `${score.total}` : "—"}

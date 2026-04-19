@@ -99,7 +99,7 @@ export function computeScore(input: ScoreInput): ScoreResult {
   // 2) Bucket by source type → pillar.
   const program = scoring.filter((e) => e.sourceType === "program");
   const questionnaire = scoring.filter((e) => e.sourceType === "questionnaire");
-  const social = scoring.filter((e) => e.sourceType === "social");
+  // Social = Phase 2; not used in MVP scoring.
   const votes = scoring.filter((e) => e.sourceType === "vote");
   const actions = scoring.filter((e) => e.sourceType === "action");
 
