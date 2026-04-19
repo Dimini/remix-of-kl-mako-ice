@@ -43,6 +43,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
+import { EvidenceSection } from "@/components/admin/EvidenceSection";
 
 const candidateSchema = z.object({
   name: z.string().trim().min(2, "Min. 2 znaky").max(120),
@@ -400,15 +401,7 @@ export default function AdminCandidateDetail() {
         </Form>
       </Card>
 
-      {!isNew && existing && (
-        <Card className="p-6">
-          <h2 className="font-semibold mb-2">Dôkazy a skóre</h2>
-          <p className="text-sm text-muted-foreground">
-            Editor dôkazov (program / dotazník / hlasovania / skutky) pribudne v Phase C.
-            Skórovací engine v Phase D potom prepočíta SLOVÁ a SKUTKY na základe dôkazov.
-          </p>
-        </Card>
-      )}
+      {!isNew && existing && <EvidenceSection candidateId={existing.id} />}
     </div>
   );
 }
