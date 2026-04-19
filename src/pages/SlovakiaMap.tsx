@@ -4,6 +4,7 @@ import { KRAJS } from "@/lib/krajs";
 import { candidatesRepo } from "@/lib/repository/candidates";
 import type { Candidate, KrajId, Badge } from "@/types/domain";
 import { ArrowRight, MapPin, Users, AlertTriangle } from "lucide-react";
+import { SlovakiaInteractiveMap } from "@/components/klima/SlovakiaInteractiveMap";
 
 interface KrajStats {
   total: number;
