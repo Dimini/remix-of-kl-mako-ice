@@ -33,13 +33,13 @@ const WhyVoteMatters = () => {
           </Link>
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 text-balance">
             {sk
-              ? 'Prečo sú komunálne voľby dôležité pre vaše zdravie, peňaženku a klímu?'
-              : 'Why Are Local Elections Important for Your Health, Wallet and Climate?'}
+              ? 'Prečo záleží na komunálnych voľbách?'
+              : 'Why Local Elections Matter'}
           </h1>
           <p className="text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto opacity-90">
             {sk
-              ? 'Komunálne a župné voľby rozhodujú o tom, kto riadi rozpočty, infraštruktúru a politiky vo vašom regióne.'
-              : 'Local and regional elections determine who controls budgets, infrastructure, and policies in your region.'}
+              ? 'Vedeli ste, že o vašom zdraví, peňaženke a vzduchu, ktorý dýchate, rozhodujú ľudia, ktorých volíte do župy a mesta?'
+              : 'Did you know that the people you elect to your region and city decide on your health, your wallet and the air you breathe?'}
           </p>
         </div>
       </section>
@@ -53,18 +53,18 @@ const WhyVoteMatters = () => {
           <div className="space-y-4 text-muted-foreground leading-relaxed">
             <p className="text-base sm:text-lg">
               {sk
-                ? 'Komunálne a župné voľby rozhodujú o tom, kto riadi rozpočty, infraštruktúru a politiky v oblasti kvality ovzdušia, zelených plôch, verejnej dopravy a energetickej efektívnosti.'
-                : 'Local and regional elections determine who controls budgets, infrastructure, and policies for air quality, green spaces, public transport, and energy efficiency.'}
+                ? 'Župan a primátor rozhodujú o veciach, ktoré cítite každý deň: aký vzduch dýchate, koľko platíte za teplo, či máte kam ísť do parku, ako často chodí autobus.'
+                : 'Your regional chairman and mayor decide on things you feel every day: the air you breathe, how much you pay for heating, whether you have a park nearby, how often the bus runs.'}
             </p>
             <p className="text-base sm:text-lg">
               {sk
-                ? 'Na rozdiel od parlamentných volieb, miestni lídri majú priamy vplyv na životné prostredie a kvalitu života vo vašom regióne. Primátor rozhoduje o cyklotrasách, župan o regionálnych cestách, starosta o parkoch vo vašej štvrti.'
-                : 'Unlike national elections, local leaders have direct power over the environment and quality of life in your region. The mayor decides on bike lanes, the regional chairman on regional roads, and district mayors on parks in your neighborhood.'}
+                ? 'Na rozdiel od parlamentných volieb tu nejde o veľké reči v Bratislave. Ide o vašu ulicu, váš dom, vašu nemocnicu. Primátor rozhoduje o cyklotrasách, župan o regionálnych cestách a školách.'
+                : 'Unlike national elections, this is not about big speeches in Bratislava. It is about your street, your home, your hospital. The mayor decides on bike lanes, the regional chairman on regional roads and schools.'}
             </p>
             <p className="text-base sm:text-lg">
               {sk
-                ? 'V komunálnych voľbách máte v rukách niekoľko hlasovacích lístkov naraz — pre župana, primátora aj poslancov mestského zastupiteľstva. Každý z nich je príležitosť ovplyvniť, ako bude váš kraj a mesto vyzerať najbližšie štyri roky.'
-                : 'In local elections, you hold several ballots at once — for the regional chairman, mayor, and city council members. Each one is an opportunity to shape how your region and city will look for the next four years.'}
+                ? '25. októbra 2026 dostanete v rukách niekoľko hlasovacích lístkov naraz — pre župana, primátora aj poslancov. Každý z nich rozhodne, ako bude váš kraj a mesto vyzerať najbližšie štyri roky.'
+                : 'On October 25, 2026 you will receive several ballots at once — for the regional chairman, mayor and council members. Each one shapes how your region and city will look for the next four years.'}
             </p>
           </div>
 
