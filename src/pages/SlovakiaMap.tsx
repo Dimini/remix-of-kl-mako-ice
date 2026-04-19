@@ -169,7 +169,8 @@ export default function SlovakiaMap() {
               </Link>
             );
           })}
-        </div>
+          </div>
+        </details>
       </section>
 
       {/* How it works */}
