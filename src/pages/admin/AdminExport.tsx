@@ -10,15 +10,19 @@ export default function AdminExport() {
   const exportJson = async () => {
     setBusy(true);
     try {
-      const [candidates, evidence] = await Promise.all([
+      const [candidates, evidence, auditLog, questionnaireResponses] = await Promise.all([
         db.candidates.toArray(),
         db.evidence.toArray(),
+        db.auditLog.toArray(),
+        db.questionnaireResponses.toArray(),
       ]);
       const payload = {
         exportedAt: new Date().toISOString(),
-        schemaVersion: 1,
+        schemaVersion: 3,
         candidates,
         evidence,
+        auditLog,
+        questionnaireResponses,
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
