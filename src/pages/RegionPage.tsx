@@ -6,6 +6,7 @@ import type { Badge, Candidate } from "@/types/domain";
 import { CandidateBadge } from "@/components/klima";
 import { ArrowLeft, AlertTriangle, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RegionImpact } from "@/components/elections/RegionImpact";
 
 type SortKey = "score-desc" | "score-asc" | "name" | "party";
 type BadgeFilter = "all" | Badge;
@@ -176,6 +177,7 @@ export default function RegionPage() {
             candidates={primatori}
             sortKey={sortKey}
           />
+          <RegionImpact krajId={kraj.id} krajName={kraj.name} />
         </>
       )}
     </main>

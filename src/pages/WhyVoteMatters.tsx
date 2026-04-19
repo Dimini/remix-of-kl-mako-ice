@@ -75,22 +75,22 @@ const WhyVoteMatters = () => {
                 icon: <Heart className="h-6 w-6" />,
                 stat: sk ? 'Zdravie' : 'Health',
                 desc: sk
-                  ? 'Košice patria medzi mestá s najhorším ovzduším na Slovensku kvôli U.S. Steel a doprave'
-                  : 'Košice ranks among cities with worst air quality in Slovakia due to U.S. Steel and traffic',
+                  ? 'Slovensko má jedno z najhorších ovzduší v EÚ — znečistenie skracuje priemernú dĺžku života o viac ako rok'
+                  : 'Slovakia has one of the worst air qualities in the EU — pollution shortens average life expectancy by over a year',
               },
               {
                 icon: <Wallet className="h-6 w-6" />,
                 stat: sk ? 'Peňaženka' : 'Wallet',
                 desc: sk
-                  ? 'Energetická neefektívnosť budov stojí domácnosti stovky eur ročne navyše'
-                  : 'Energy inefficiency of buildings costs households hundreds of euros extra per year',
+                  ? 'Energetická neefektívnosť budov a závislosť od fosílnych palív stojí domácnosti stovky eur ročne navyše'
+                  : 'Energy inefficiency and fossil fuel dependence cost households hundreds of euros extra per year',
               },
               {
                 icon: <Trees className="h-6 w-6" />,
                 stat: sk ? 'Kvalita života' : 'Quality of Life',
                 desc: sk
-                  ? 'Košice majú deficit zelených plôch - letné teploty v centre dosahujú až 40°C'
-                  : 'Košice has a green space deficit - summer temperatures in the center reach up to 40°C',
+                  ? 'Slovenské mestá trpia tepelnými ostrovmi — letné teploty v centrách dosahujú až 40 °C'
+                  : 'Slovak cities suffer from urban heat islands — summer temperatures in centers reach up to 40 °C',
               },
             ].map((item, i) => (
               <div key={i} className="border p-5 bg-card">
@@ -109,7 +109,7 @@ const WhyVoteMatters = () => {
       <section className="py-12 sm:py-20 px-4 bg-muted/30 border-y">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight mb-8">
-            {sk ? 'Ako košickí politici ovplyvňujú váš každodenný život' : 'How Košice Politicians Affect Your Daily Life'}
+            {sk ? 'Ako župan a primátor ovplyvňujú váš každodenný život' : 'How Your Regional Chairman and Mayor Affect Your Daily Life'}
           </h2>
           <ImpactTable language={language} />
         </div>
