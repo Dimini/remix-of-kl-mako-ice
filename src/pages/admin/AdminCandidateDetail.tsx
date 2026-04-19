@@ -45,6 +45,9 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { EvidenceSection } from "@/components/admin/EvidenceSection";
 import { ScorePreview } from "@/components/admin/ScorePreview";
+import { AuditLogPanel } from "@/components/admin/AuditLogPanel";
+import { logAudit } from "@/lib/audit";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
 const candidateSchema = z.object({
   name: z.string().trim().min(2, "Min. 2 znaky").max(120),
@@ -78,6 +81,7 @@ export default function AdminCandidateDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = id === "new";
+  const { reviewer } = useAdminAuth();
 
   const existing = useLiveQuery(
     () => (isNew ? Promise.resolve(undefined) : db.candidates.get(id!)),
@@ -182,7 +186,6 @@ export default function AdminCandidateDetail() {
       toast({ title: "Chyba", description: guard.reason, variant: "destructive" });
       return;
     }
-    // APPROVED requires the approval flag.
     const updates: Partial<typeof existing> = {
       state: to,
       updatedAt: new Date().toISOString(),
@@ -190,6 +193,14 @@ export default function AdminCandidateDetail() {
     if (to === "APPROVED") updates.isApproved = true;
     if (to === "NEEDS_REVISION") updates.isApproved = false;
     await db.candidates.update(existing.id, updates);
+    await logAudit({
+      candidateId: existing.id,
+      reviewer: reviewer || "neznámy",
+      action:
+        to === "APPROVED" ? "APPROVED" : to === "NEEDS_REVISION" ? "NEEDS_REVISION" : "STATE_CHANGE",
+      fromState: existing.state,
+      toState: to,
+    });
     toast({
       title: "Stav zmenený",
       description: `${STATE_LABELS[existing.state]} → ${STATE_LABELS[to]}`,
@@ -404,6 +415,7 @@ export default function AdminCandidateDetail() {
 
       {!isNew && existing && <ScorePreview candidateId={existing.id} />}
       {!isNew && existing && <EvidenceSection candidateId={existing.id} />}
+      {!isNew && existing && <AuditLogPanel candidateId={existing.id} />}
     </div>
   );
 }

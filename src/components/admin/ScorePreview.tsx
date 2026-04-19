@@ -4,6 +4,8 @@ import { RefreshCw, Save } from "lucide-react";
 import { db } from "@/lib/db/dexie";
 import { computeScore, meanConfidence } from "@/lib/scoring/computeScore";
 import { adminCandidatesRepo } from "@/lib/repository/adminCandidates";
+import { logAudit } from "@/lib/audit";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +23,7 @@ interface ScorePreviewProps {
 // "Uložiť skóre" persists the snapshot onto the candidate record so the
 // public-facing surfaces (and the Phase G JSON export) see it.
 export function ScorePreview({ candidateId }: ScorePreviewProps) {
+  const { reviewer } = useAdminAuth();
   const candidate = useLiveQuery(() => db.candidates.get(candidateId), [candidateId]);
   const evidence =
     useLiveQuery(
@@ -41,6 +44,12 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
 
   async function handleSave() {
     await adminCandidatesRepo.update(candidateId, { score });
+    await logAudit({
+      candidateId,
+      reviewer: reviewer || "neznámy",
+      action: "SCORE_SAVED",
+      note: `total=${score.total ?? "—"} badge=${score.badge}`,
+    });
     toast({
       title: "Skóre uložené",
       description: `Total: ${score.total ?? "—"} / 100 · ${score.badge.toUpperCase()}`,

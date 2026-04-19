@@ -7,7 +7,7 @@ const navItem =
   "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors";
 
 export function AdminLayout() {
-  const { lock } = useAdminAuth();
+  const { lock, reviewer } = useAdminAuth();
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b bg-card">
@@ -41,6 +41,11 @@ export function AdminLayout() {
             >
               <Download className="w-4 h-4" /> Export
             </NavLink>
+            {reviewer && (
+              <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">
+                {reviewer}
+              </span>
+            )}
             <Button variant="ghost" size="sm" onClick={lock} className="ml-2">
               <LogOut className="w-4 h-4 mr-1" /> Odhlásiť
             </Button>
