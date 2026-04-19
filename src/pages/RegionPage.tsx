@@ -290,3 +290,32 @@ function CandidateCard({ candidate: c }: { candidate: Candidate }) {
     </Link>
   );
 }
+
+function CompactPillar({ label, weight, value }: { label: string; weight: string; value: number | null }) {
+  const pct = value === null ? 0 : Math.max(0, Math.min(100, value));
+  const barColor =
+    value === null
+      ? "bg-badge-grey"
+      : value >= 80
+        ? "bg-badge-green"
+        : value >= 55
+          ? "bg-badge-yellow"
+          : value >= 30
+            ? "bg-badge-orange"
+            : "bg-badge-red";
+  return (
+    <div>
+      <div className="flex items-baseline justify-between text-xs mb-0.5">
+        <span className="font-semibold text-foreground">
+          {label} <span className="text-muted-foreground font-normal">{weight}</span>
+        </span>
+        <span className="font-bold tabular-nums text-foreground">
+          {value !== null ? `${value}/100` : "—"}
+        </span>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+        <div className={cn("h-full rounded-full transition-all", barColor)} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
