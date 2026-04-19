@@ -25,16 +25,43 @@ export interface CandidateRecord extends Omit<Candidate, "citations"> {
   updatedAt: string;
 }
 
+// Audit trail — every approval / revision / state change.
+// Survives in IndexedDB for the lifetime of the local-first phase and is
+// included in the Phase G JSON export so backend migration keeps history.
+export interface AuditLogRecord {
+  id: string;                 // ulid-ish: `${candidateId}-${ts}`
+  candidateId: string;
+  at: string;                 // ISO
+  reviewer: string;           // free-text reviewer name from admin auth
+  action:
+    | "STATE_CHANGE"
+    | "APPROVED"
+    | "NEEDS_REVISION"
+    | "SCORE_SAVED"
+    | "ADJUSTMENT";
+  fromState?: string;
+  toState?: string;
+  note?: string;
+  // For ADJUSTMENT entries: snapshot of pillar deltas vs AI suggestion.
+  adjustments?: Record<string, number | null>;
+}
+
 export class KlimaKompasDB extends Dexie {
   candidates!: Table<CandidateRecord, string>;
   evidence!: Table<EvidenceRecord, string>;
+  auditLog!: Table<AuditLogRecord, string>;
 
   constructor() {
     super("klima_kompas_admin");
     this.version(1).stores({
-      // Indexed fields — primary key first.
       candidates: "id, krajId, position, state, year, isApproved",
       evidence: "id, candidateId, pillar, sourceType, climateRelevanceTier",
+    });
+    // v2: add audit log table.
+    this.version(2).stores({
+      candidates: "id, krajId, position, state, year, isApproved",
+      evidence: "id, candidateId, pillar, sourceType, climateRelevanceTier",
+      auditLog: "id, candidateId, at, action",
     });
   }
 }
