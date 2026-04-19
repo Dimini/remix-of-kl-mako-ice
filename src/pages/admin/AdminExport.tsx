@@ -3,6 +3,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db/dexie";
 import { Download } from "lucide-react";
+import {
+  EXPORT_SCHEMA_VERSION,
+  type ExportPayload,
+  type ExportedCandidate,
+  type ExportedEvidence,
+  type ExportedAuditEntry,
+  type ExportedQuestionnaireResponse,
+} from "@/lib/export/exportSchema";
 
 export default function AdminExport() {
   const [busy, setBusy] = useState(false);
@@ -16,13 +24,13 @@ export default function AdminExport() {
         db.auditLog.toArray(),
         db.questionnaireResponses.toArray(),
       ]);
-      const payload = {
+      const payload: ExportPayload = {
         exportedAt: new Date().toISOString(),
-        schemaVersion: 3,
-        candidates,
-        evidence,
-        auditLog,
-        questionnaireResponses,
+        schemaVersion: EXPORT_SCHEMA_VERSION,
+        candidates: candidates as ExportedCandidate[],
+        evidence: evidence as ExportedEvidence[],
+        auditLog: auditLog as ExportedAuditEntry[],
+        questionnaireResponses: questionnaireResponses as ExportedQuestionnaireResponse[],
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -39,9 +47,13 @@ export default function AdminExport() {
   return (
     <Card className="p-6 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Export dát</h1>
+        <h1 className="text-xl font-semibold">Export dát (Phase G handoff)</h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Stiahnuť celý lokálny obsah ako JSON. Tento súbor slúži ako vstup pre Supabase migráciu (Phase G).
+          Stiahnuť celý lokálny obsah ako JSON podľa kontraktu{" "}
+          <code className="text-xs">src/lib/export/exportSchema.ts</code> (schemaVersion ={" "}
+          {EXPORT_SCHEMA_VERSION}). Tento súbor + <code className="text-xs">supabase/seed-skeleton.sql</code> +{" "}
+          <code className="text-xs">docs/SUPABASE_IMPORT.md</code> tvoria odovzdávku pre Claude Code,
+          ktorý napíše reálnu Supabase migráciu.
         </p>
       </div>
       <Button onClick={exportJson} disabled={busy}>
