@@ -21,6 +21,9 @@ export interface EvidenceRecord extends SourceCitation {
 }
 
 export interface CandidateRecord extends Omit<Candidate, "citations"> {
+  // Unique link UUID — embedded in /dotaznik/:uuid sent to the candidate.
+  // Optional in v2 records; v3 backfill fills it for everyone.
+  questionnaireUuid?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,7 +41,8 @@ export interface AuditLogRecord {
     | "APPROVED"
     | "NEEDS_REVISION"
     | "SCORE_SAVED"
-    | "ADJUSTMENT";
+    | "ADJUSTMENT"
+    | "QUESTIONNAIRE_SUBMITTED";
   fromState?: string;
   toState?: string;
   note?: string;
@@ -46,10 +50,33 @@ export interface AuditLogRecord {
   adjustments?: Record<string, number | null>;
 }
 
+// Phase F — questionnaire response from the candidate-facing /dotaznik/:uuid form.
+// One per candidate (unique). The published verbatim text lives in `responseJson`.
+export interface QuestionnaireResponseRecord {
+  id: string;                       // == candidateId (1:1)
+  candidateId: string;
+  uuid: string;                     // matches CandidateRecord.questionnaireUuid
+  status: "draft" | "submitted";
+  candidateName: string;            // self-reported (audit trail)
+  email: string;
+  scaleAnswers: Record<string, "1" | "2" | "3" | "4" | "5">;
+  priorityActions: string;
+  additionalNotes?: string;
+  consentPublish: boolean;
+  consentTruthful: boolean;
+  // Computed at submit time — sum of (scale-3) across answered scale qs,
+  // mapped to the 0..54 cap defined in CLAUDE.md (questionnaire raw range).
+  rawScore: number | null;
+  submittedAt?: string;             // ISO
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class KlimaKompasDB extends Dexie {
   candidates!: Table<CandidateRecord, string>;
   evidence!: Table<EvidenceRecord, string>;
   auditLog!: Table<AuditLogRecord, string>;
+  questionnaireResponses!: Table<QuestionnaireResponseRecord, string>;
 
   constructor() {
     super("klima_kompas_admin");
@@ -63,7 +90,35 @@ export class KlimaKompasDB extends Dexie {
       evidence: "id, candidateId, pillar, sourceType, climateRelevanceTier",
       auditLog: "id, candidateId, at, action",
     });
+    // v3: add questionnaireUuid index + questionnaireResponses table.
+    // Backfill: assign a stable UUID to every existing candidate record.
+    this.version(3)
+      .stores({
+        candidates: "id, krajId, position, state, year, isApproved, questionnaireUuid",
+        evidence: "id, candidateId, pillar, sourceType, climateRelevanceTier",
+        auditLog: "id, candidateId, at, action",
+        questionnaireResponses: "id, candidateId, uuid, status",
+      })
+      .upgrade(async (tx) => {
+        await tx.table("candidates").toCollection().modify((c) => {
+          if (!c.questionnaireUuid) c.questionnaireUuid = generateUuid();
+        });
+      });
   }
 }
 
 export const db = new KlimaKompasDB();
+
+// Lightweight UUID generator (RFC4122 v4-ish via crypto.getRandomValues).
+// Avoids adding the `uuid` package for a single use site.
+export function generateUuid(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
