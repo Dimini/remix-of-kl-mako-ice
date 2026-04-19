@@ -52,9 +52,19 @@ export default function AdminCandidatesList() {
             Lokálna evidencia kandidátov. Po uzávierke registrácie a schválení sa publikujú na verejnú stránku.
           </p>
         </div>
-        <Button asChild>
-          <Link to="/admin/candidate/new"><Plus className="w-4 h-4 mr-1" /> Nový kandidát</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleSeed} disabled={busy}>
+            <Sparkles className="w-4 h-4 mr-1" /> Seed z mock dát
+          </Button>
+          {total > 0 && (
+            <Button variant="ghost" onClick={handleClear} disabled={busy} className="text-destructive">
+              <Trash2 className="w-4 h-4 mr-1" /> Vyčistiť
+            </Button>
+          )}
+          <Button asChild>
+            <Link to="/admin/candidate/new"><Plus className="w-4 h-4 mr-1" /> Nový kandidát</Link>
+          </Button>
+        </div>
       </div>
 
       <Card className="p-4">
@@ -85,19 +95,23 @@ export default function AdminCandidatesList() {
               </tr>
             </thead>
             <tbody>
-              {candidates?.map((c) => (
-                <tr key={c.id} className="border-t hover:bg-accent/30">
-                  <td className="px-4 py-2">
-                    <Link to={`/admin/candidate/${c.id}`} className="text-primary hover:underline">
-                      {c.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2">{c.position}</td>
-                  <td className="px-4 py-2">{c.krajId}</td>
-                  <td className="px-4 py-2"><span className="text-xs font-mono">{c.state}</span></td>
-                  <td className="px-4 py-2">{c.isApproved ? "✓" : "—"}</td>
-                </tr>
-              ))}
+              {candidates?.map((c) => {
+                const kraj = getKraj(c.krajId);
+                return (
+                  <tr key={c.id} className="border-t hover:bg-accent/30">
+                    <td className="px-4 py-2">
+                      <Link to={`/admin/candidate/${c.id}`} className="text-primary hover:underline">
+                        {c.name}
+                      </Link>
+                      <div className="text-xs text-muted-foreground">{c.party}</div>
+                    </td>
+                    <td className="px-4 py-2">{c.position === "zupan" ? "Župan" : "Primátor"}</td>
+                    <td className="px-4 py-2">{kraj?.name ?? c.krajId}</td>
+                    <td className="px-4 py-2"><span className="text-xs">{STATE_LABELS[c.state]}</span></td>
+                    <td className="px-4 py-2">{c.isApproved ? "✓" : "—"}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
