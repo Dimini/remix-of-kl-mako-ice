@@ -1,12 +1,43 @@
+import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Link } from "react-router-dom";
 import { db } from "@/lib/db/dexie";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles, Trash2 } from "lucide-react";
+import { seedFromMock, clearAllAdminData } from "@/lib/seed";
+import { STATE_LABELS } from "@/lib/stateMachine";
+import { getKraj } from "@/lib/krajs";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminCandidatesList() {
+  const [busy, setBusy] = useState(false);
+
+  async function handleSeed() {
+    setBusy(true);
+    try {
+      const { inserted, skipped } = await seedFromMock();
+      toast({
+        title: "Seed dokončený",
+        description: `Pridaných ${inserted}, preskočených ${skipped} (už existujú).`,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleClear() {
+    if (!confirm("Vymazať VŠETKÝCH kandidátov a dôkazy z lokálnej evidencie?")) return;
+    setBusy(true);
+    try {
+      await clearAllAdminData();
+      toast({ title: "Vymazané", description: "Lokálna evidencia je prázdna." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const candidates = useLiveQuery(() => db.candidates.toArray(), [], []);
   const total = candidates?.length ?? 0;
   const approved = candidates?.filter((c) => c.isApproved).length ?? 0;
