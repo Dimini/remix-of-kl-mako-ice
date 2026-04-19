@@ -4,7 +4,7 @@ export function ResponsibilitiesSection({ language }: { language: string }) {
   const sk = language === 'sk';
 
   const city = {
-    title: sk ? 'Mestské voľby (Mesto Košice)' : 'City Elections (City of Košice)',
+    title: sk ? 'Mestské voľby (primátor krajského mesta)' : 'City Elections (Mayor of the regional capital)',
     icon: <Building2 className="h-6 w-6" />,
     items: sk
       ? [
@@ -24,7 +24,7 @@ export function ResponsibilitiesSection({ language }: { language: string }) {
   };
 
   const region = {
-    title: sk ? 'Regionálne voľby (Košický samosprávny kraj)' : 'Regional Elections (Košice Self-Governing Region)',
+    title: sk ? 'Regionálne voľby (samosprávny kraj / župa)' : 'Regional Elections (Self-Governing Region)',
     icon: <MapPin className="h-6 w-6" />,
     items: sk
       ? [
