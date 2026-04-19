@@ -14,31 +14,50 @@ import SlovakiaMap from "./pages/SlovakiaMap";
 import RegionPage from "./pages/RegionPage";
 import CandidateDetail from "./pages/CandidateDetail";
 import Questionnaire from "./pages/Questionnaire";
+import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
+import { AdminGate } from "@/components/admin/AdminGate";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import AdminCandidatesList from "./pages/admin/AdminCandidatesList";
+import AdminCandidateDetail from "./pages/admin/AdminCandidateDetail";
+import AdminReviewQueue from "./pages/admin/AdminReviewQueue";
+import AdminExport from "./pages/admin/AdminExport";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<SlovakiaMap />} />
-            <Route path="/region/:krajId" element={<RegionPage />} />
-            <Route path="/kandidat/:id" element={<CandidateDetail />} />
-            <Route path="/dotaznik/:uuid" element={<Questionnaire />} />
-            <Route path="/kandidati" element={<Elections />} />
-            <Route path="/preco-volit" element={<WhyVoteMatters />} />
-            <Route path="/klimaticka-zmena" element={<ClimateChange />} />
-            <Route path="/klimaticke-data" element={<Index />} />
-            <Route path="/metodologia" element={<Metodologia />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AdminAuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<SlovakiaMap />} />
+              <Route path="/region/:krajId" element={<RegionPage />} />
+              <Route path="/kandidat/:id" element={<CandidateDetail />} />
+              {/* Questionnaire is intentionally public — candidates fill it without auth. */}
+              <Route path="/dotaznik/:uuid" element={<Questionnaire />} />
+              <Route path="/kandidati" element={<Elections />} />
+              <Route path="/preco-volit" element={<WhyVoteMatters />} />
+              <Route path="/klimaticka-zmena" element={<ClimateChange />} />
+              <Route path="/klimaticke-data" element={<Index />} />
+              <Route path="/metodologia" element={<Metodologia />} />
+
+              {/* Admin — every route inside is password-gated. */}
+              <Route path="/admin" element={<AdminGate><AdminLayout /></AdminGate>}>
+                <Route index element={<AdminCandidatesList />} />
+                <Route path="candidate/:id" element={<AdminCandidateDetail />} />
+                <Route path="review" element={<AdminReviewQueue />} />
+                <Route path="export" element={<AdminExport />} />
+              </Route>
+
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AdminAuthProvider>
     </LanguageProvider>
   </QueryClientProvider>
 );
