@@ -58,26 +58,25 @@ export default function SlovakiaMap() {
             Komunálne voľby 2026
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 text-balance">
-            Volím klímu 2026
+            Tvoj kraj. Tvoje voľby. Tvoja klíma.
           </h1>
           <p className="text-lg md:text-xl lg:text-2xl leading-relaxed mb-8 max-w-3xl opacity-90">
-            Klimatické hodnotenie kandidátov na <strong>predsedov krajov</strong> a{" "}
-            <strong>primátorov krajských miest</strong>. Postavené na overených zdrojoch — programy,
-            hlasovania, dotazníky a dokumentované činy.
+            25. októbra rozhoduješ, kto bude štyri roky riadiť tvoj kraj a krajské mesto.
+            Pozri si, ako sú na tom kandidáti — jednoducho a podľa faktov.
           </p>
           <div className="flex flex-wrap gap-3">
             <a
               href="#regions"
               className="inline-flex items-center gap-2 bg-primary-foreground text-primary px-6 py-3 font-semibold hover:bg-primary-foreground/90 transition-colors"
             >
-              Vyberte si kraj
+              Nájdi svojich kandidátov
               <ArrowRight className="h-4 w-4" />
             </a>
             <Link
-              to="/metodologia"
+              to="/preco-volit"
               className="inline-flex items-center gap-2 border-2 border-primary-foreground text-primary-foreground px-6 py-3 font-semibold hover:bg-primary-foreground hover:text-primary transition-colors"
             >
-              Metodológia
+              Prečo na tom záleží?
             </Link>
           </div>
         </div>
@@ -103,6 +102,12 @@ export default function SlovakiaMap() {
           <p className="text-muted-foreground text-lg">
             Kliknite na svoj kraj a pozrite si hodnotenie kandidátov na župana aj primátora
             krajského mesta. Farba kraja zobrazuje prevažujúce hodnotenie kandidátov.
+          </p>
+          <p className="mt-3 text-sm">
+            <Link to="/preco-volit" className="text-primary font-semibold hover:underline inline-flex items-center gap-1">
+              Nový volič? Začni tu
+              <ArrowRight className="h-3 w-3" />
+            </Link>
           </p>
         </div>
 
