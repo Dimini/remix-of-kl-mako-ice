@@ -72,6 +72,34 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        // Klima Kompas — 5-badge system
+        badge: {
+          green: {
+            DEFAULT: "hsl(var(--badge-green))",
+            foreground: "hsl(var(--badge-green-foreground))",
+            soft: "hsl(var(--badge-green-soft))",
+          },
+          yellow: {
+            DEFAULT: "hsl(var(--badge-yellow))",
+            foreground: "hsl(var(--badge-yellow-foreground))",
+            soft: "hsl(var(--badge-yellow-soft))",
+          },
+          orange: {
+            DEFAULT: "hsl(var(--badge-orange))",
+            foreground: "hsl(var(--badge-orange-foreground))",
+            soft: "hsl(var(--badge-orange-soft))",
+          },
+          red: {
+            DEFAULT: "hsl(var(--badge-red))",
+            foreground: "hsl(var(--badge-red-foreground))",
+            soft: "hsl(var(--badge-red-soft))",
+          },
+          grey: {
+            DEFAULT: "hsl(var(--badge-grey))",
+            foreground: "hsl(var(--badge-grey-foreground))",
+            soft: "hsl(var(--badge-grey-soft))",
+          },
+        },
         // Chart color palette
         chart: {
           1: "hsl(var(--chart-1))",
