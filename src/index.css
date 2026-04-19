@@ -53,6 +53,27 @@
     /* Klimatapotrebuje.sk inspired accent colors */
     --climate-green: 120 40% 25%;
     --climate-action: 15 100% 45%;
+
+    /* Klima Kompas — 5-badge system (HSL, semantic) */
+    --badge-green: 134 61% 35%;          /* ≥80% — strong climate champion */
+    --badge-green-foreground: 0 0% 100%;
+    --badge-green-soft: 134 55% 92%;
+
+    --badge-yellow: 45 93% 47%;          /* ≥55% */
+    --badge-yellow-foreground: 0 0% 12%;
+    --badge-yellow-soft: 48 96% 90%;
+
+    --badge-orange: 25 95% 53%;          /* ≥30% */
+    --badge-orange-foreground: 0 0% 100%;
+    --badge-orange-soft: 28 100% 92%;
+
+    --badge-red: 0 72% 45%;              /* <30% */
+    --badge-red-foreground: 0 0% 100%;
+    --badge-red-soft: 0 86% 94%;
+
+    --badge-grey: 220 9% 46%;            /* insufficient data */
+    --badge-grey-foreground: 0 0% 100%;
+    --badge-grey-soft: 220 14% 93%;
   }
 
   .dark {
