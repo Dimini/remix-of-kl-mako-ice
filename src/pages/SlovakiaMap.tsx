@@ -94,20 +94,29 @@ export default function SlovakiaMap() {
         </div>
       </section>
 
-      {/* Region cards */}
+      {/* Interactive map */}
       <section id="regions" className="container py-16 md:py-20">
-        <div className="max-w-3xl mb-10">
+        <div className="max-w-3xl mb-8">
           <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3">
             8 krajov, {totalCandidates || "—"} kandidátov
           </h2>
           <p className="text-muted-foreground text-lg">
-            Vyberte si svoj kraj a pozrite si hodnotenie kandidátov na župana aj primátora
-            krajského mesta.
+            Kliknite na svoj kraj a pozrite si hodnotenie kandidátov na župana aj primátora
+            krajského mesta. Farba kraja zobrazuje prevažujúce hodnotenie kandidátov.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {KRAJS.map((kraj) => {
+        <div className="rounded-xl border bg-card p-4 sm:p-6 mb-10">
+          <SlovakiaInteractiveMap statsByKraj={statsByKraj} />
+        </div>
+
+        {/* Accessible region list — also serves mobile users who prefer tapping a list */}
+        <details className="mb-2">
+          <summary className="cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground">
+            Zobraziť kraje ako zoznam
+          </summary>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            {KRAJS.map((kraj) => {
             const stats = statsByKraj?.[kraj.id];
             return (
               <Link
