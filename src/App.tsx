@@ -10,6 +10,10 @@ import Elections from "./pages/Elections";
 import WhyVoteMatters from "./pages/WhyVoteMatters";
 import NotFound from "./pages/NotFound";
 import Metodologia from "./pages/Metodologia";
+import SlovakiaMap from "./pages/SlovakiaMap";
+import RegionPage from "./pages/RegionPage";
+import CandidateDetail from "./pages/CandidateDetail";
+import Questionnaire from "./pages/Questionnaire";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +25,11 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Elections />} />
+            <Route path="/" element={<SlovakiaMap />} />
+            <Route path="/region/:krajId" element={<RegionPage />} />
+            <Route path="/kandidat/:id" element={<CandidateDetail />} />
+            <Route path="/dotaznik/:uuid" element={<Questionnaire />} />
+            <Route path="/kandidati" element={<Elections />} />
             <Route path="/preco-volit" element={<WhyVoteMatters />} />
             <Route path="/klimaticka-zmena" element={<ClimateChange />} />
             <Route path="/klimaticke-data" element={<Index />} />
