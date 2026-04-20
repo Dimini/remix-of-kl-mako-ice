@@ -21,6 +21,7 @@ import AdminCandidatesList from "./pages/admin/AdminCandidatesList";
 import AdminCandidateDetail from "./pages/admin/AdminCandidateDetail";
 import AdminReviewQueue from "./pages/admin/AdminReviewQueue";
 import AdminExport from "./pages/admin/AdminExport";
+import AdminLogin from "./pages/admin/AdminLogin";
 
 const queryClient = new QueryClient();
 
@@ -44,7 +45,10 @@ const App = () => (
               <Route path="/klimaticke-data" element={<Index />} />
               <Route path="/metodologia" element={<Metodologia />} />
 
-              {/* Admin — every route inside is password-gated. */}
+              {/* Admin login — public. */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+
+              {/* Admin — every route inside requires session + reviewer/admin role. */}
               <Route path="/admin" element={<AdminGate><AdminLayout /></AdminGate>}>
                 <Route index element={<AdminCandidatesList />} />
                 <Route path="candidate/:id" element={<AdminCandidateDetail />} />
