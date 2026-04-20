@@ -1,11 +1,12 @@
-import { useLiveQuery } from "dexie-react-hooks";
+import { useCallback } from "react";
 import { History } from "lucide-react";
 
-import { db } from "@/lib/db/dexie";
 import { Card } from "@/components/ui/card";
 import { Badge as UiBadge } from "@/components/ui/badge";
 import { STATE_LABELS } from "@/lib/stateMachine";
 import type { CandidateState } from "@/types/domain";
+import { listAuditFor } from "@/lib/audit";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 
 interface AuditLogPanelProps {
   candidateId: string;
@@ -17,6 +18,7 @@ const ACTION_LABELS: Record<string, string> = {
   NEEDS_REVISION: "Vrátené na úpravy",
   SCORE_SAVED: "Uložené skóre",
   ADJUSTMENT: "Úprava recenzentom",
+  QUESTIONNAIRE_SUBMITTED: "Dotazník odoslaný",
 };
 
 const ACTION_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -25,13 +27,11 @@ const ACTION_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   STATE_CHANGE: "secondary",
   SCORE_SAVED: "outline",
   ADJUSTMENT: "outline",
+  QUESTIONNAIRE_SUBMITTED: "secondary",
 };
 
 function fmt(iso: string) {
-  return new Date(iso).toLocaleString("sk-SK", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
+  return new Date(iso).toLocaleString("sk-SK", { dateStyle: "short", timeStyle: "short" });
 }
 
 function stateLabel(s?: string) {
@@ -39,16 +39,9 @@ function stateLabel(s?: string) {
 }
 
 export function AuditLogPanel({ candidateId }: AuditLogPanelProps) {
-  const entries =
-    useLiveQuery(
-      () =>
-        db.auditLog
-          .where("candidateId")
-          .equals(candidateId)
-          .reverse()
-          .sortBy("at"),
-      [candidateId],
-    ) ?? [];
+  const fetcher = useCallback(() => listAuditFor(candidateId), [candidateId]);
+  const { data } = useSupabaseQuery(fetcher, [candidateId], ["review_audit_log"]);
+  const entries = data ?? [];
 
   return (
     <Card className="p-6">
@@ -76,9 +69,7 @@ export function AuditLogPanel({ candidateId }: AuditLogPanelProps) {
                     </span>
                   )}
                 </div>
-                {e.note && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{e.note}</p>
-                )}
+                {e.note && <p className="text-xs text-muted-foreground mt-0.5">{e.note}</p>}
               </div>
               <div className="text-xs text-muted-foreground text-right shrink-0">
                 <div className="font-medium text-foreground">{e.reviewer}</div>

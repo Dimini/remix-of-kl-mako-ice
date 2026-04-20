@@ -1,22 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Inbox,
-  RotateCcw,
-  Send,
-} from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Inbox, RotateCcw, Send } from "lucide-react";
 
-import { db } from "@/lib/db/dexie";
 import { computeScore, meanConfidence } from "@/lib/scoring/computeScore";
 import { logAudit } from "@/lib/audit";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { canTransition, STATE_LABELS } from "@/lib/stateMachine";
 import { getKraj } from "@/lib/krajs";
 import type { ScoreBreakdown } from "@/types/domain";
+import { adminCandidatesRepo, adminEvidenceRepo } from "@/lib/repository/adminCandidates";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,7 +22,6 @@ import { CandidateBadge } from "@/components/klima/CandidateBadge";
 import { PillarBar } from "@/components/klima/PillarBar";
 import { toast } from "@/hooks/use-toast";
 
-// Reviewable states: candidates that need a human pass.
 const REVIEWABLE = new Set(["ANALYZED", "IN_REVIEW", "NEEDS_REVISION"]);
 
 interface Adjustments {
@@ -38,27 +31,13 @@ interface Adjustments {
   actionsNorm: number | null;
 }
 
-const SUB_KEYS: Array<keyof Adjustments> = [
-  "programNorm",
-  "questionnaireNorm",
-  "votesNorm",
-  "actionsNorm",
-];
-
+const SUB_KEYS: Array<keyof Adjustments> = ["programNorm", "questionnaireNorm", "votesNorm", "actionsNorm"];
 const SUB_LABELS: Record<keyof Adjustments, string> = {
-  programNorm: "Program",
-  questionnaireNorm: "Dotazník",
-  votesNorm: "Hlasovania",
-  actionsNorm: "Činy",
+  programNorm: "Program", questionnaireNorm: "Dotazník", votesNorm: "Hlasovania", actionsNorm: "Činy",
 };
 
 function fromScore(s: ScoreBreakdown): Adjustments {
-  return {
-    programNorm: s.programNorm,
-    questionnaireNorm: s.questionnaireNorm,
-    votesNorm: s.votesNorm,
-    actionsNorm: s.actionsNorm,
-  };
+  return { programNorm: s.programNorm, questionnaireNorm: s.questionnaireNorm, votesNorm: s.votesNorm, actionsNorm: s.actionsNorm };
 }
 
 function recomputePillars(adj: Adjustments) {
@@ -66,19 +45,16 @@ function recomputePillars(adj: Adjustments) {
   if (adj.programNorm !== null) slovaParts.push(adj.programNorm);
   if (adj.questionnaireNorm !== null) slovaParts.push(adj.questionnaireNorm);
   const slova = slovaParts.length === 0 ? null : slovaParts.reduce((s, n) => s + n, 0) / slovaParts.length;
-
   let skutky: number | null;
   if (adj.votesNorm === null && adj.actionsNorm === null) skutky = null;
   else if (adj.votesNorm === null) skutky = adj.actionsNorm;
   else if (adj.actionsNorm === null) skutky = adj.votesNorm;
   else skutky = adj.votesNorm * 0.417 + adj.actionsNorm * 0.583;
-
   let total: number | null;
   if (slova === null && skutky === null) total = null;
   else if (slova === null) total = skutky;
   else if (skutky === null) total = slova;
   else total = slova * 0.4 + skutky * 0.6;
-
   return {
     slova: slova === null ? null : Math.round(slova * 10) / 10,
     skutky: skutky === null ? null : Math.round(skutky * 10) / 10,
@@ -87,34 +63,32 @@ function recomputePillars(adj: Adjustments) {
 }
 
 export default function AdminReviewQueue() {
-  const { reviewer } = useAdminAuth();
-  const all = useLiveQuery(() => db.candidates.toArray(), []) ?? [];
+  const { reviewer, user } = useAdminAuth();
+  const allFetcher = useCallback(() => adminCandidatesRepo.list(), []);
+  const { data: all = [], refetch: refetchAll } = useSupabaseQuery(allFetcher, [], ["candidates"]);
   const queue = useMemo(
-    () => all.filter((c) => REVIEWABLE.has(c.state)).sort((a, b) => a.name.localeCompare(b.name)),
+    () => (all ?? []).filter((c) => REVIEWABLE.has(c.state)).sort((a, b) => a.name.localeCompare(b.name)),
     [all],
   );
 
   const [cursor, setCursor] = useState(0);
-  useEffect(() => {
-    if (cursor >= queue.length) setCursor(0);
-  }, [queue.length, cursor]);
+  useEffect(() => { if (cursor >= queue.length) setCursor(0); }, [queue.length, cursor]);
 
   const candidate = queue[cursor];
-  const evidence =
-    useLiveQuery(
-      () =>
-        candidate
-          ? db.evidence.where("candidateId").equals(candidate.id).toArray()
-          : Promise.resolve([]),
-      [candidate?.id],
-    ) ?? [];
 
-  // AI suggestion = pure recompute from evidence.
+  const evFetcher = useCallback(
+    () => (candidate ? adminEvidenceRepo.listByCandidate(candidate.id) : Promise.resolve([])),
+    [candidate?.id],
+  );
+  const { data: evidence = [] } = useSupabaseQuery(evFetcher, [candidate?.id], [
+    "source_citations", "documented_actions", "votes", "programs",
+  ]);
+
   const aiResult = candidate
     ? computeScore({
-        evidence,
+        evidence: evidence ?? [],
         isNewCandidate: !candidate.incumbent,
-        overallConfidence: meanConfidence(evidence),
+        overallConfidence: meanConfidence(evidence ?? []),
         questionnaireResponded: candidate.questionnaireResponded,
       })
     : null;
@@ -122,14 +96,8 @@ export default function AdminReviewQueue() {
   const [adj, setAdj] = useState<Adjustments | null>(null);
   const [note, setNote] = useState("");
 
-  // Reset adjustments when candidate changes.
   useEffect(() => {
-    if (aiResult) {
-      setAdj(fromScore(aiResult));
-      setNote("");
-    } else {
-      setAdj(null);
-    }
+    if (aiResult) { setAdj(fromScore(aiResult)); setNote(""); } else setAdj(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candidate?.id]);
 
@@ -155,9 +123,7 @@ export default function AdminReviewQueue() {
     setAdj((prev) => (prev ? { ...prev, [key]: v === null || Number.isNaN(v) ? null : Math.max(0, Math.min(100, v)) } : prev));
   }
 
-  function reset() {
-    if (aiResult) setAdj(fromScore(aiResult));
-  }
+  function reset() { if (aiResult) setAdj(fromScore(aiResult)); }
 
   function deltas(): Record<string, number | null> {
     const out: Record<string, number | null> = {};
@@ -171,28 +137,22 @@ export default function AdminReviewQueue() {
     return out;
   }
 
-  async function persistReviewerScore() {
-    const finalScore: ScoreBreakdown = {
-      ...aiResult!,
-      programNorm: adj!.programNorm,
-      questionnaireNorm: adj!.questionnaireNorm,
-      votesNorm: adj!.votesNorm,
-      actionsNorm: adj!.actionsNorm,
-      slova: reviewerPillars.slova,
-      skutky: reviewerPillars.skutky,
-      total: reviewerPillars.total,
-    };
-    // Recompute badge from total via the same thresholds (without re-running grey logic — reviewer overrides).
+  async function persistReviewerScore(approved: boolean) {
     const t = reviewerPillars.total;
-    if (t !== null) {
-      finalScore.badge =
-        t >= 80 ? "green" : t >= 55 ? "yellow" : t >= 30 ? "orange" : "red";
-      finalScore.badgeSubtype = undefined;
-    }
-    await db.candidates.update(candidate.id, {
-      score: finalScore,
-      updatedAt: new Date().toISOString(),
+    const badge = t === null
+      ? "grey" : t >= 80 ? "green" : t >= 55 ? "yellow" : t >= 30 ? "orange" : "red";
+    const { error } = await supabase.from("scores").insert({
+      candidate_id: candidate.id,
+      pillar1_score: reviewerPillars.slova,
+      pillar2_score: reviewerPillars.skutky,
+      total_score: reviewerPillars.total,
+      badge,
+      formula_version: aiResult!.formulaVersion,
+      is_approved: approved,
+      approved_by: user?.id ?? null,
+      approved_at: approved ? new Date().toISOString() : null,
     });
+    if (error) throw error;
     const d = deltas();
     if (Object.keys(d).length > 0) {
       await logAudit({
@@ -207,108 +167,54 @@ export default function AdminReviewQueue() {
 
   async function handleSendToReview() {
     const guard = canTransition(candidate.state, "IN_REVIEW");
-    if (!guard.ok) {
-      toast({ title: "Chyba", description: guard.reason, variant: "destructive" });
-      return;
-    }
-    await persistReviewerScore();
-    await db.candidates.update(candidate.id, { state: "IN_REVIEW" });
-    await logAudit({
-      candidateId: candidate.id,
-      reviewer: reviewer || "neznámy",
-      action: "STATE_CHANGE",
-      fromState: candidate.state,
-      toState: "IN_REVIEW",
-    });
+    if (!guard.ok) { toast({ title: "Chyba", description: guard.reason, variant: "destructive" }); return; }
+    await persistReviewerScore(false);
+    await adminCandidatesRepo.update(candidate.id, { state: "IN_REVIEW" });
+    await logAudit({ candidateId: candidate.id, reviewer: reviewer || "neznámy", action: "STATE_CHANGE", fromState: candidate.state, toState: "IN_REVIEW" });
     toast({ title: "Odoslané do revízie", description: candidate.name });
+    refetchAll();
   }
 
   async function handleApprove() {
     const guard = canTransition(candidate.state, "APPROVED");
-    if (!guard.ok) {
-      toast({ title: "Chyba", description: guard.reason, variant: "destructive" });
-      return;
-    }
-    await persistReviewerScore();
-    await db.candidates.update(candidate.id, { state: "APPROVED", isApproved: true });
-    await logAudit({
-      candidateId: candidate.id,
-      reviewer: reviewer || "neznámy",
-      action: "APPROVED",
-      fromState: candidate.state,
-      toState: "APPROVED",
-      note: note.trim() || undefined,
-    });
+    if (!guard.ok) { toast({ title: "Chyba", description: guard.reason, variant: "destructive" }); return; }
+    await persistReviewerScore(true);
+    await adminCandidatesRepo.update(candidate.id, { state: "APPROVED", isApproved: true });
+    await logAudit({ candidateId: candidate.id, reviewer: reviewer || "neznámy", action: "APPROVED", fromState: candidate.state, toState: "APPROVED", note: note.trim() || undefined });
     toast({ title: "Schválené ✓", description: candidate.name });
+    refetchAll();
   }
 
   async function handleNeedsRevision() {
     const guard = canTransition(candidate.state, "NEEDS_REVISION");
-    if (!guard.ok) {
-      toast({
-        title: "Chyba",
-        description: guard.reason ?? "Tento prechod je dostupný iba z IN_REVIEW.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!note.trim()) {
-      toast({
-        title: "Chýba poznámka",
-        description: "Pri vrátení na úpravy uveďte dôvod v poznámke.",
-        variant: "destructive",
-      });
-      return;
-    }
-    await db.candidates.update(candidate.id, {
-      state: "NEEDS_REVISION",
-      isApproved: false,
-    });
-    await logAudit({
-      candidateId: candidate.id,
-      reviewer: reviewer || "neznámy",
-      action: "NEEDS_REVISION",
-      fromState: candidate.state,
-      toState: "NEEDS_REVISION",
-      note: note.trim(),
-    });
+    if (!guard.ok) { toast({ title: "Chyba", description: guard.reason ?? "Tento prechod je dostupný iba z IN_REVIEW.", variant: "destructive" }); return; }
+    if (!note.trim()) { toast({ title: "Chýba poznámka", description: "Pri vrátení na úpravy uveďte dôvod v poznámke.", variant: "destructive" }); return; }
+    await adminCandidatesRepo.update(candidate.id, { state: "NEEDS_REVISION", isApproved: false });
+    await logAudit({ candidateId: candidate.id, reviewer: reviewer || "neznámy", action: "NEEDS_REVISION", fromState: candidate.state, toState: "NEEDS_REVISION", note: note.trim() });
     toast({ title: "Vrátené na úpravy", description: candidate.name });
+    refetchAll();
   }
 
   return (
     <div className="space-y-4">
-      {/* Header / queue nav */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Front kontroly</h1>
           <p className="text-sm text-muted-foreground">
             {cursor + 1} z {queue.length} · {candidate.name} ·{" "}
-            <Link to={`/admin/candidate/${candidate.id}`} className="text-primary hover:underline">
-              otvoriť detail
-            </Link>
+            <Link to={`/admin/candidate/${candidate.id}`} className="text-primary hover:underline">otvoriť detail</Link>
           </p>
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCursor((c) => (c - 1 + queue.length) % queue.length)}
-            disabled={queue.length < 2}
-          >
+          <Button variant="outline" size="sm" onClick={() => setCursor((c) => (c - 1 + queue.length) % queue.length)} disabled={queue.length < 2}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCursor((c) => (c + 1) % queue.length)}
-            disabled={queue.length < 2}
-          >
+          <Button variant="outline" size="sm" onClick={() => setCursor((c) => (c + 1) % queue.length)} disabled={queue.length < 2}>
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {/* Candidate meta */}
       <Card className="p-4 flex items-center gap-3 flex-wrap">
         <UiBadge variant="secondary" className="font-mono">{candidate.state}</UiBadge>
         <span className="text-sm">{STATE_LABELS[candidate.state]}</span>
@@ -320,25 +226,14 @@ export default function AdminReviewQueue() {
         <span className="text-sm">{candidate.party}</span>
       </Card>
 
-      {/* Split panel */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* AI suggestion */}
         <Card className="p-5 space-y-4">
           <div>
-            <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
-              AI návrh
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Vypočítané z dôkazov · formula {aiResult.formulaVersion}
-            </div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">AI návrh</div>
+            <div className="text-sm text-muted-foreground">Vypočítané z dôkazov · formula {aiResult.formulaVersion}</div>
           </div>
           <div className="flex items-center gap-3">
-            <CandidateBadge
-              badge={aiResult.badge}
-              score={aiResult.total}
-              subtype={aiResult.badgeSubtype}
-              size="lg"
-            />
+            <CandidateBadge badge={aiResult.badge} score={aiResult.total} subtype={aiResult.badgeSubtype} size="lg" />
           </div>
           <PillarBar slova={aiResult.slova} skutky={aiResult.skutky} />
           <div className="grid grid-cols-2 gap-3 text-sm">
@@ -353,37 +248,24 @@ export default function AdminReviewQueue() {
           </div>
         </Card>
 
-        {/* Reviewer adjustments */}
         <Card className="p-5 space-y-4">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
-                Úprava recenzentom
-              </div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">Úprava recenzentom</div>
               <div className="text-sm text-muted-foreground">
                 Recenzent: <span className="text-foreground font-medium">{reviewer || "—"}</span>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={reset}>
-              <RotateCcw className="w-4 h-4 mr-1" /> Reset
-            </Button>
+            <Button variant="ghost" size="sm" onClick={reset}><RotateCcw className="w-4 h-4 mr-1" /> Reset</Button>
           </div>
 
           <div className="flex items-center gap-3">
             <CandidateBadge
-              badge={
-                reviewerPillars.total === null
-                  ? "grey"
-                  : reviewerPillars.total >= 80
-                    ? "green"
-                    : reviewerPillars.total >= 55
-                      ? "yellow"
-                      : reviewerPillars.total >= 30
-                        ? "orange"
-                        : "red"
-              }
-              score={reviewerPillars.total}
-              size="lg"
+              badge={reviewerPillars.total === null ? "grey"
+                : reviewerPillars.total >= 80 ? "green"
+                : reviewerPillars.total >= 55 ? "yellow"
+                : reviewerPillars.total >= 30 ? "orange" : "red"}
+              score={reviewerPillars.total} size="lg"
             />
           </div>
           <PillarBar slova={reviewerPillars.slova} skutky={reviewerPillars.skutky} />
@@ -392,25 +274,13 @@ export default function AdminReviewQueue() {
             {SUB_KEYS.map((k) => {
               const aiVal = aiResult[k];
               const revVal = adj[k];
-              const delta =
-                aiVal === null || revVal === null ? null : Math.round((revVal - aiVal) * 10) / 10;
+              const delta = aiVal === null || revVal === null ? null : Math.round((revVal - aiVal) * 10) / 10;
               return (
                 <div key={k}>
                   <Label className="text-xs">{SUB_LABELS[k]}</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={revVal ?? ""}
-                    placeholder="—"
-                    onChange={(e) => changeAdj(k, e.target.value)}
-                  />
+                  <Input type="number" min={0} max={100} value={revVal ?? ""} placeholder="—" onChange={(e) => changeAdj(k, e.target.value)} />
                   {delta !== null && delta !== 0 && (
-                    <div
-                      className={`text-xs mt-0.5 tabular-nums ${
-                        delta > 0 ? "text-badge-green" : "text-badge-red"
-                      }`}
-                    >
+                    <div className={`text-xs mt-0.5 tabular-nums ${delta > 0 ? "text-badge-green" : "text-badge-red"}`}>
                       {delta > 0 ? "+" : ""}{delta} vs AI
                     </div>
                   )}
@@ -420,32 +290,19 @@ export default function AdminReviewQueue() {
           </div>
 
           <div>
-            <Label htmlFor="note" className="text-xs">
-              Poznámka recenzenta {`(povinná pri vrátení na úpravy)`}
-            </Label>
-            <Textarea
-              id="note"
-              rows={3}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Dôvod úpravy alebo požiadavky pre ďalšiu fázu zberu dát…"
-            />
+            <Label htmlFor="note" className="text-xs">Poznámka recenzenta {`(povinná pri vrátení na úpravy)`}</Label>
+            <Textarea id="note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Dôvod úpravy alebo požiadavky pre ďalšiu fázu zberu dát…" />
           </div>
         </Card>
       </div>
 
-      {/* Action bar */}
       <Card className="p-4 flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm text-muted-foreground">
-          {Object.keys(deltas()).length > 0
-            ? `${Object.keys(deltas()).length} úprav vs AI`
-            : "Bez úprav"}
+          {Object.keys(deltas()).length > 0 ? `${Object.keys(deltas()).length} úprav vs AI` : "Bez úprav"}
         </div>
         <div className="flex flex-wrap gap-2">
           {candidate.state === "ANALYZED" && (
-            <Button variant="outline" onClick={handleSendToReview}>
-              <Send className="w-4 h-4 mr-1" /> Odoslať do revízie
-            </Button>
+            <Button variant="outline" onClick={handleSendToReview}><Send className="w-4 h-4 mr-1" /> Odoslať do revízie</Button>
           )}
           {candidate.state === "IN_REVIEW" && (
             <Button variant="outline" onClick={handleNeedsRevision} className="text-destructive">
@@ -453,14 +310,10 @@ export default function AdminReviewQueue() {
             </Button>
           )}
           {candidate.state === "IN_REVIEW" && (
-            <Button onClick={handleApprove}>
-              <Check className="w-4 h-4 mr-1" /> Schváliť a publikovať
-            </Button>
+            <Button onClick={handleApprove}><Check className="w-4 h-4 mr-1" /> Schváliť a publikovať</Button>
           )}
           {candidate.state === "NEEDS_REVISION" && (
-            <Button variant="outline" onClick={handleSendToReview}>
-              <Send className="w-4 h-4 mr-1" /> Po úpravách späť do kontroly
-            </Button>
+            <Button variant="outline" onClick={handleSendToReview}><Send className="w-4 h-4 mr-1" /> Po úpravách späť do kontroly</Button>
           )}
         </div>
       </Card>

@@ -1,16 +1,8 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { db } from "@/lib/db/dexie";
 import { Download } from "lucide-react";
-import {
-  EXPORT_SCHEMA_VERSION,
-  type ExportPayload,
-  type ExportedCandidate,
-  type ExportedEvidence,
-  type ExportedAuditEntry,
-  type ExportedQuestionnaireResponse,
-} from "@/lib/export/exportSchema";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminExport() {
   const [busy, setBusy] = useState(false);
@@ -18,19 +10,27 @@ export default function AdminExport() {
   const exportJson = async () => {
     setBusy(true);
     try {
-      const [candidates, evidence, auditLog, questionnaireResponses] = await Promise.all([
-        db.candidates.toArray(),
-        db.evidence.toArray(),
-        db.auditLog.toArray(),
-        db.questionnaireResponses.toArray(),
+      const [c, sc, da, v, p, ar, q, s] = await Promise.all([
+        supabase.from("candidates").select("*"),
+        supabase.from("source_citations").select("*"),
+        supabase.from("documented_actions").select("*"),
+        supabase.from("votes").select("*"),
+        supabase.from("programs").select("*"),
+        supabase.from("review_audit_log").select("*"),
+        supabase.from("questionnaire_responses").select("*"),
+        supabase.from("scores").select("*"),
       ]);
-      const payload: ExportPayload = {
+      const payload = {
         exportedAt: new Date().toISOString(),
-        schemaVersion: EXPORT_SCHEMA_VERSION,
-        candidates: candidates as ExportedCandidate[],
-        evidence: evidence as ExportedEvidence[],
-        auditLog: auditLog as ExportedAuditEntry[],
-        questionnaireResponses: questionnaireResponses as ExportedQuestionnaireResponse[],
+        schemaVersion: "supabase-1",
+        candidates: c.data ?? [],
+        source_citations: sc.data ?? [],
+        documented_actions: da.data ?? [],
+        votes: v.data ?? [],
+        programs: p.data ?? [],
+        review_audit_log: ar.data ?? [],
+        questionnaire_responses: q.data ?? [],
+        scores: s.data ?? [],
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -47,13 +47,9 @@ export default function AdminExport() {
   return (
     <Card className="p-6 space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Export dát (Phase G handoff)</h1>
+        <h1 className="text-xl font-semibold">Export dát</h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Stiahnuť celý lokálny obsah ako JSON podľa kontraktu{" "}
-          <code className="text-xs">src/lib/export/exportSchema.ts</code> (schemaVersion ={" "}
-          {EXPORT_SCHEMA_VERSION}). Tento súbor + <code className="text-xs">supabase/seed-skeleton.sql</code> +{" "}
-          <code className="text-xs">docs/SUPABASE_IMPORT.md</code> tvoria odovzdávku pre Claude Code,
-          ktorý napíše reálnu Supabase migráciu.
+          Stiahnuť celý obsah Supabase databázy ako JSON snapshot (zálohovanie / debug).
         </p>
       </div>
       <Button onClick={exportJson} disabled={busy}>

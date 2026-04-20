@@ -15,7 +15,7 @@ import type {
   ScoreBreakdown,
   SourceCitation,
 } from "@/types/domain";
-import type { EvidenceRecord } from "@/lib/db/dexie";
+import type { EvidenceRecord } from "@/lib/repository/types";
 import { getEvidenceType, PILLAR_FOR_SOURCE } from "@/lib/evidenceTypes";
 
 export const FORMULA_VERSION = "v1.0";

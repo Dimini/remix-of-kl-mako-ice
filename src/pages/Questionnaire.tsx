@@ -36,7 +36,7 @@ import {
   type ScaleValue,
 } from "@/lib/repository/questionnaire";
 import { getKraj } from "@/lib/krajs";
-import type { CandidateRecord } from "@/lib/db/dexie";
+import type { CandidateRecord } from "@/lib/repository/types";
 
 // ---------------------------------------------------------------------------
 // Climate questionnaire — Slovak labels
