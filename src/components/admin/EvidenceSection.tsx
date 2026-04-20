@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useState, useCallback } from "react";
 import { Pencil, Plus, Trash2, ExternalLink } from "lucide-react";
 
-import { db, type EvidenceRecord } from "@/lib/db/dexie";
+import type { EvidenceRecord } from "@/lib/repository/types";
 import { adminEvidenceRepo } from "@/lib/repository/adminCandidates";
 import { getEvidenceType, PILLAR_FOR_SOURCE } from "@/lib/evidenceTypes";
 import { EvidenceForm } from "@/components/admin/EvidenceForm";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,11 +26,17 @@ export function EvidenceSection({ candidateId }: EvidenceSectionProps) {
   const [editing, setEditing] = useState<EvidenceRecord | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const items =
-    useLiveQuery(
-      () => db.evidence.where("candidateId").equals(candidateId).toArray(),
-      [candidateId],
-    ) ?? [];
+  const fetcher = useCallback(
+    () => adminEvidenceRepo.listByCandidate(candidateId),
+    [candidateId],
+  );
+  const { data, refetch } = useSupabaseQuery(fetcher, [candidateId], [
+    "source_citations",
+    "documented_actions",
+    "votes",
+    "programs",
+  ]);
+  const items = data ?? [];
 
   const slova = items.filter((i) => i.pillar === "slova");
   const skutky = items.filter((i) => i.pillar === "skutky");
@@ -39,6 +45,7 @@ export function EvidenceSection({ candidateId }: EvidenceSectionProps) {
     if (!confirm("Zmazať tento dôkaz?")) return;
     await adminEvidenceRepo.remove(id);
     toast({ title: "Zmazané", description: "Dôkaz bol odstránený." });
+    refetch();
   }
 
   const showForm = creating || editing !== null;
@@ -67,6 +74,7 @@ export function EvidenceSection({ candidateId }: EvidenceSectionProps) {
             onSaved={() => {
               setCreating(false);
               setEditing(null);
+              refetch();
             }}
             onCancel={() => {
               setCreating(false);

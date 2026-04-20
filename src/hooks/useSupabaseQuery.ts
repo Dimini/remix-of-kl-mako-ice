@@ -36,8 +36,7 @@ export function useSupabaseQuery<T>(
     if (realtimeTables.length === 0) return;
     const channel = supabase.channel(`rt-${realtimeTables.join("-")}-${Math.random().toString(36).slice(2, 7)}`);
     for (const t of realtimeTables) {
-      channel.on(
-        // @ts-expect-error - postgres_changes typing
+      (channel.on as unknown as (e: string, f: object, cb: () => void) => void)(
         "postgres_changes",
         { event: "*", schema: "public", table: t },
         () => void run(),

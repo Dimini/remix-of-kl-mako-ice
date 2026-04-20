@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, X } from "lucide-react";
 
-import type { EvidenceRecord } from "@/lib/db/dexie";
+import type { EvidenceRecord } from "@/lib/repository/types";
 import {
   ALL_EVIDENCE_TYPES,
   PILLAR_FOR_SOURCE,
@@ -117,7 +117,7 @@ export function EvidenceForm({ candidateId, initial, onSaved, onCancel }: Eviden
     }
     const now = new Date().toISOString();
     const record: EvidenceRecord = {
-      id: initial?.id ?? `ev-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      id: initial?.id ?? crypto.randomUUID(),
       candidateId,
       pillar: definition.pillar,
       sourceType: definition.sourceType,
