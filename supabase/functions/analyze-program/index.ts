@@ -189,7 +189,7 @@ async function extractPdfWithClaude(buf: ArrayBuffer): Promise<string> {
   if (buf.byteLength > 30 * 1024 * 1024) {
     throw new Error("PDF too large for Claude document fallback (>30 MB)");
   }
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  const apiKey = getAnthropicApiKey();
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
 
   // Base64-encode the PDF (chunked to avoid stack overflow on large buffers).
@@ -263,7 +263,7 @@ async function analyzeWithClaude(
   text: string,
   candidateName: string,
 ): Promise<AnalysisResult> {
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  const apiKey = getAnthropicApiKey();
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
 
   const chunks = chunkText(text, MAX_CHUNK_CHARS, CHUNK_OVERLAP);
@@ -439,6 +439,25 @@ function chunkText(
 }
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function getAnthropicApiKey(): string {
+  const raw = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!raw) return "";
+
+  const sanitized = raw.replace(/[\r\n]+/g, "").trim();
+  if (!sanitized) {
+    throw new Error("ANTHROPIC_API_KEY is empty after sanitization");
+  }
+
+  for (const ch of sanitized) {
+    const code = ch.charCodeAt(0);
+    if (code > 0xff || (code < 0x20 && code !== 0x09) || code === 0x7f) {
+      throw new Error("ANTHROPIC_API_KEY contains invalid header characters");
+    }
+  }
+
+  return sanitized;
+}
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
