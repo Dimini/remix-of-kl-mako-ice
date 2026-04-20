@@ -3,7 +3,6 @@
 // passages using the Carter Method, and writes results to the `programs` table.
 // CAP-07 (score-candidate) reads programs.normalized_score in its SLOVÁ computation.
 
-import Anthropic from "npm:@anthropic-ai/sdk@0.32.1";
 import { corsHeaders, handleCors } from "../_shared/cors.ts";
 import { verifyReviewerOrAdmin } from "../_shared/auth.ts";
 import { createServiceClient } from "../_shared/db.ts";
@@ -263,16 +262,15 @@ async function analyzeWithClaude(
   text: string,
   candidateName: string,
 ): Promise<AnalysisResult> {
-  const anthropic = new Anthropic({
-    apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
-  });
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
 
   const chunks = chunkText(text, MAX_CHUNK_CHARS, CHUNK_OVERLAP);
   let allSentences: CitationItem[] = [];
   let totalSentences = 0;
 
   for (const chunk of chunks) {
-    const result = await analyzeChunk(anthropic, chunk, candidateName);
+    const result = await analyzeChunk(apiKey, chunk, candidateName);
     allSentences = allSentences.concat(result.sentences);
     totalSentences += result.total_sentences;
   }
@@ -309,7 +307,7 @@ async function analyzeWithClaude(
 }
 
 async function analyzeChunk(
-  anthropic: Anthropic,
+  apiKey: string,
   chunkText: string,
   candidateName: string,
 ): Promise<{ sentences: CitationItem[]; total_sentences: number }> {
@@ -366,16 +364,28 @@ ${chunkText}
 ---`;
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
-      temperature: attempt === 0 ? 0.2 : 0,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 8192,
+        temperature: attempt === 0 ? 0.2 : 0,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      }),
     });
 
-    const text =
-      response.content[0]?.type === "text" ? response.content[0].text : "";
+    if (!resp.ok) {
+      const errBody = await resp.text();
+      throw new Error(`Anthropic API ${resp.status}: ${errBody.slice(0, 500)}`);
+    }
+    const data = await resp.json();
+    const text = data?.content?.[0]?.type === "text" ? data.content[0].text : "";
     const parsed = tryParseJson(text);
     if (parsed && isValidShape(parsed)) {
       return parsed as { sentences: CitationItem[]; total_sentences: number };
