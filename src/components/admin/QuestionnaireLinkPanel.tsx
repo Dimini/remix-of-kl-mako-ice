@@ -1,13 +1,12 @@
-import { useEffect, useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useCallback, useEffect, useState } from "react";
 import { Copy, ExternalLink, Mail, Check } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { db } from "@/lib/db/dexie";
-import { ensureUuid } from "@/lib/repository/questionnaire";
+import { ensureUuid, getResponseForCandidate } from "@/lib/repository/questionnaire";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 import { toast } from "@/hooks/use-toast";
 
 interface Props {
@@ -18,10 +17,8 @@ export function QuestionnaireLinkPanel({ candidateId }: Props) {
   const [uuid, setUuid] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const response = useLiveQuery(
-    () => db.questionnaireResponses.get(candidateId),
-    [candidateId],
-  );
+  const fetcher = useCallback(() => getResponseForCandidate(candidateId), [candidateId]);
+  const { data: response } = useSupabaseQuery(fetcher, [candidateId], ["questionnaire_responses"]);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,9 +26,7 @@ export function QuestionnaireLinkPanel({ candidateId }: Props) {
       const u = await ensureUuid(candidateId);
       if (!cancelled) setUuid(u);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [candidateId]);
 
   if (!uuid) return null;
@@ -45,11 +40,7 @@ export function QuestionnaireLinkPanel({ candidateId }: Props) {
       setTimeout(() => setCopied(false), 1500);
       toast({ title: "Skopírované", description: "Odkaz je v schránke." });
     } catch {
-      toast({
-        title: "Skopírujte ručne",
-        description: url,
-        variant: "destructive",
-      });
+      toast({ title: "Skopírujte ručne", description: url, variant: "destructive" });
     }
   }
 
@@ -111,9 +102,7 @@ export function QuestionnaireLinkPanel({ candidateId }: Props) {
               <div className="text-xs font-medium text-muted-foreground mb-1">
                 Doplňujúci komentár:
               </div>
-              <p className="text-sm whitespace-pre-wrap">
-                {response.additionalNotes}
-              </p>
+              <p className="text-sm whitespace-pre-wrap">{response.additionalNotes}</p>
             </div>
           )}
         </div>

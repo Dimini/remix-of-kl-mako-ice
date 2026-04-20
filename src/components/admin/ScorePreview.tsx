@@ -1,11 +1,12 @@
-import { useLiveQuery } from "dexie-react-hooks";
+import { useCallback } from "react";
 import { RefreshCw, Save } from "lucide-react";
 
-import { db } from "@/lib/db/dexie";
 import { computeScore, meanConfidence } from "@/lib/scoring/computeScore";
-import { adminCandidatesRepo } from "@/lib/repository/adminCandidates";
+import { adminCandidatesRepo, adminEvidenceRepo } from "@/lib/repository/adminCandidates";
 import { logAudit } from "@/lib/audit";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,18 +19,16 @@ interface ScorePreviewProps {
   candidateId: string;
 }
 
-// Live, read-only preview of the computed score for the candidate currently
-// open in the admin detail view. Recomputes whenever evidence changes.
-// "Uložiť skóre" persists the snapshot onto the candidate record so the
-// public-facing surfaces (and the Phase G JSON export) see it.
 export function ScorePreview({ candidateId }: ScorePreviewProps) {
-  const { reviewer } = useAdminAuth();
-  const candidate = useLiveQuery(() => db.candidates.get(candidateId), [candidateId]);
-  const evidence =
-    useLiveQuery(
-      () => db.evidence.where("candidateId").equals(candidateId).toArray(),
-      [candidateId],
-    ) ?? [];
+  const { reviewer, user } = useAdminAuth();
+
+  const candFetcher = useCallback(() => adminCandidatesRepo.getById(candidateId), [candidateId]);
+  const evFetcher = useCallback(() => adminEvidenceRepo.listByCandidate(candidateId), [candidateId]);
+  const { data: candidate } = useSupabaseQuery(candFetcher, [candidateId], ["candidates"]);
+  const { data: evidenceData } = useSupabaseQuery(evFetcher, [candidateId], [
+    "source_citations", "documented_actions", "votes", "programs",
+  ]);
+  const evidence = evidenceData ?? [];
 
   if (!candidate) return null;
 
@@ -43,7 +42,22 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
   const { debug, ...score } = result;
 
   async function handleSave() {
-    await adminCandidatesRepo.update(candidateId, { score });
+    // Upsert into scores table (one row per candidate, latest version_number).
+    const { error } = await supabase.from("scores").insert({
+      candidate_id: candidateId,
+      pillar1_score: score.slova,
+      pillar2_score: score.skutky,
+      total_score: score.total,
+      badge: score.badge,
+      badge_subtype: score.badgeSubtype ?? null,
+      formula_version: score.formulaVersion,
+      is_approved: false,
+      approved_by: user?.id ?? null,
+    });
+    if (error) {
+      toast({ title: "Chyba pri ukladaní skóre", description: error.message, variant: "destructive" });
+      return;
+    }
     await logAudit({
       candidateId,
       reviewer: reviewer || "neznámy",
@@ -56,9 +70,6 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
     });
   }
 
-  const stale =
-    JSON.stringify(candidate.score) !== JSON.stringify(score);
-
   return (
     <Card className="p-6 space-y-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -69,12 +80,10 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {stale && (
-            <UiBadge variant="secondary" className="gap-1">
-              <RefreshCw className="w-3 h-3" /> Neuložené
-            </UiBadge>
-          )}
-          <Button size="sm" onClick={handleSave} disabled={!stale}>
+          <UiBadge variant="secondary" className="gap-1">
+            <RefreshCw className="w-3 h-3" /> Live
+          </UiBadge>
+          <Button size="sm" onClick={handleSave}>
             <Save className="w-4 h-4 mr-1" /> Uložiť skóre
           </Button>
         </div>
@@ -118,15 +127,7 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
   );
 }
 
-function SubScore({
-  label,
-  value,
-  muted,
-}: {
-  label: string;
-  value: number | null;
-  muted?: boolean;
-}) {
+function SubScore({ label, value, muted }: { label: string; value: number | null; muted?: boolean }) {
   return (
     <div className={muted ? "opacity-60" : ""}>
       <div className="text-xs text-muted-foreground">{label}</div>
