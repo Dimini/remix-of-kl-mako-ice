@@ -157,14 +157,73 @@ function stripHtml(html: string): string {
 }
 
 async function extractPdfText(buf: ArrayBuffer): Promise<string> {
+  // 1. Try native text extraction.
+  let nativeText = "";
   try {
-    // pdf-parse requires a Buffer; Deno provides globalThis.Buffer via Node compat.
     const { default: pdf } = await import("npm:pdf-parse@1.1.1");
     const data = await pdf(Buffer.from(buf));
-    return data.text ?? "";
-  } catch (_) {
-    return "";
+    nativeText = data.text ?? "";
+  } catch (e) {
+    console.warn("[analyze-program] pdf-parse failed:", e);
   }
+
+  const letterCount = (nativeText.match(/[A-Za-zÁ-ž]/g) || []).length;
+  if (nativeText.length > 500 && letterCount > 100) {
+    return nativeText;
+  }
+
+  // 2. Fallback: send PDF directly to Claude (vision/document support).
+  console.log(
+    `[analyze-program] native PDF extraction poor (chars=${nativeText.length}, letters=${letterCount}); using Claude document fallback`,
+  );
+  try {
+    return await extractPdfWithClaude(buf);
+  } catch (e) {
+    console.error("[analyze-program] Claude PDF fallback failed:", e);
+    return nativeText; // best-effort
+  }
+}
+
+async function extractPdfWithClaude(buf: ArrayBuffer): Promise<string> {
+  // Claude has a 32 MB document limit; bail early if larger.
+  if (buf.byteLength > 30 * 1024 * 1024) {
+    throw new Error("PDF too large for Claude document fallback (>30 MB)");
+  }
+  const { default: Anthropic } = await import("npm:@anthropic-ai/sdk@0.32.1");
+  const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
+
+  // Base64-encode the PDF (chunked to avoid stack overflow on large buffers).
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  const base64 = btoa(binary);
+
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 8192,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: { type: "base64", media_type: "application/pdf", data: base64 },
+          },
+          {
+            type: "text",
+            text:
+              "Extract ALL readable text from this PDF document verbatim. Preserve paragraph breaks. Do not summarise, do not add commentary, do not translate — return only the raw text content of the document.",
+          },
+        ],
+      },
+    ],
+  });
+
+  const text = response.content[0]?.type === "text" ? response.content[0].text : "";
+  return text.trim();
 }
 
 // ---------------------------------------------------------------------------
