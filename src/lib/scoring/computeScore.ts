@@ -100,8 +100,13 @@ export function computeScore(input: ScoreInput): ScoreResult {
   const program = scoring.filter((e) => e.sourceType === "program");
   const questionnaire = scoring.filter((e) => e.sourceType === "questionnaire");
   // Social = Phase 2; not used in MVP scoring.
-  const votes = scoring.filter((e) => e.sourceType === "vote");
-  const actions = scoring.filter((e) => e.sourceType === "action");
+  const votes = scoring.filter((e) => e.sourceType === "council_vote");
+  // Actions = everything in SKUTKY pillar that isn't a council vote.
+  const actions = scoring.filter(
+    (e) =>
+      e.pillar === "skutky" &&
+      e.sourceType !== "council_vote",
+  );
 
   // 3) Sub-scores ----------------------------------------------------------
   // PROGRAM: average of available evidence confidence-weighted into the

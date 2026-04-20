@@ -119,7 +119,7 @@ function buildCitations(rng: () => number, hasData: boolean): SourceCitation[] {
     {
       id: `c-${Math.floor(rng() * 1e9)}`,
       pillar: "skutky",
-      sourceType: "vote",
+      sourceType: "council_vote",
       url: "https://example.sk/zapisnica-2024-03.pdf",
       citationText:
         "Hlasovanie o rozšírení autobusovej siete – zápisnica zastupiteľstva 12.03.2024.",
