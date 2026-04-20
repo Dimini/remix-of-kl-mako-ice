@@ -39,12 +39,39 @@ export type CandidateState =
 
 export type ClimateRelevanceTier = 1 | 2 | 3;
 
+// Aligned to Postgres enum `public.source_type` (migration 001).
 export type SourceType =
+  | "council_vote"
+  | "resolution"
+  | "initiative"
   | "program"
   | "questionnaire"
-  | "social"
-  | "vote"
-  | "action";
+  | "social_post"
+  | "manual_entry";
+
+// Aligned to Postgres enum `public.evidence_type` (documented_actions.action_type).
+export type EvidenceType =
+  | "project_implementation"
+  | "public_statement"
+  | "attended_protest"
+  | "membership"
+  | "op_ed"
+  | "interview"
+  | "other";
+
+// Aligned to Postgres enum `public.audit_action`.
+export type AuditAction =
+  | "STATE_CHANGE"
+  | "APPROVED"
+  | "NEEDS_REVISION"
+  | "SCORE_SAVED"
+  | "ADJUSTMENT"
+  | "QUESTIONNAIRE_SUBMITTED";
+
+// Aligned to Postgres enum `public.vote_direction`.
+export type VoteDirection = "for" | "against" | "abstain" | "absent";
+
+export type Pillar = "slova" | "skutky";
 
 export interface SourceCitation {
   id: string;
