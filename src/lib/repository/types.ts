@@ -16,6 +16,8 @@ export interface EvidenceRecord extends SourceCitation {
   // "council_vote_for", "implemented_project", "program"…). Maps to a row
   // in one of the four evidence tables.
   evidenceType?: string;
+  // For program-derived sub-citations: pro/anti climate sentiment (color-coded in UI).
+  sentiment?: "pro_climate" | "anti_climate" | "neutral";
   createdAt: string;
   updatedAt: string;
 }
