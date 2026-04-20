@@ -100,6 +100,7 @@ export function evidenceFromCitation(row: CitationRow): EvidenceRecord {
 }
 
 export function evidenceFromAction(row: ActionRow): EvidenceRecord {
+  const pts = row.points !== null ? Number(row.points) : null;
   return {
     id: row.id,
     candidateId: row.candidate_id,
@@ -113,12 +114,14 @@ export function evidenceFromAction(row: ActionRow): EvidenceRecord {
     confidence: undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    pointValue: row.points !== null ? Number(row.points) : null,
+    pointValue: pts,
     evidenceType: row.action_type,
+    sentiment: pts !== null && pts > 0 ? "pro_climate" : pts !== null && pts < 0 ? "anti_climate" : undefined,
   };
 }
 
 export function evidenceFromVote(row: VoteRow): EvidenceRecord {
+  const dir = row.vote_direction;
   return {
     id: row.id,
     candidateId: row.candidate_id,
@@ -133,7 +136,8 @@ export function evidenceFromVote(row: VoteRow): EvidenceRecord {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     pointValue: row.points !== null ? Number(row.points) : null,
-    evidenceType: `council_vote_${row.vote_direction === "for" ? "for" : row.vote_direction === "against" ? "against" : "abstain"}`,
+    evidenceType: `council_vote_${dir === "for" ? "for" : dir === "against" ? "against" : "abstain"}`,
+    sentiment: dir === "for" ? "pro_climate" : dir === "against" ? "anti_climate" : undefined,
   };
 }
 
