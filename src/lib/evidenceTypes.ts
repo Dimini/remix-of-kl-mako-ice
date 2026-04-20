@@ -24,9 +24,11 @@ export interface EvidenceTypeDef {
 export const PILLAR_FOR_SOURCE: Record<SourceType, EvidencePillar> = {
   program: "slova",
   questionnaire: "slova",
-  social: "slova",
-  vote: "skutky",
-  action: "skutky",
+  social_post: "slova",
+  council_vote: "skutky",
+  resolution: "skutky",
+  initiative: "skutky",
+  manual_entry: "skutky",
 };
 
 // SLOVÁ — point values are NOT shown; sub-score is computed from the set.
@@ -47,7 +49,7 @@ export const SLOVA_TYPES: EvidenceTypeDef[] = [
   },
   {
     key: "social_post",
-    sourceType: "social",
+    sourceType: "social_post",
     pillar: "slova",
     label: "Príspevok na sociálnej sieti",
     description: "Verejný post / vyjadrenie kandidáta. (Phase 2 — voliteľné v MVP.)",
@@ -60,7 +62,7 @@ export const SKUTKY_TYPES: EvidenceTypeDef[] = [
   // Council votes — typically ±2 per vote (caps to ±n×2)
   {
     key: "council_vote_for",
-    sourceType: "vote",
+    sourceType: "council_vote",
     pillar: "skutky",
     label: "Hlasovanie ZA klimatické opatrenie",
     description: "Doložené hlasovanie v zastupiteľstve v prospech klimatického opatrenia.",
@@ -68,7 +70,7 @@ export const SKUTKY_TYPES: EvidenceTypeDef[] = [
   },
   {
     key: "council_vote_against",
-    sourceType: "vote",
+    sourceType: "council_vote",
     pillar: "skutky",
     label: "Hlasovanie PROTI klimatickému opatreniu",
     description: "Doložené hlasovanie v zastupiteľstve proti klimatickému opatreniu.",
@@ -76,7 +78,7 @@ export const SKUTKY_TYPES: EvidenceTypeDef[] = [
   },
   {
     key: "council_vote_abstain",
-    sourceType: "vote",
+    sourceType: "council_vote",
     pillar: "skutky",
     label: "Zdržanie sa pri klimatickom hlasovaní",
     description: "Zdržanie sa hlasovania o klimatickom opatrení (počíta sa ako čiastočné mínus).",
@@ -85,7 +87,7 @@ export const SKUTKY_TYPES: EvidenceTypeDef[] = [
   // Documented actions
   {
     key: "resolution",
-    sourceType: "action",
+    sourceType: "resolution",
     pillar: "skutky",
     label: "Iniciatíva / uznesenie",
     description: "Predložené uznesenie alebo iniciatíva s preukázateľným environmentálnym dopadom.",
@@ -93,7 +95,7 @@ export const SKUTKY_TYPES: EvidenceTypeDef[] = [
   },
   {
     key: "implemented_project",
-    sourceType: "action",
+    sourceType: "initiative",
     pillar: "skutky",
     label: "Realizovaný projekt",
     description: "Dokončený projekt s merateľným environmentálnym prínosom.",
@@ -101,7 +103,7 @@ export const SKUTKY_TYPES: EvidenceTypeDef[] = [
   },
   {
     key: "public_commitment",
-    sourceType: "action",
+    sourceType: "manual_entry",
     pillar: "skutky",
     label: "Verejný záväzok",
     description: "Verejne deklarovaný a dokumentovaný klimatický záväzok.",
@@ -109,7 +111,7 @@ export const SKUTKY_TYPES: EvidenceTypeDef[] = [
   },
   {
     key: "obstruction",
-    sourceType: "action",
+    sourceType: "manual_entry",
     pillar: "skutky",
     label: "Blokovanie / obštrukcia",
     description: "Dokumentované blokovanie klimatického opatrenia mimo hlasovaní.",
@@ -117,7 +119,7 @@ export const SKUTKY_TYPES: EvidenceTypeDef[] = [
   },
   {
     key: "harmful_project",
-    sourceType: "action",
+    sourceType: "manual_entry",
     pillar: "skutky",
     label: "Podpora environmentálne škodlivého projektu",
     description: "Aktívna podpora projektu so zdokumentovaným negatívnym dopadom.",

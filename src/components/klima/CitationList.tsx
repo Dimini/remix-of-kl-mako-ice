@@ -11,9 +11,11 @@ interface CitationListProps {
 const SOURCE_TYPE_LABELS: Record<SourceCitation["sourceType"], string> = {
   program: "Volebný program",
   questionnaire: "Odpoveď na dotazník",
-  social: "Sociálna sieť",
-  vote: "Zápisnica zastupiteľstva",
-  action: "Dokumentovaný čin",
+  social_post: "Sociálna sieť",
+  council_vote: "Zápisnica zastupiteľstva",
+  resolution: "Uznesenie",
+  initiative: "Iniciatíva",
+  manual_entry: "Dokumentovaný čin",
 };
 
 const TIER_LABELS = {
