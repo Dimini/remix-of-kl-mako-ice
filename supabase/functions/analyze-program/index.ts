@@ -334,8 +334,12 @@ async function analyzeWithClaude(
   const rawScore =
     (effectivePro / safeTotal) * 100 - (effectiveAnti / safeTotal) * 100;
 
+  const proCount = allSentences.filter((s) => s.classification === "pro_climate").length;
+  const antiCount = allSentences.filter((s) => s.classification === "anti_climate").length;
+  const neutralCount = allSentences.filter((s) => s.classification === "neutral").length;
   const tier1 = allSentences.filter((s) => s.climate_relevance_tier === 1).length;
   const tier2 = allSentences.filter((s) => s.climate_relevance_tier === 2).length;
+  const tier3 = allSentences.filter((s) => s.climate_relevance_tier === 3).length;
   const relevant = tier1 + tier2;
   const confidence =
     relevant > 0
@@ -349,10 +353,30 @@ async function analyzeWithClaude(
     )
     .map((s) => ({ ...s, citation_text: (s.citation_text ?? "").slice(0, 280) }));
 
+  const meta: AnalysisMeta = {
+    totalSentences,
+    proCount,
+    antiCount,
+    neutralCount,
+    tier1Count: tier1,
+    tier2Count: tier2,
+    tier3Count: tier3,
+    proPercent: Math.round((proCount / safeTotal) * 1000) / 10,
+    antiPercent: Math.round((antiCount / safeTotal) * 1000) / 10,
+    rawCarter: Math.round(rawScore * 100) / 100,
+    effectivePro: Math.round(effectivePro * 100) / 100,
+    effectiveAnti: Math.round(effectiveAnti * 100) / 100,
+  };
+
+  console.log(
+    `[analyze-program][claude] meta total=${totalSentences} pro=${proCount} anti=${antiCount} neutral=${neutralCount} t1=${tier1} t2=${tier2} t3=${tier3} raw=${meta.rawCarter}`,
+  );
+
   return {
     rawScore: Number.isFinite(rawScore) ? rawScore : 0,
     confidence: Number.isFinite(confidence) ? confidence : 0.1,
     citations,
+    meta,
   };
 }
 
