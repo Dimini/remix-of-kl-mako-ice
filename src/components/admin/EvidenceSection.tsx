@@ -157,13 +157,15 @@ function EvidenceList({ items, onEdit, onDelete }: EvidenceListProps) {
               <div className="flex items-center gap-2 flex-wrap text-sm">
                 <UiBadge variant="outline">{PILLAR_FOR_SOURCE[ev.sourceType].toUpperCase()}</UiBadge>
                 <span className="font-medium">{def?.label ?? ev.evidenceType ?? ev.sourceType}</span>
-                <UiBadge variant={tierVariant}>Tier {ev.climateRelevanceTier}</UiBadge>
                 {ev.sentiment === "pro_climate" && (
-                  <UiBadge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">pro-climate</UiBadge>
+                  <UiBadge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Prospešné</UiBadge>
                 )}
                 {ev.sentiment === "anti_climate" && (
-                  <UiBadge className="bg-red-100 text-red-800 hover:bg-red-100">anti-climate</UiBadge>
+                  <UiBadge className="bg-red-100 text-red-800 hover:bg-red-100">Škodlivé</UiBadge>
                 )}
+                <UiBadge className="bg-stone-200 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300">
+                  Tier {ev.climateRelevanceTier}
+                </UiBadge>
                 {ev.pillar === "skutky" && ev.pointValue != null && (
                   <span className="font-mono text-xs">
                     {ev.pointValue > 0 ? "+" : ""}{ev.pointValue} b.

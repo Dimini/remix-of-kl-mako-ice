@@ -25,9 +25,9 @@ const TIER_LABELS = {
 } as const;
 
 const TIER_CLASSES = {
-  1: "bg-badge-green-soft text-badge-green",
-  2: "bg-badge-yellow-soft text-badge-yellow",
-  3: "bg-badge-grey-soft text-badge-grey",
+  1: "bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-300",
+  2: "bg-stone-100 text-stone-600 dark:bg-stone-900 dark:text-stone-400",
+  3: "bg-stone-100 text-stone-500 dark:bg-stone-900 dark:text-stone-500",
 } as const;
 
 export function CitationList({
@@ -83,6 +83,16 @@ function CitationItem({ citation }: { citation: SourceCitation }) {
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           {SOURCE_TYPE_LABELS[citation.sourceType]}
         </span>
+        {sentiment === "pro_climate" && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+            Prospešné
+          </span>
+        )}
+        {sentiment === "anti_climate" && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+            Škodlivé
+          </span>
+        )}
         <span
           className={cn(
             "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
@@ -92,16 +102,6 @@ function CitationItem({ citation }: { citation: SourceCitation }) {
         >
           Tier {tier} · {TIER_LABELS[tier]}
         </span>
-        {sentiment === "pro_climate" && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-            Pro-klíma
-          </span>
-        )}
-        {sentiment === "anti_climate" && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
-            Anti-klíma
-          </span>
-        )}
       </div>
       <blockquote
         className={cn(
