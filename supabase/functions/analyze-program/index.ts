@@ -3,7 +3,7 @@
 // passages using the Carter Method, and writes results to the `programs` table.
 // CAP-07 (score-candidate) reads programs.normalized_score in its SLOVÁ computation.
 
-import Anthropic from "npm:@anthropic-ai/sdk@0.24";
+import Anthropic from "npm:@anthropic-ai/sdk@0.32.1";
 import { corsHeaders, handleCors } from "../_shared/cors.ts";
 import { verifyReviewerOrAdmin } from "../_shared/auth.ts";
 import { createServiceClient } from "../_shared/db.ts";
