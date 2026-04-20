@@ -11,7 +11,7 @@ Built by #klimatapotrebuje NGO. Not a commercial product.
 
 **Core principle:** AI agents collect and score evidence. NGO humans approve before anything is published. Nothing goes live without human sign-off.
 
-**MVP goal:** Working website with real scores for 16 candidates. Manual evidence entry (CAP-08) covers all pillars — SLOVÁ and SKUTKY — wherever AI agents are unavailable. AI automation is additive.
+**MVP goal:** Working website with real scores for all registered candidates across 16 Phase 1 positions (estimated 60–96 total scorecards — exact count known after registration closes May/June 2026). Manual evidence entry (CAP-08) covers all pillars — SLOVÁ and SKUTKY — wherever AI agents are unavailable. AI automation is additive.
 
 ---
 
@@ -50,6 +50,8 @@ Shared (coordinate before editing):
 ```
 
 If you need to edit a file owned by another tool, state why in your commit message.
+
+**Exception — Lovable migration write:** Lovable may write and apply the initial Supabase migration (`/supabase/migrations/001_initial_schema.sql`) and auto-generate `src/integrations/supabase/types.ts`. It must use REQUIREMENTS.md as the source of truth for the schema — not infer it from domain.ts or Dexie types. All subsequent Edge Functions and backend logic remain with Claude Code / Antigravity.
 
 ---
 
@@ -181,7 +183,7 @@ One grey visual on public site. Sub-type stored in DB, shown as explanatory text
 4. **Tier 2 evidence items require `reviewer_note`.** Must explain the environmental connection. Published publicly. Form cannot submit without it.
 5. **Legal disclaimer on every public scorecard:** "Toto hodnotenie nie je odporúčaním na hlasovanie."
 6. **Social media note on every MVP scorecard:** "Hodnotenie sociálnych sietí bude doplnené v ďalšej fáze."
-7. **All 16 Phase 1 candidates are always visible**, even if Grey. No selective coverage.
+7. **All registered candidates in all 16 Phase 1 positions are always visible**, even if Grey. No selective coverage. Number of candidates per position is variable and unknown until registration closes.
 8. **Questionnaire responses are published verbatim, unedited.**
 9. **Claude API key is in Supabase Vault only.** Never in source code, never in client-side code.
 

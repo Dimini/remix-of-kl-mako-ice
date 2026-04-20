@@ -8,7 +8,7 @@
 
 ### Pages (MVP)
 - `/` — Homepage with interactive SVG map of Slovakia's 8 krajov
-- `/region/:krajId` — 2 candidate rows (Predseda kraju + Primátor krajského mesta); badge + name + party
+- `/region/:krajId` — all candidates for both positions in this region (Predseda kraju + Primátor krajského mesta), grouped by position; badge + name + party. Variable number of candidates per position — UI must handle 1 to 8+ gracefully
 - `/kandidat/:region/:position/:slug` — Full scorecard detail
 - `/metodologia` — Methodology page with formula, thresholds, Climate Relevance Framework, normalisation worked example
 - `*` — 404
@@ -183,7 +183,7 @@ Per public post (Facebook primary, Instagram, X):
 - "Approve for Publication" button → sets `is_approved = true` → triggers CAP-07 publish
 - Generate questionnaire UUID link per candidate (for NGO to copy and email manually)
 - Candidate management: create/edit (name, photo, party, region, position, state)
-- Progress: X/16 candidates approved
+- Progress: X of N candidates approved (N = total registered candidates across all 16 positions; populated from DB count, not hardcoded)
 
 ### Keyboard Shortcuts
 - A: Accept current item
