@@ -20,13 +20,15 @@ export async function findCandidateByUuid(uuid: string): Promise<CandidateRecord
   if (!uuid) return null;
   // Uses a SECURITY DEFINER RPC that bypasses the admin-only RLS on candidates,
   // allowing anonymous candidates to load the form via their secret UUID link.
+  // RPC returns SETOF candidates → array. Take first row (LIMIT 1 in SQL).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.rpc as any)(
     "get_candidate_for_questionnaire",
     { p_uuid: uuid },
-  ).maybeSingle();
+  );
   if (error) throw error;
-  return data ? candidateFromRow(data) : null;
+  const row = Array.isArray(data) ? data[0] : data;
+  return row ? candidateFromRow(row) : null;
 }
 
 export async function getResponseForCandidate(
