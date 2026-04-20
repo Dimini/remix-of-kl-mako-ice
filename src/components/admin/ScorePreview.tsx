@@ -111,15 +111,43 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
   })();
 
   async function handleSave() {
+    // Determine next version_number (avoid 23505 unique violation).
+    const { data: latest, error: verErr } = await supabase
+      .from("scores")
+      .select("version_number")
+      .eq("candidate_id", candidateId)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (verErr) {
+      toast({ title: "Chyba pri načítaní verzie", description: verErr.message, variant: "destructive" });
+      return;
+    }
+    const nextVersion = (latest?.version_number ?? 0) + 1;
+
+    // Demote all previous approved scores so only the newest is public.
+    const { error: demoteErr } = await supabase
+      .from("scores")
+      .update({ is_approved: false })
+      .eq("candidate_id", candidateId)
+      .eq("is_approved", true);
+    if (demoteErr) {
+      toast({ title: "Chyba pri deaprobovaní", description: demoteErr.message, variant: "destructive" });
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
     const { error } = await supabase.from("scores").insert({
       candidate_id: candidateId,
+      version_number: nextVersion,
       pillar1_score: slovaFinal,
       pillar2_score: score.skutky,
       total_score: totalFinal,
       badge: score.badge,
       badge_subtype: score.badgeSubtype ?? null,
       formula_version: score.formulaVersion,
-      is_approved: false,
+      is_approved: true,
+      approved_at: nowIso,
       approved_by: user?.id ?? null,
     });
     if (error) {
