@@ -1,41 +1,28 @@
 
 
-## Next steps: wire the AI functions into the admin UI
+## Dokončenie fixu `analyze-program` + test
 
-Both edge functions (`analyze-program`, `score-candidate`) are **deployed and ready**, the `ANTHROPIC_API_KEY` is in Vault, and the DB constraints are in place. But there's currently **no UI to call them**, so you can't test them from the preview yet.
+### Čo urobím
 
-Two ways to test them — pick one (or do both):
+1. **Force redeploy `analyze-program`** — Edge logs potvrdzujú, že stále beží stará verzia s SDK volaním na riadku 302 (`TypeError: 'headers' is not a valid ByteString`). V `supabase/functions/analyze-program/index.ts` spravím kozmetickú zmenu, ktorá vynúti nové nasadenie:
+   - Bump `AGENT_VERSION` z `-cap02-v1` na `-cap02-v2`
+   - Pridám `console.log("[analyze-program] boot v2 — SDK removed")` na začiatok `Deno.serve` handlera pre diagnostiku v logoch
 
-### Option A — Test from the preview (recommended)
+2. **Explicitný redeploy** cez `supabase--deploy_edge_functions` — zaistí, že nová verzia skutočne pôjde do runtime (nespoliehať sa na auto-deploy, ktorý zlyhal pri predošlých pokusoch).
 
-Add an **"AI nástroje"** card to the admin candidate detail page (`/admin/candidate/:id`) with two buttons:
+3. **Overenie cez logy** — po deploye prečítam `supabase--edge_function_logs` a skontrolujem, či sa objavil `boot v2` riadok. Ak áno, nová verzia beží.
 
-1. **"Analyzovať program"** — opens a small dialog asking for a `program_url` (with the candidate's existing program URL pre-filled if any), then calls `supabase.functions.invoke('analyze-program', { body: { candidate_id, program_url } })`. Shows a loading spinner (~30–90 s while Claude analyses), then a toast with `normalizedScore`, `confidence`, and citation count. Refreshes the evidence section.
+4. **Smoke test cez curl** — zavolám `analyze-program` s testovacím krátkym programom (verejne dostupné SMER URL alebo minimálny text) pomocou `supabase--curl_edge_functions`, aby som potvrdil, že `analyzeChunk` už nepadá na ByteString a Anthropic API odpovedá. Ak Claude vráti 401/429 (nedostatok kreditu), povieme ti presne — to už bude mimo technickej chyby.
 
-2. **"Prepočítať skóre"** — calls `supabase.functions.invoke('score-candidate', { body: { candidate_id } })`. Shows a toast with the new `version`, pillar scores, badge, and badge subtype. Refreshes the `ScorePreview` panel.
+5. **Report** — zhrniem výsledok: buď všetko OK a môžeš testovať v admin UI, alebo presnú chybu z Claude (kredit / rate limit / iné).
 
-Both buttons:
-- Disabled while running
-- Show clear error toast on failure (parse the JSON `{ error }` body)
-- Use the existing logged-in admin session — `supabase.functions.invoke` automatically attaches the JWT, which the edge functions verify via `verifyReviewerOrAdmin`
+### Čo nerobím
 
-After this, you can test end-to-end in the preview:
-1. Open a candidate in `/admin`
-2. Click **Analyzovať program** with a real Slovak party program URL → wait → see citations appear in the Evidence section
-3. Click **Prepočítať skóre** → see a new unapproved score row appear in `ScorePreview`
-4. Approve it via the existing review flow → walk to PUBLISHED → verify it on the public region page
+- Žiadne zmeny DB, secretov, ani iných funkcií
+- Žiadne zmeny v UI (`AIToolsPanel.tsx`)
+- Neprepisujem logiku analýzy ani extrakcie PDF
 
-### Option B — Test directly without UI (faster smoke test)
+### Fallback ak deploy znova zlyhá
 
-I can call the deployed functions directly using `supabase--curl_edge_functions` against a real candidate ID from your seeded data, and report back the raw response + edge function logs. This proves the pipeline works without writing any UI code, but you can't trigger it from the preview yourself.
-
-### Files I will create/modify (Option A)
-
-- **Create** `src/components/admin/AIToolsPanel.tsx` — the card with both buttons + the program URL dialog
-- **Modify** `src/pages/admin/AdminCandidateDetail.tsx` — render `<AIToolsPanel candidateId={existing.id} programUrl={…} />` near `ScorePreview`
-- No DB changes, no new secrets, no edge function changes
-
-### Recommendation
-
-Do **both**: I'll run Option B first as a quick smoke test (so we know the deployed functions actually work end-to-end with Claude), then build Option A so you can use them from the preview going forward.
+Ak sa `boot v2` neobjaví v logoch ani po explicitnom `deploy_edge_functions`, skontrolujem prítomnosť `deno.lock` v `supabase/functions/` (známa príčina tichých deploy zlyhaní) a navrhnem ďalší krok.
 
