@@ -137,22 +137,36 @@ export function evidenceFromVote(row: VoteRow): EvidenceRecord {
   };
 }
 
-export function evidenceFromProgram(row: ProgramRow): EvidenceRecord {
-  // Summary citation — the full raw_text can be 100k chars; the ScorePreview
-  // panel surfaces the Carter-method detail separately. Here we only show a
-  // short summary so EvidenceSection doesn't render the entire PDF.
-  const cj = row.citations_json as { meta?: { totalSentences?: number; proCount?: number; antiCount?: number; rawCarter?: number } } | unknown[] | null;
-  const meta = !Array.isArray(cj) ? cj?.meta : undefined;
-  const summary = meta
-    ? `Analýza programu (AI): ${meta.proCount ?? 0} pro / ${meta.antiCount ?? 0} anti z ${meta.totalSentences ?? 0} viet · raw Carter = ${meta.rawCarter ?? "—"} · normalizované = ${row.normalized_score ?? "—"}/100`
-    : (row.raw_text ?? "").slice(0, 280);
-  return {
+interface ProgramCitationItem {
+  citation_text?: string;
+  classification?: "pro_climate" | "anti_climate" | "neutral";
+  climate_relevance_tier?: number;
+}
+
+export function evidenceFromProgram(row: ProgramRow): EvidenceRecord[] {
+  // Returns one summary record + one record per pro/anti citation extracted by
+  // the AI agent. Neutral / Tier 3 items are skipped (Tier 3 is never scored,
+  // neutral sentences shouldn't appear in items at all per the prompt).
+  const cj = row.citations_json as
+    | { meta?: { totalSentences?: number; proCount?: number; antiCount?: number; rawCarter?: number }; items?: ProgramCitationItem[] }
+    | unknown[]
+    | null;
+
+  const isLegacyArray = Array.isArray(cj);
+  const meta = !isLegacyArray ? cj?.meta : undefined;
+  const items: ProgramCitationItem[] = isLegacyArray
+    ? (cj as ProgramCitationItem[])
+    : (cj?.items ?? []);
+
+  const summary: EvidenceRecord = {
     id: row.id,
     candidateId: row.candidate_id,
     pillar: "slova",
     sourceType: "program",
     url: row.source_url,
-    citationText: summary,
+    citationText: meta
+      ? `Analýza programu (AI): ${meta.proCount ?? 0} pro / ${meta.antiCount ?? 0} anti z ${meta.totalSentences ?? 0} viet · raw Carter = ${meta.rawCarter ?? "—"} · normalizované = ${row.normalized_score ?? "—"}/100`
+      : (row.raw_text ?? "").slice(0, 280),
     climateRelevanceTier: 1,
     dateAccessed: (row.processed_at ?? row.created_at).slice(0, 10),
     confidence: row.confidence !== null ? Number(row.confidence) : undefined,
@@ -161,6 +175,27 @@ export function evidenceFromProgram(row: ProgramRow): EvidenceRecord {
     pointValue: null,
     evidenceType: "program",
   };
+
+  const subCitations: EvidenceRecord[] = items
+    .filter((it) => it && it.citation_text && (it.classification === "pro_climate" || it.classification === "anti_climate"))
+    .map((it, idx) => ({
+      id: `${row.id}::cite-${idx}`,
+      candidateId: row.candidate_id,
+      pillar: "slova" as const,
+      sourceType: "program" as const,
+      url: row.source_url,
+      citationText: it.citation_text!,
+      climateRelevanceTier: ((it.climate_relevance_tier ?? 1) as 1 | 2 | 3),
+      dateAccessed: (row.processed_at ?? row.created_at).slice(0, 10),
+      confidence: row.confidence !== null ? Number(row.confidence) : undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      pointValue: null,
+      evidenceType: "program",
+      sentiment: it.classification,
+    }));
+
+  return [summary, ...subCitations];
 }
 
 export function questionnaireFromRow(row: QResponseRow): QuestionnaireResponseRecord {
