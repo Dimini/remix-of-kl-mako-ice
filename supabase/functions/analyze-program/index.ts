@@ -157,11 +157,12 @@ function stripHtml(html: string): string {
 }
 
 async function extractPdfText(buf: ArrayBuffer): Promise<string> {
-  // 1. Try native text extraction.
+  // 1. Try native text extraction (pdf-parse needs Node Buffer — import explicitly).
   let nativeText = "";
   try {
+    const { Buffer: NodeBuffer } = await import("node:buffer");
     const { default: pdf } = await import("npm:pdf-parse@1.1.1");
-    const data = await pdf(Buffer.from(buf));
+    const data = await pdf(NodeBuffer.from(buf));
     nativeText = data.text ?? "";
   } catch (e) {
     console.warn("[analyze-program] pdf-parse failed:", e);
@@ -172,7 +173,7 @@ async function extractPdfText(buf: ArrayBuffer): Promise<string> {
     return nativeText;
   }
 
-  // 2. Fallback: send PDF directly to Claude (vision/document support).
+  // 2. Fallback: send PDF directly to Claude (document support).
   console.log(
     `[analyze-program] native PDF extraction poor (chars=${nativeText.length}, letters=${letterCount}); using Claude document fallback`,
   );
@@ -180,17 +181,16 @@ async function extractPdfText(buf: ArrayBuffer): Promise<string> {
     return await extractPdfWithClaude(buf);
   } catch (e) {
     console.error("[analyze-program] Claude PDF fallback failed:", e);
-    return nativeText; // best-effort
+    return nativeText;
   }
 }
 
 async function extractPdfWithClaude(buf: ArrayBuffer): Promise<string> {
-  // Claude has a 32 MB document limit; bail early if larger.
   if (buf.byteLength > 30 * 1024 * 1024) {
     throw new Error("PDF too large for Claude document fallback (>30 MB)");
   }
-  const { default: Anthropic } = await import("npm:@anthropic-ai/sdk@0.32.1");
-  const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
 
   // Base64-encode the PDF (chunked to avoid stack overflow on large buffers).
   const bytes = new Uint8Array(buf);
@@ -201,29 +201,44 @@ async function extractPdfWithClaude(buf: ArrayBuffer): Promise<string> {
   }
   const base64 = btoa(binary);
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 8192,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: { type: "base64", media_type: "application/pdf", data: base64 },
-          },
-          {
-            type: "text",
-            text:
-              "Extract ALL readable text from this PDF document verbatim. Preserve paragraph breaks. Do not summarise, do not add commentary, do not translate — return only the raw text content of the document.",
-          },
-        ],
-      },
-    ],
+  // Call Anthropic API directly via fetch — avoids SDK header-construction bug in Deno.
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-beta": "pdfs-2024-09-25",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 8192,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "document",
+              source: { type: "base64", media_type: "application/pdf", data: base64 },
+            },
+            {
+              type: "text",
+              text:
+                "Extract ALL readable text from this PDF document verbatim. Preserve paragraph breaks. Do not summarise, do not add commentary, do not translate — return only the raw text content of the document.",
+            },
+          ],
+        },
+      ],
+    }),
   });
 
-  const text = response.content[0]?.type === "text" ? response.content[0].text : "";
-  return text.trim();
+  if (!resp.ok) {
+    const errBody = await resp.text();
+    throw new Error(`Anthropic API ${resp.status}: ${errBody.slice(0, 500)}`);
+  }
+  const data = await resp.json();
+  const text = data?.content?.[0]?.type === "text" ? data.content[0].text : "";
+  return (text ?? "").trim();
 }
 
 // ---------------------------------------------------------------------------
