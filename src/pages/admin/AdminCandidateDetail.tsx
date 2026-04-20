@@ -1,24 +1,19 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft, Save, Trash2 } from "lucide-react";
 
-import { db } from "@/lib/db/dexie";
 import { KRAJS, getKraj } from "@/lib/krajs";
 import {
   STATE_LABELS,
   nextStates,
   canTransition,
 } from "@/lib/stateMachine";
-import type {
-  CandidateState,
-  KrajId,
-  Position,
-  ScoreBreakdown,
-} from "@/types/domain";
+import type { CandidateState, KrajId, Position } from "@/types/domain";
+import { adminCandidatesRepo } from "@/lib/repository/adminCandidates";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -64,30 +59,17 @@ const candidateSchema = z.object({
 
 type FormValues = z.infer<typeof candidateSchema>;
 
-const EMPTY_SCORE: ScoreBreakdown = {
-  programNorm: null,
-  questionnaireNorm: null,
-  socialNorm: null,
-  votesNorm: null,
-  actionsNorm: null,
-  slova: null,
-  skutky: null,
-  total: null,
-  badge: "grey",
-  badgeSubtype: "GREY_NO_DATA",
-  formulaVersion: "v1.0",
-};
-
 export default function AdminCandidateDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = id === "new";
   const { reviewer } = useAdminAuth();
 
-  const existing = useLiveQuery(
-    () => (isNew ? Promise.resolve(undefined) : db.candidates.get(id!)),
+  const fetcher = useCallback(
+    () => (isNew ? Promise.resolve(null) : adminCandidatesRepo.getById(id!)),
     [id, isNew],
   );
+  const { data: existing, refetch } = useSupabaseQuery(fetcher, [id, isNew], isNew ? [] : ["candidates"]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(candidateSchema),
@@ -104,7 +86,6 @@ export default function AdminCandidateDetail() {
     },
   });
 
-  // Hydrate form once existing record loads.
   useEffect(() => {
     if (!existing) return;
     form.reset({
@@ -123,7 +104,6 @@ export default function AdminCandidateDetail() {
   const position = form.watch("position");
   const krajId = form.watch("krajId");
 
-  // Auto-fill city for primátor when kraj changes & city empty.
   useEffect(() => {
     if (position === "primator" && !form.getValues("city")) {
       const k = getKraj(krajId);
@@ -137,11 +117,34 @@ export default function AdminCandidateDetail() {
   );
 
   async function onSubmit(values: FormValues) {
-    const now = new Date().toISOString();
-    if (isNew) {
-      const newId = `${values.krajId.toLowerCase()}-${values.position}-${Date.now().toString(36)}`;
-      await db.candidates.put({
-        id: newId,
+    try {
+      if (isNew) {
+        const newId = crypto.randomUUID();
+        await adminCandidatesRepo.upsert({
+          id: newId,
+          name: values.name,
+          position: values.position as Position,
+          krajId: values.krajId as KrajId,
+          city: values.city || undefined,
+          party: values.party,
+          isIndependent: values.isIndependent,
+          incumbent: values.incumbent,
+          year: values.year,
+          photoUrl: values.photoUrl || undefined,
+          state: "REGISTERED",
+          score: undefined as never,
+          questionnaireResponded: false,
+          isApproved: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        toast({ title: "Vytvorené", description: `Kandidát ${values.name} bol pridaný.` });
+        navigate(`/admin/candidate/${newId}`, { replace: true });
+        return;
+      }
+
+      if (!existing) return;
+      await adminCandidatesRepo.update(existing.id, {
         name: values.name,
         position: values.position as Position,
         krajId: values.krajId as KrajId,
@@ -151,33 +154,16 @@ export default function AdminCandidateDetail() {
         incumbent: values.incumbent,
         year: values.year,
         photoUrl: values.photoUrl || undefined,
-        state: "REGISTERED",
-        score: EMPTY_SCORE,
-        questionnaireResponded: false,
-        isApproved: false,
-        createdAt: now,
-        updatedAt: now,
       });
-      toast({ title: "Vytvorené", description: `Kandidát ${values.name} bol pridaný.` });
-      navigate(`/admin/candidate/${newId}`, { replace: true });
-      return;
+      toast({ title: "Uložené", description: "Zmeny sú uložené." });
+      refetch();
+    } catch (e) {
+      toast({
+        title: "Chyba pri ukladaní",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
     }
-
-    if (!existing) return;
-    await db.candidates.put({
-      ...existing,
-      name: values.name,
-      position: values.position as Position,
-      krajId: values.krajId as KrajId,
-      city: values.city || undefined,
-      party: values.party,
-      isIndependent: values.isIndependent,
-      incumbent: values.incumbent,
-      year: values.year,
-      photoUrl: values.photoUrl || undefined,
-      updatedAt: now,
-    });
-    toast({ title: "Uložené", description: "Zmeny sú uložené lokálne." });
   }
 
   async function handleTransition(to: CandidateState) {
@@ -187,13 +173,10 @@ export default function AdminCandidateDetail() {
       toast({ title: "Chyba", description: guard.reason, variant: "destructive" });
       return;
     }
-    const updates: Partial<typeof existing> = {
-      state: to,
-      updatedAt: new Date().toISOString(),
-    };
-    if (to === "APPROVED") updates.isApproved = true;
-    if (to === "NEEDS_REVISION") updates.isApproved = false;
-    await db.candidates.update(existing.id, updates);
+    const patch: Parameters<typeof adminCandidatesRepo.update>[1] = { state: to };
+    if (to === "APPROVED") patch.isApproved = true;
+    if (to === "NEEDS_REVISION") patch.isApproved = false;
+    await adminCandidatesRepo.update(existing.id, patch);
     await logAudit({
       candidateId: existing.id,
       reviewer: reviewer || "neznámy",
@@ -206,14 +189,14 @@ export default function AdminCandidateDetail() {
       title: "Stav zmenený",
       description: `${STATE_LABELS[existing.state]} → ${STATE_LABELS[to]}`,
     });
+    refetch();
   }
 
   async function handleDelete() {
     if (!existing) return;
     if (!confirm(`Naozaj zmazať kandidáta „${existing.name}"? Vymažú sa aj všetky dôkazy.`)) return;
-    await db.candidates.delete(existing.id);
-    await db.evidence.where("candidateId").equals(existing.id).delete();
-    toast({ title: "Zmazané", description: "Kandidát bol odstránený z lokálnej evidencie." });
+    await adminCandidatesRepo.remove(existing.id);
+    toast({ title: "Zmazané", description: "Kandidát bol odstránený." });
     navigate("/admin", { replace: true });
   }
 

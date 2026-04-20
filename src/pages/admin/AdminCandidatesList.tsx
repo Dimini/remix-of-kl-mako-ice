@@ -1,7 +1,5 @@
-import { useState } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
+import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import { db } from "@/lib/db/dexie";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -10,9 +8,14 @@ import { seedFromMock, clearAllAdminData } from "@/lib/seed";
 import { STATE_LABELS } from "@/lib/stateMachine";
 import { getKraj } from "@/lib/krajs";
 import { toast } from "@/hooks/use-toast";
+import { adminCandidatesRepo } from "@/lib/repository/adminCandidates";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 
 export default function AdminCandidatesList() {
   const [busy, setBusy] = useState(false);
+
+  const fetcher = useCallback(() => adminCandidatesRepo.list(), []);
+  const { data: candidates, refetch } = useSupabaseQuery(fetcher, [], ["candidates"]);
 
   async function handleSeed() {
     setBusy(true);
@@ -22,23 +25,36 @@ export default function AdminCandidatesList() {
         title: "Seed dokončený",
         description: `Pridaných ${inserted}, preskočených ${skipped} (už existujú).`,
       });
+      refetch();
+    } catch (e) {
+      toast({
+        title: "Chyba pri seedovaní",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
     } finally {
       setBusy(false);
     }
   }
 
   async function handleClear() {
-    if (!confirm("Vymazať VŠETKÝCH kandidátov a dôkazy z lokálnej evidencie?")) return;
+    if (!confirm("Vymazať VŠETKÝCH kandidátov a dôkazy z databázy?")) return;
     setBusy(true);
     try {
       await clearAllAdminData();
-      toast({ title: "Vymazané", description: "Lokálna evidencia je prázdna." });
+      toast({ title: "Vymazané", description: "Databáza je prázdna." });
+      refetch();
+    } catch (e) {
+      toast({
+        title: "Chyba",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
     } finally {
       setBusy(false);
     }
   }
 
-  const candidates = useLiveQuery(() => db.candidates.toArray(), [], []);
   const total = candidates?.length ?? 0;
   const approved = candidates?.filter((c) => c.isApproved).length ?? 0;
   const pct = total === 0 ? 0 : Math.round((approved / total) * 100);
@@ -49,7 +65,7 @@ export default function AdminCandidatesList() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Kandidáti</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Lokálna evidencia kandidátov. Po uzávierke registrácie a schválení sa publikujú na verejnú stránku.
+            Kandidáti sú v Supabase. Po schválení a prechode do stavu PUBLISHED sa zobrazia na verejnej stránke.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -80,8 +96,7 @@ export default function AdminCandidatesList() {
       <Card className="overflow-hidden">
         {total === 0 ? (
           <div className="p-10 text-center text-sm text-muted-foreground">
-            Zatiaľ žiadni kandidáti. Použite tlačidlo „Nový kandidát" vyššie.
-            <p className="mt-2 text-xs">(Phase B pridáva CRUD formuláre.)</p>
+            Zatiaľ žiadni kandidáti. Použite tlačidlo „Nový kandidát" alebo „Seed z mock dát" vyššie.
           </div>
         ) : (
           <>
