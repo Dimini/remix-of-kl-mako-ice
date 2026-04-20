@@ -76,6 +76,7 @@ export function CitationList({
 
 function CitationItem({ citation }: { citation: SourceCitation }) {
   const tier = citation.climateRelevanceTier;
+  const sentiment = citation.sentiment;
   return (
     <li className="border-l-2 border-border pl-4">
       <div className="flex flex-wrap items-center gap-2 mb-1.5">
@@ -91,8 +92,27 @@ function CitationItem({ citation }: { citation: SourceCitation }) {
         >
           Tier {tier} · {TIER_LABELS[tier]}
         </span>
+        {sentiment === "pro_climate" && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+            Pro-klíma
+          </span>
+        )}
+        {sentiment === "anti_climate" && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+            Anti-klíma
+          </span>
+        )}
       </div>
-      <blockquote className="text-sm text-foreground mb-2 italic">
+      <blockquote
+        className={cn(
+          "text-sm mb-2 italic",
+          sentiment === "pro_climate"
+            ? "text-emerald-800 dark:text-emerald-300"
+            : sentiment === "anti_climate"
+              ? "text-red-800 dark:text-red-300"
+              : "text-foreground",
+        )}
+      >
         „{citation.citationText}"
       </blockquote>
       {tier === 2 && citation.reviewerNote && (

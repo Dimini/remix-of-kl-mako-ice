@@ -83,6 +83,7 @@ export interface SourceCitation {
   reviewerNote?: string;         // REQUIRED for Tier 2
   dateAccessed: string;          // ISO date
   confidence?: number;           // 0..1
+  sentiment?: "pro_climate" | "anti_climate" | "neutral"; // For program-derived sub-citations
 }
 
 export interface ScoreBreakdown {
