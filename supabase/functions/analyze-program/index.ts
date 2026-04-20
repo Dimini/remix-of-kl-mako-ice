@@ -17,6 +17,7 @@ const MAX_CHUNK_CHARS = 80_000;
 const CHUNK_OVERLAP = 2_000;
 
 Deno.serve(async (req) => {
+  console.log("[analyze-program] boot v2 — SDK removed, using direct fetch");
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
