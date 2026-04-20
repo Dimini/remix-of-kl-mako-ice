@@ -1,75 +1,41 @@
 
 
-## Goal
-Swap the Dexie/IndexedDB persistence layer for Supabase across the three repositories (`candidates`, `adminCandidates`, `questionnaire`) plus the audit helper, so that all reads/writes go through the live Postgres backend. After this, Dexie can be deleted and the public site renders real DB-backed candidates.
+## Next steps: wire the AI functions into the admin UI
 
-## Why this is the right next step
-- Auth is in place and you have the `admin` role → write paths will satisfy RLS.
-- Schema + types are aligned (migration done, `src/integrations/supabase/types.ts` regenerated, `src/types/domain.ts` matches DB enums).
-- Until this swap, every admin edit still writes to your browser's IndexedDB only — invisible to the DB and to other reviewers.
+Both edge functions (`analyze-program`, `score-candidate`) are **deployed and ready**, the `ANTHROPIC_API_KEY` is in Vault, and the DB constraints are in place. But there's currently **no UI to call them**, so you can't test them from the preview yet.
 
-## Scope of changes
+Two ways to test them — pick one (or do both):
 
-### 1. New Supabase-backed repositories (replace Dexie implementations)
+### Option A — Test from the preview (recommended)
 
-**`src/lib/repository/candidates.ts`** (public reads)
-- `list()` → `select * from candidates where state='PUBLISHED' and is_approved=true` (RLS already enforces this for anon).
-- `getByKraj`, `getByKrajAndPosition` → same with `.eq('region', krajId)` / `.eq('position', position)`.
-- `getById` → single row fetch + join `scores` (latest approved), `source_citations`, `programs`, `documented_actions`, `votes` to assemble the public `Candidate` shape consumed by `CandidateDetail.tsx` and the map.
-- Keep the `CandidatesRepository` interface unchanged so UI code is untouched.
+Add an **"AI nástroje"** card to the admin candidate detail page (`/admin/candidate/:id`) with two buttons:
 
-**`src/lib/repository/adminCandidates.ts`** (reviewer CRUD)
-- Replace Dexie calls with Supabase client calls against `candidates` and the evidence tables.
-- Map snake_case DB columns ↔ camelCase `CandidateRecord` in a single adapter (`fromRow` / `toRow`) so component code keeps using the existing record shape.
-- `adminEvidenceRepo`: split the unified Dexie `evidence` table into reads/writes against the four canonical tables (`source_citations`, `programs`, `documented_actions`, `votes`) using `pillar` + `source_type` to route. Returns a unified `EvidenceRecord[]` to keep `EvidenceSection.tsx` / `EvidenceForm.tsx` working without prop changes.
+1. **"Analyzovať program"** — opens a small dialog asking for a `program_url` (with the candidate's existing program URL pre-filled if any), then calls `supabase.functions.invoke('analyze-program', { body: { candidate_id, program_url } })`. Shows a loading spinner (~30–90 s while Claude analyses), then a toast with `normalizedScore`, `confidence`, and citation count. Refreshes the evidence section.
 
-**`src/lib/repository/questionnaire.ts`**
-- `findCandidateByUuid` → `select … where questionnaire_uuid = :uuid`.
-- `saveDraft` / `submitFinal` → upsert into `questionnaire_responses` with the canonical shape (`link_uuid`, `response_json` JSONB bundling scaleAnswers/priorityActions/consents, `questionnaire_score`, `status`, `responded_at`).
-- `submitFinal` also updates `candidates.state` + `questionnaire_responded` and writes a `review_audit_log` row via the new audit helper.
+2. **"Prepočítať skóre"** — calls `supabase.functions.invoke('score-candidate', { body: { candidate_id } })`. Shows a toast with the new `version`, pillar scores, badge, and badge subtype. Refreshes the `ScorePreview` panel.
 
-**`src/lib/audit.ts`**
-- Rewrite `logAudit()` to insert into `public.review_audit_log` using the current session (`reviewer = user.email`, `reviewer_user_id = user.id`).
-- `listAuditFor()` → select by `candidate_id` ordered by `at desc`.
+Both buttons:
+- Disabled while running
+- Show clear error toast on failure (parse the JSON `{ error }` body)
+- Use the existing logged-in admin session — `supabase.functions.invoke` automatically attaches the JWT, which the edge functions verify via `verifyReviewerOrAdmin`
 
-### 2. Convert `useLiveQuery` call sites
-`AdminCandidatesList.tsx`, `AdminCandidateDetail.tsx`, `AdminReviewQueue.tsx`, `AdminExport.tsx`, `EvidenceSection.tsx`, `AuditLogPanel.tsx`, `QuestionnaireLinkPanel.tsx` currently use `dexie-react-hooks`. Replace each with a small `useSupabaseQuery` pattern using `useEffect` + `useState` (or TanStack Query if already wired — will check). Subscribe to Supabase Realtime on the relevant table so the list refreshes on inserts/updates without manual refetch.
+After this, you can test end-to-end in the preview:
+1. Open a candidate in `/admin`
+2. Click **Analyzovať program** with a real Slovak party program URL → wait → see citations appear in the Evidence section
+3. Click **Prepočítať skóre** → see a new unapproved score row appear in `ScorePreview`
+4. Approve it via the existing review flow → walk to PUBLISHED → verify it on the public region page
 
-### 3. Seed flow
-- Repurpose `src/lib/seed.ts` `seedFromMock()` to upsert `MOCK_CANDIDATES` into Supabase (`candidates` only — no scores/evidence) so you can populate the DB once for testing. Guard behind admin role.
-- `clearAllAdminData()` → delete-all from `candidates` cascading through the evidence tables (admin-only, with confirm dialog already in place).
+### Option B — Test directly without UI (faster smoke test)
 
-### 4. Delete (after smoke-test passes)
-- `src/lib/db/dexie.ts`
-- `dexie` + `dexie-react-hooks` from `package.json`
-- All `import { db } from "@/lib/db/dexie"` references
+I can call the deployed functions directly using `supabase--curl_edge_functions` against a real candidate ID from your seeded data, and report back the raw response + edge function logs. This proves the pipeline works without writing any UI code, but you can't trigger it from the preview yourself.
 
-### 5. UI tweak
-- `AdminCandidatesList.tsx` empty-state copy referencing "Phase B" / IndexedDB → update to mention Supabase.
-- `AdminLayout` header: show signed-in reviewer email next to the sign-out button (cheap win, helps multi-reviewer workflows).
+### Files I will create/modify (Option A)
 
-## Out of scope (next iterations)
-- Public `Candidate` shape conversion when no row in `scores` exists yet → Grey badge fallback. Will implement basic fallback but full grey-subtype logic stays as-is.
-- Storage bucket for candidate photos (currently `photo_url` is a free text URL — fine for now).
-- Admin user management UI.
-- CAP-07 scoring Edge Function (Antigravity territory).
+- **Create** `src/components/admin/AIToolsPanel.tsx` — the card with both buttons + the program URL dialog
+- **Modify** `src/pages/admin/AdminCandidateDetail.tsx` — render `<AIToolsPanel candidateId={existing.id} programUrl={…} />` near `ScorePreview`
+- No DB changes, no new secrets, no edge function changes
 
-## Risks & mitigations
-- **RLS lockout on writes**: every write goes through `Reviewers manage …` policies which require `has_role`. Your `admin` role covers this. Other reviewers will need roles granted before they can write.
-- **Public reads return empty until candidates are PUBLISHED + approved**: expected. The seed flow inserts at `state='REGISTERED'` so the public site stays empty until you walk a candidate through the state machine. I'll add a one-line note in the admin list explaining this.
-- **`useLiveQuery` → manual subscription**: I'll wrap the pattern in a tiny `useTable(name, query)` hook in `src/hooks/useSupabaseTable.ts` so call sites stay one-liners.
+### Recommendation
 
-## Files touched (estimate)
-- Rewritten: `candidates.ts`, `adminCandidates.ts`, `questionnaire.ts`, `audit.ts`, `seed.ts` (5 files in `src/lib/`)
-- New: `src/hooks/useSupabaseTable.ts`, `src/lib/repository/_adapters.ts`
-- Edited (hook swap only): 7 admin pages/components listed above
-- Deleted: `src/lib/db/dexie.ts` + dexie deps
-- Untouched: all `src/components/klima/*`, `src/pages/CandidateDetail.tsx`, public site routing
-
-## Verification steps after implementation
-1. Sign in at `/admin/login` → land on `/admin` without errors.
-2. Click "Seed z mock dát" → see candidates appear (verify via `select count(*) from candidates`).
-3. Open one candidate, add an evidence item, save → verify row in `source_citations`/`votes`/etc.
-4. Walk a candidate to `PUBLISHED` + approved → confirm it appears on the public `/region/:krajId` page in an incognito window (anon read path).
-5. Open browser devtools → confirm no `dexie` references remain in the network/console.
+Do **both**: I'll run Option B first as a quick smoke test (so we know the deployed functions actually work end-to-end with Claude), then build Option A so you can use them from the preview going forward.
 
