@@ -43,6 +43,7 @@ import { ScorePreview } from "@/components/admin/ScorePreview";
 import { AuditLogPanel } from "@/components/admin/AuditLogPanel";
 import { QuestionnaireLinkPanel } from "@/components/admin/QuestionnaireLinkPanel";
 import { CandidatePhotoUpload } from "@/components/admin/CandidatePhotoUpload";
+import { AIToolsPanel } from "@/components/admin/AIToolsPanel";
 import { logAudit } from "@/lib/audit";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
@@ -414,6 +415,7 @@ export default function AdminCandidateDetail() {
       </Card>
 
       {!isNew && existing && <QuestionnaireLinkPanel candidateId={existing.id} />}
+      {!isNew && existing && <AIToolsPanel candidateId={existing.id} onComplete={refetch} />}
       {!isNew && existing && <ScorePreview candidateId={existing.id} />}
       {!isNew && existing && <EvidenceSection candidateId={existing.id} />}
       {!isNew && existing && <AuditLogPanel candidateId={existing.id} />}
