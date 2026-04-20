@@ -261,8 +261,8 @@ export default function Questionnaire() {
             consentTruthful: Boolean(values.consentTruthful),
           });
           setLastDraftSavedAt(new Date().toISOString());
-        } catch {
-          /* draft save errors are non-fatal */
+        } catch (e) {
+          console.error("[questionnaire] auto-save failed", e);
         }
       }, 1500);
     });
@@ -291,6 +291,12 @@ export default function Questionnaire() {
       toast({
         title: "Koncept uložený",
         description: "Môžete sa kedykoľvek vrátiť cez ten istý odkaz.",
+      });
+    } catch (e) {
+      toast({
+        title: "Nepodarilo sa uložiť koncept",
+        description: e instanceof Error ? e.message : "Skúste to znova.",
+        variant: "destructive",
       });
     } finally {
       setSavingDraft(false);

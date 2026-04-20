@@ -20,13 +20,15 @@ import { supabase } from "@/integrations/supabase/client";
 interface AIToolsPanelProps {
   candidateId: string;
   defaultProgramUrl?: string;
+  questionnaireSubmitted?: boolean;
   onComplete?: () => void;
 }
 
 const MAX_PDF_BYTES = 20 * 1024 * 1024; // 20 MB
 
-export function AIToolsPanel({ candidateId, defaultProgramUrl, onComplete }: AIToolsPanelProps) {
+export function AIToolsPanel({ candidateId, defaultProgramUrl, questionnaireSubmitted, onComplete }: AIToolsPanelProps) {
   const [analyzing, setAnalyzing] = useState(false);
+  const [analyzingQ, setAnalyzingQ] = useState(false);
   const [scoring, setScoring] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -165,7 +167,30 @@ export function AIToolsPanel({ candidateId, defaultProgramUrl, onComplete }: AIT
     }
   }
 
-  const busy = analyzing || scoring || uploading;
+  async function runAnalyzeQuestionnaire() {
+    setAnalyzingQ(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-questionnaire", {
+        body: { candidate_id: candidateId },
+      });
+      if (error) throw new Error(extractError(error as never));
+      toast({
+        title: "Dotazník analyzovaný",
+        description: `Skóre: ${data?.questionnaire_score ?? "?"} • Opatrenia: ${data?.measureCount ?? 0}`,
+      });
+      onComplete?.();
+    } catch (e) {
+      toast({
+        title: "Analýza dotazníka zlyhala",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setAnalyzingQ(false);
+    }
+  }
+
+  const busy = analyzing || analyzingQ || scoring || uploading;
 
   return (
     <>
@@ -194,6 +219,21 @@ export function AIToolsPanel({ candidateId, defaultProgramUrl, onComplete }: AIT
             )}
             Analyzovať program
           </Button>
+          {questionnaireSubmitted && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={runAnalyzeQuestionnaire}
+            >
+              {analyzingQ ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4 mr-1" />
+              )}
+              Analyzovať dotazník
+            </Button>
+          )}
           <Button size="sm" variant="outline" disabled={busy} onClick={runScore}>
             {scoring ? (
               <Loader2 className="w-4 h-4 mr-1 animate-spin" />

@@ -415,7 +415,13 @@ export default function AdminCandidateDetail() {
       </Card>
 
       {!isNew && existing && <QuestionnaireLinkPanel candidateId={existing.id} />}
-      {!isNew && existing && <AIToolsPanel candidateId={existing.id} onComplete={refetch} />}
+      {!isNew && existing && (
+        <AIToolsPanel
+          candidateId={existing.id}
+          questionnaireSubmitted={existing.questionnaireResponded}
+          onComplete={refetch}
+        />
+      )}
       {!isNew && existing && <ScorePreview candidateId={existing.id} />}
       {!isNew && existing && <EvidenceSection candidateId={existing.id} />}
       {!isNew && existing && <AuditLogPanel candidateId={existing.id} />}
