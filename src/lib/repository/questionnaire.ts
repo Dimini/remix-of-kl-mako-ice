@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/lib/audit";
 import { adminCandidatesRepo } from "./adminCandidates";
-import { questionnaireFromRow } from "./_adapters";
+import { candidateFromRow, questionnaireFromRow } from "./_adapters";
 import type { CandidateRecord, QuestionnaireResponseRecord } from "./types";
 
 export type ScaleValue = "1" | "2" | "3" | "4" | "5";
@@ -18,7 +18,15 @@ export interface SubmitPayload {
 
 export async function findCandidateByUuid(uuid: string): Promise<CandidateRecord | null> {
   if (!uuid) return null;
-  return adminCandidatesRepo.getByQuestionnaireUuid(uuid);
+  // Uses a SECURITY DEFINER RPC that bypasses the admin-only RLS on candidates,
+  // allowing anonymous candidates to load the form via their secret UUID link.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.rpc as any)(
+    "get_candidate_for_questionnaire",
+    { p_uuid: uuid },
+  ).maybeSingle();
+  if (error) throw error;
+  return data ? candidateFromRow(data) : null;
 }
 
 export async function getResponseForCandidate(
