@@ -10,6 +10,7 @@ import {
   scoreFromRow,
 } from "./_adapters";
 import type { EvidenceRecord } from "./types";
+import { computeScore, meanConfidence } from "@/lib/scoring/computeScore";
 
 // ---------------------------------------------------------------------------
 // Public reads — Supabase implementation.
