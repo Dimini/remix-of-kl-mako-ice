@@ -533,6 +533,37 @@ export type Database = {
         }
         Returns: undefined
       }
+      candidate_id_for_questionnaire_uuid: {
+        Args: { p_uuid: string }
+        Returns: string
+      }
+      get_candidate_for_questionnaire: {
+        Args: { p_uuid: string }
+        Returns: {
+          city: string | null
+          created_at: string
+          id: string
+          incumbent: boolean | null
+          is_approved: boolean
+          is_independent: boolean
+          name: string
+          party: string
+          photo_url: string | null
+          position: Database["public"]["Enums"]["position_type"]
+          questionnaire_responded: boolean
+          questionnaire_uuid: string | null
+          region: Database["public"]["Enums"]["kraj_id"]
+          state: Database["public"]["Enums"]["candidate_state"]
+          updated_at: string
+          year: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "candidates"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
