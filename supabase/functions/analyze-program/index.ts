@@ -12,7 +12,7 @@ import { clampNorm } from "../_shared/scoring.ts";
 const PROGRAM_CAP_MIN = -35.30;
 const PROGRAM_CAP_MAX = 17.31;
 
-const AGENT_VERSION = "claude-sonnet-4-20250514-cap02-v3";
+const AGENT_VERSION = "claude-sonnet-4-5-20250929-cap02-v3";
 const MAX_CHUNK_CHARS = 80_000;
 const CHUNK_OVERLAP = 2_000;
 
@@ -226,7 +226,7 @@ async function extractPdfWithClaude(buf: ArrayBuffer): Promise<string> {
     method: "POST",
     headers: buildAnthropicHeaders(apiKey, true),
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5-20250929",
       max_tokens: 8192,
       messages: [
         {
@@ -394,7 +394,7 @@ ${chunkText}
       method: "POST",
       headers: buildAnthropicHeaders(apiKey),
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-5-20250929",
         max_tokens: 8192,
         temperature: attempt === 0 ? 0.2 : 0,
         system: systemPrompt,
