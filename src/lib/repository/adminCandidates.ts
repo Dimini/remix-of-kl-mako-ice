@@ -152,7 +152,7 @@ class SupabaseEvidenceRepo implements AdminEvidenceRepository {
       ...(c.data ?? []).map(evidenceFromCitation),
       ...(a.data ?? []).map(evidenceFromAction),
       ...(v.data ?? []).map(evidenceFromVote),
-      ...(p.data ?? []).map(evidenceFromProgram),
+      ...(p.data ?? []).flatMap(evidenceFromProgram),
     ];
   }
 

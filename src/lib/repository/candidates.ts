@@ -115,7 +115,7 @@ async function fetchCitations(candidateId: string): Promise<SourceCitation[]> {
     ...(citationsRes.data ?? []).map(evidenceFromCitation),
     ...(actionsRes.data ?? []).map(evidenceFromAction),
     ...(votesRes.data ?? []).map(evidenceFromVote),
-    ...(programsRes.data ?? []).map(evidenceFromProgram),
+    ...(programsRes.data ?? []).flatMap(evidenceFromProgram),
   ];
   return items.map(({ candidateId: _c, pointValue: _p, evidenceType: _e, createdAt: _ca, updatedAt: _u, ...rest }) => rest);
 }
