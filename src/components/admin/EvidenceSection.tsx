@@ -158,13 +158,30 @@ function EvidenceList({ items, onEdit, onDelete }: EvidenceListProps) {
                 <UiBadge variant="outline">{PILLAR_FOR_SOURCE[ev.sourceType].toUpperCase()}</UiBadge>
                 <span className="font-medium">{def?.label ?? ev.evidenceType ?? ev.sourceType}</span>
                 <UiBadge variant={tierVariant}>Tier {ev.climateRelevanceTier}</UiBadge>
+                {ev.sentiment === "pro_climate" && (
+                  <UiBadge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">pro-climate</UiBadge>
+                )}
+                {ev.sentiment === "anti_climate" && (
+                  <UiBadge className="bg-red-100 text-red-800 hover:bg-red-100">anti-climate</UiBadge>
+                )}
                 {ev.pillar === "skutky" && ev.pointValue != null && (
                   <span className="font-mono text-xs">
                     {ev.pointValue > 0 ? "+" : ""}{ev.pointValue} b.
                   </span>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{ev.citationText}</p>
+              <p
+                className={
+                  "text-sm line-clamp-3 mt-1 " +
+                  (ev.sentiment === "pro_climate"
+                    ? "text-emerald-700 dark:text-emerald-400"
+                    : ev.sentiment === "anti_climate"
+                      ? "text-red-700 dark:text-red-400"
+                      : "text-muted-foreground")
+                }
+              >
+                {ev.sentiment ? `„${ev.citationText}"` : ev.citationText}
+              </p>
               {ev.reviewerNote && (
                 <p className="text-xs italic text-muted-foreground mt-1">
                   Pozn.: {ev.reviewerNote}
