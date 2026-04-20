@@ -1,73 +1,75 @@
 
 
 ## Goal
-Write the **initial Supabase migration** as the first real backend artifact for Klima Kompas, using **REQUIREMENTS.md + CLAUDE.md as the schema source of truth**. Apply it, regenerate `src/integrations/supabase/types.ts`, run the linter, and report the next step.
+Swap the Dexie/IndexedDB persistence layer for Supabase across the three repositories (`candidates`, `adminCandidates`, `questionnaire`) plus the audit helper, so that all reads/writes go through the live Postgres backend. After this, Dexie can be deleted and the public site renders real DB-backed candidates.
 
-## Inconsistencies Found (must resolve before/while migrating)
+## Why this is the right next step
+- Auth is in place and you have the `admin` role → write paths will satisfy RLS.
+- Schema + types are aligned (migration done, `src/integrations/supabase/types.ts` regenerated, `src/types/domain.ts` matches DB enums).
+- Until this swap, every admin edit still writes to your browser's IndexedDB only — invisible to the DB and to other reviewers.
 
-I cross-checked REQUIREMENTS.md, CLAUDE.md, `src/types/domain.ts`, `src/lib/db/dexie.ts`, and `supabase/seed-skeleton.sql`. Findings:
+## Scope of changes
 
-| # | Topic | REQUIREMENTS.md / CLAUDE.md | Dexie / domain.ts | Recommendation |
-|---|---|---|---|---|
-| 1 | **Pillar source tables** | Separate: `programs`, `votes`, `documented_actions`, `questionnaire_responses` + a *parallel* `source_citations` table for citations | Single unified `evidence` table covering all pillars | **Follow REQUIREMENTS.** Create separate domain tables (programs/votes/documented_actions) AND a `source_citations` table. The Dexie unified model was a local-first shortcut — repository layer will adapt. |
-| 2 | **`source_type` enum values** | `council_vote \| resolution \| initiative \| program \| questionnaire \| social_post \| manual_entry` | `program \| questionnaire \| social \| vote \| action` | **Follow REQUIREMENTS** in DB. Update `domain.ts` later (Lovable-owned) so the public types match the canonical enum. |
-| 3 | **Position enum** | "Predseda kraju (župan)" + "Primátor" — no string literal locked | `"zupan" \| "primator"` | **Adopt `zupan \| primator`** in DB enum (consistent with existing UI/routes like `/region/:krajId`). Document in CLAUDE.md. |
-| 4 | **Region enum** | 8 krajov, codes BA/TT/TN/NR/ZA/BB/PO/KE | Same | ✅ Aligned. |
-| 5 | **`scoring_config.value` type** | Stored as text-ish keys (`'-35.30'`, `'1.0'`) | Skeleton uses JSONB-quoted | **Use `value JSONB`** (skeleton already does) — supports numbers + strings cleanly. |
-| 6 | **`questionnaire_responses` shape** | `link_uuid`, `response_json`, `questionnaire_score`, `status`, `sent_at`, `responded_at` | `scaleAnswers`, `priorityActions`, `consentPublish`, `consentTruthful`, `rawScore` (flat) | **Follow REQUIREMENTS:** flat columns for routing fields, bundle the candidate-supplied content into `response_json JSONB`. |
-| 7 | **`computed_points` GENERATED column** | REQUIREMENTS calls for it on documented_actions/votes | Not present | Defer — Postgres `GENERATED ALWAYS AS … STORED` requires a deterministic expression but the formula needs a lookup table. Use a **trigger** instead. Note in migration. |
-| 8 | **Audit log table name** | CLAUDE.md doesn't name one; skeleton uses `review_audit_log` | Dexie `auditLog` | **Use `review_audit_log`** (matches skeleton + `docs/SUPABASE_IMPORT.md`). |
-| 9 | **Tier 2 enforcement** | "Form cannot submit without `reviewer_note`" + DB CHECK suggested | Frontend-only in Dexie | **Add CHECK constraint** in DB on every evidence-bearing table. |
+### 1. New Supabase-backed repositories (replace Dexie implementations)
 
-**My recommendation on the bigger conflict (#1, #2):**
-- **Keep REQUIREMENTS.md as source of truth** — it's the contract Claude Code will build to.
-- **Update `src/types/domain.ts` and the Dexie types** in a follow-up Lovable task to match the canonical enums (so UI keeps compiling against Supabase types). I'll flag this clearly when reporting "next step" — won't do it in this turn to keep the migration atomic.
+**`src/lib/repository/candidates.ts`** (public reads)
+- `list()` → `select * from candidates where state='PUBLISHED' and is_approved=true` (RLS already enforces this for anon).
+- `getByKraj`, `getByKrajAndPosition` → same with `.eq('region', krajId)` / `.eq('position', position)`.
+- `getById` → single row fetch + join `scores` (latest approved), `source_citations`, `programs`, `documented_actions`, `votes` to assemble the public `Candidate` shape consumed by `CandidateDetail.tsx` and the map.
+- Keep the `CandidatesRepository` interface unchanged so UI code is untouched.
 
-## Migration Plan — `001_initial_schema.sql`
+**`src/lib/repository/adminCandidates.ts`** (reviewer CRUD)
+- Replace Dexie calls with Supabase client calls against `candidates` and the evidence tables.
+- Map snake_case DB columns ↔ camelCase `CandidateRecord` in a single adapter (`fromRow` / `toRow`) so component code keeps using the existing record shape.
+- `adminEvidenceRepo`: split the unified Dexie `evidence` table into reads/writes against the four canonical tables (`source_citations`, `programs`, `documented_actions`, `votes`) using `pillar` + `source_type` to route. Returns a unified `EvidenceRecord[]` to keep `EvidenceSection.tsx` / `EvidenceForm.tsx` working without prop changes.
 
-**Tables (in dependency order):**
-1. **Enums:** `app_role`, `kraj_id`, `position_type`, `candidate_state`, `badge_color`, `grey_subtype`, `pillar`, `source_type`, `evidence_type`, `direction`, `vote_direction`, `audit_action`, `questionnaire_status`.
-2. **`user_roles`** + **`has_role(user_id, role)`** SECURITY DEFINER function (per system prompt, prevents RLS recursion). Used by reviewer policies.
-3. **`scoring_config`** (key TEXT PK, value JSONB, description). Seeded in step 9.
-4. **`candidates`** (id, name, photo_url, position, region, city, party, is_independent, incumbent, year, state, questionnaire_responded, is_approved, questionnaire_uuid UNIQUE, timestamps).
-5. **`scores`** (one row per candidate per version_number; pillar1_score/pillar2_score/total_score; badge + badge_subtype; formula_version; is_approved/approved_at/approved_by; UNIQUE on (candidate_id, version_number)).
-6. **`programs`** (program-pillar agent output: source_url, raw_text, raw_score, normalized_score, citations_json, agent_version, confidence, processed_at).
-7. **`questionnaire_responses`** (candidate_id FK, link_uuid UNIQUE, sent_at, responded_at, status, candidate_name, email, response_json JSONB, questionnaire_score).
-8. **`votes`** (candidate_id, date, meeting_id, topic, vote_direction, points, source_url, climate_relevance_tier, reviewer_note, confidence, entered_by, is_ai_generated, requires_second_reviewer).
-9. **`documented_actions`** (candidate_id, action_type evidence_type, date, description, points, source_url, citation_text, climate_relevance_tier, reviewer_note, entered_by, is_ai_generated, requires_second_reviewer).
-10. **`source_citations`** (the canonical evidence audit table per REQUIREMENTS §EVIDENCE SCHEMA — pillar, source_type, url NOT NULL, citation_text ≤280 CHECK, date_accessed, confidence, climate_relevance_tier, reviewer_note).
-11. **`review_audit_log`** (candidate_id, at, reviewer, action, from_state, to_state, note, adjustments JSONB).
+**`src/lib/repository/questionnaire.ts`**
+- `findCandidateByUuid` → `select … where questionnaire_uuid = :uuid`.
+- `saveDraft` / `submitFinal` → upsert into `questionnaire_responses` with the canonical shape (`link_uuid`, `response_json` JSONB bundling scaleAnswers/priorityActions/consents, `questionnaire_score`, `status`, `responded_at`).
+- `submitFinal` also updates `candidates.state` + `questionnaire_responded` and writes a `review_audit_log` row via the new audit helper.
 
-**Constraints applied:**
-- Tier 2 CHECK on `votes`, `documented_actions`, `source_citations`: `tier <> 2 OR (reviewer_note IS NOT NULL AND length(trim(reviewer_note)) > 0)`.
-- `citation_text` length ≤ 280.
-- `confidence` BETWEEN 0 and 1.
-- Foreign keys all ON DELETE CASCADE from `candidates`.
+**`src/lib/audit.ts`**
+- Rewrite `logAudit()` to insert into `public.review_audit_log` using the current session (`reviewer = user.email`, `reviewer_user_id = user.id`).
+- `listAuditFor()` → select by `candidate_id` ordered by `at desc`.
 
-**Triggers:**
-- `set_updated_at()` BEFORE UPDATE on every table that has `updated_at`.
+### 2. Convert `useLiveQuery` call sites
+`AdminCandidatesList.tsx`, `AdminCandidateDetail.tsx`, `AdminReviewQueue.tsx`, `AdminExport.tsx`, `EvidenceSection.tsx`, `AuditLogPanel.tsx`, `QuestionnaireLinkPanel.tsx` currently use `dexie-react-hooks`. Replace each with a small `useSupabaseQuery` pattern using `useEffect` + `useState` (or TanStack Query if already wired — will check). Subscribe to Supabase Realtime on the relevant table so the list refreshes on inserts/updates without manual refetch.
 
-**RLS policies (per `docs/SUPABASE_IMPORT.md` §3):**
-- `candidates`: public SELECT when `state = 'PUBLISHED' AND is_approved = true`; reviewers (`has_role('reviewer')`) full access.
-- `scores`: public SELECT when `is_approved = true`; reviewers full access.
-- `source_citations`, `programs`, `questionnaire_responses`, `votes`, `documented_actions`: public SELECT joined to a published+approved candidate; reviewers full access. Questionnaire additionally requires `consent_publish = true` inside `response_json`.
-- `review_audit_log`: reviewers only, never public.
-- `scoring_config`: public SELECT.
-- `user_roles`: only the user themselves SELECT their own row; reviewers can read all.
+### 3. Seed flow
+- Repurpose `src/lib/seed.ts` `seedFromMock()` to upsert `MOCK_CANDIDATES` into Supabase (`candidates` only — no scores/evidence) so you can populate the DB once for testing. Guard behind admin role.
+- `clearAllAdminData()` → delete-all from `candidates` cascading through the evidence tables (admin-only, with confirm dialog already in place).
 
-**Seed `scoring_config`** with all v1.0 constants from REQUIREMENTS §CAP-07 (program min/max, questionnaire max, actions min/max, badge thresholds, weights, formula_version).
+### 4. Delete (after smoke-test passes)
+- `src/lib/db/dexie.ts`
+- `dexie` + `dexie-react-hooks` from `package.json`
+- All `import { db } from "@/lib/db/dexie"` references
 
-## Steps I will execute (after approval)
+### 5. UI tweak
+- `AdminCandidatesList.tsx` empty-state copy referencing "Phase B" / IndexedDB → update to mention Supabase.
+- `AdminLayout` header: show signed-in reviewer email next to the sign-out button (cheap win, helps multi-reviewer workflows).
 
-1. Write `supabase/migrations/<ts>_initial_schema.sql` containing everything above. Run it via the migration tool.
-2. Run **`supabase--linter`** + **`security--run_security_scan`** and fix any findings (typically: enable RLS on every table even if not needed, set `search_path` on functions).
-3. Auto-regenerate `src/integrations/supabase/types.ts` (happens automatically after migration apply).
-4. Verify by running `SELECT count(*) FROM scoring_config` via `supabase--read_query` — should return 16+ rows.
-5. Report next step: **swap `src/lib/repository/{candidates,adminCandidates,questionnaire}.ts` from Dexie to Supabase** (Claude Code's territory per CLAUDE.md), and **align `src/types/domain.ts` enums to the DB** (Lovable's territory). Plus: implement auth so reviewers can actually authenticate and `has_role()` resolves.
+## Out of scope (next iterations)
+- Public `Candidate` shape conversion when no row in `scores` exists yet → Grey badge fallback. Will implement basic fallback but full grey-subtype logic stays as-is.
+- Storage bucket for candidate photos (currently `photo_url` is a free text URL — fine for now).
+- Admin user management UI.
+- CAP-07 scoring Edge Function (Antigravity territory).
 
-## Out of scope for this turn
-- No data import from the JSON export (separate one-shot script).
-- No repository swap — that's the explicit next step Claude Code will pick up.
-- No Edge Functions (CAP-07 scoring webhook) — Antigravity territory.
-- No auth UI — flag as a blocker for write operations.
+## Risks & mitigations
+- **RLS lockout on writes**: every write goes through `Reviewers manage …` policies which require `has_role`. Your `admin` role covers this. Other reviewers will need roles granted before they can write.
+- **Public reads return empty until candidates are PUBLISHED + approved**: expected. The seed flow inserts at `state='REGISTERED'` so the public site stays empty until you walk a candidate through the state machine. I'll add a one-line note in the admin list explaining this.
+- **`useLiveQuery` → manual subscription**: I'll wrap the pattern in a tiny `useTable(name, query)` hook in `src/hooks/useSupabaseTable.ts` so call sites stay one-liners.
+
+## Files touched (estimate)
+- Rewritten: `candidates.ts`, `adminCandidates.ts`, `questionnaire.ts`, `audit.ts`, `seed.ts` (5 files in `src/lib/`)
+- New: `src/hooks/useSupabaseTable.ts`, `src/lib/repository/_adapters.ts`
+- Edited (hook swap only): 7 admin pages/components listed above
+- Deleted: `src/lib/db/dexie.ts` + dexie deps
+- Untouched: all `src/components/klima/*`, `src/pages/CandidateDetail.tsx`, public site routing
+
+## Verification steps after implementation
+1. Sign in at `/admin/login` → land on `/admin` without errors.
+2. Click "Seed z mock dát" → see candidates appear (verify via `select count(*) from candidates`).
+3. Open one candidate, add an evidence item, save → verify row in `source_citations`/`votes`/etc.
+4. Walk a candidate to `PUBLISHED` + approved → confirm it appears on the public `/region/:krajId` page in an incognito window (anon read path).
+5. Open browser devtools → confirm no `dexie` references remain in the network/console.
 
