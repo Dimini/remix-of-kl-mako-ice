@@ -19,15 +19,58 @@ interface ScorePreviewProps {
   candidateId: string;
 }
 
+interface ProgramMeta {
+  totalSentences?: number;
+  proCount?: number;
+  antiCount?: number;
+  neutralCount?: number;
+  tier1Count?: number;
+  tier2Count?: number;
+  tier3Count?: number;
+  proPercent?: number;
+  antiPercent?: number;
+  rawCarter?: number;
+  effectivePro?: number;
+  effectiveAnti?: number;
+}
+
+interface ProgramRow {
+  normalized_score: number | null;
+  raw_score: number | null;
+  confidence: number | null;
+  citations_json: unknown;
+  agent_version: string | null;
+  processed_at: string | null;
+  source_url: string;
+}
+
+function readProgramMeta(row: ProgramRow | null): ProgramMeta | null {
+  if (!row?.citations_json) return null;
+  const cj = row.citations_json as { meta?: ProgramMeta } | unknown[];
+  if (Array.isArray(cj)) return null; // legacy: plain array, no meta
+  return cj?.meta ?? null;
+}
+
 export function ScorePreview({ candidateId }: ScorePreviewProps) {
   const { reviewer, user } = useAdminAuth();
 
   const candFetcher = useCallback(() => adminCandidatesRepo.getById(candidateId), [candidateId]);
   const evFetcher = useCallback(() => adminEvidenceRepo.listByCandidate(candidateId), [candidateId]);
+  const programFetcher = useCallback(async (): Promise<ProgramRow | null> => {
+    const { data, error } = await supabase
+      .from("programs")
+      .select("normalized_score, raw_score, confidence, citations_json, agent_version, processed_at, source_url")
+      .eq("candidate_id", candidateId)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }, [candidateId]);
+
   const { data: candidate } = useSupabaseQuery(candFetcher, [candidateId], ["candidates"]);
   const { data: evidenceData } = useSupabaseQuery(evFetcher, [candidateId], [
     "source_citations", "documented_actions", "votes", "programs",
   ]);
+  const { data: programRow } = useSupabaseQuery(programFetcher, [candidateId], ["programs"]);
   const evidence = evidenceData ?? [];
 
   if (!candidate) return null;
@@ -41,13 +84,38 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
 
   const { debug, ...score } = result;
 
+  // Prefer the AI agent's own normalized program score (Carter Method) when
+  // present. computeScore's `programNorm` is a confidence-weighted heuristic
+  // for manually entered evidence and would overestimate program scores.
+  const aiProgramNorm =
+    programRow?.normalized_score !== null && programRow?.normalized_score !== undefined
+      ? Math.round(Number(programRow.normalized_score) * 10) / 10
+      : null;
+  const programNormFinal = aiProgramNorm ?? score.programNorm;
+  const programMeta = readProgramMeta(programRow ?? null);
+
+  // Recompute slova with the AI program score so total reflects Carter.
+  const slovaFinal = (() => {
+    const parts: number[] = [];
+    if (programNormFinal !== null && programNormFinal !== undefined) parts.push(programNormFinal);
+    if (score.questionnaireNorm !== null && score.questionnaireNorm !== undefined) parts.push(score.questionnaireNorm);
+    if (parts.length === 0) return null;
+    return Math.round((parts.reduce((s, v) => s + v, 0) / parts.length) * 10) / 10;
+  })();
+
+  const totalFinal = (() => {
+    if (slovaFinal === null && score.skutky === null) return null;
+    if (slovaFinal === null) return score.skutky;
+    if (score.skutky === null) return slovaFinal;
+    return Math.round((slovaFinal * 0.4 + score.skutky * 0.6) * 10) / 10;
+  })();
+
   async function handleSave() {
-    // Upsert into scores table (one row per candidate, latest version_number).
     const { error } = await supabase.from("scores").insert({
       candidate_id: candidateId,
-      pillar1_score: score.slova,
+      pillar1_score: slovaFinal,
       pillar2_score: score.skutky,
-      total_score: score.total,
+      total_score: totalFinal,
       badge: score.badge,
       badge_subtype: score.badgeSubtype ?? null,
       formula_version: score.formulaVersion,
@@ -62,11 +130,11 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
       candidateId,
       reviewer: reviewer || "neznámy",
       action: "SCORE_SAVED",
-      note: `total=${score.total ?? "—"} badge=${score.badge}`,
+      note: `total=${totalFinal ?? "—"} badge=${score.badge}`,
     });
     toast({
       title: "Skóre uložené",
-      description: `Total: ${score.total ?? "—"} / 100 · ${score.badge.toUpperCase()}`,
+      description: `Total: ${totalFinal ?? "—"} / 100 · ${score.badge.toUpperCase()}`,
     });
   }
 
@@ -90,10 +158,10 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
       </div>
 
       <div className="flex items-center gap-4 flex-wrap">
-        <CandidateBadge badge={score.badge} score={score.total} subtype={score.badgeSubtype} size="lg" />
+        <CandidateBadge badge={score.badge} score={totalFinal} subtype={score.badgeSubtype} size="lg" />
         <div>
           <div className="text-3xl font-bold tabular-nums">
-            {score.total !== null ? `${score.total}` : "—"}
+            {totalFinal !== null ? `${totalFinal}` : "—"}
             <span className="text-base text-muted-foreground font-normal"> / 100</span>
           </div>
           <div className="text-xs text-muted-foreground font-mono">
@@ -102,26 +170,67 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
         </div>
       </div>
 
-      <PillarBar slova={score.slova} skutky={score.skutky} />
+      <PillarBar slova={slovaFinal} skutky={score.skutky} />
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-        <SubScore label="Program" value={score.programNorm} />
+        <SubScore label="Program (AI)" value={programNormFinal} />
         <SubScore label="Dotazník" value={score.questionnaireNorm} />
         <SubScore label="Sociálne (Fáza 2)" value={score.socialNorm} muted />
         <SubScore label="Hlasovania" value={score.votesNorm} />
         <SubScore label="Činy" value={score.actionsNorm} />
       </div>
 
-      <details className="text-xs text-muted-foreground">
+      <details className="text-xs text-muted-foreground" open>
         <summary className="cursor-pointer font-medium">Debug — vstup do výpočtu</summary>
-        <ul className="mt-2 space-y-1 font-mono">
-          <li>n (klimatické hlasovania) = {debug.n}</li>
-          <li>raw votes = {debug.rawVotes}</li>
-          <li>raw actions = {debug.rawActions}</li>
-          <li>vylúčené Tier 3 = {debug.excludedTier3}</li>
-          <li>program položky = {debug.programCount}</li>
-          <li>dotazník položky = {debug.questionnaireCount}</li>
-        </ul>
+        <div className="mt-2 space-y-3">
+          <div>
+            <div className="font-semibold text-foreground mb-1">Evidence</div>
+            <ul className="space-y-1 font-mono">
+              <li>n (klimatické hlasovania) = {debug.n}</li>
+              <li>raw votes = {debug.rawVotes}</li>
+              <li>raw actions = {debug.rawActions}</li>
+              <li>vylúčené Tier 3 = {debug.excludedTier3}</li>
+              <li>program položky = {debug.programCount}</li>
+              <li>dotazník položky = {debug.questionnaireCount}</li>
+            </ul>
+          </div>
+          {programMeta && (
+            <div>
+              <div className="font-semibold text-foreground mb-1">Program — Carter Method</div>
+              <ul className="space-y-1 font-mono">
+                <li>celkom viet v dokumente = {programMeta.totalSentences ?? "—"}</li>
+                <li>
+                  pro-climate = {programMeta.proCount ?? "—"}
+                  {programMeta.proPercent !== undefined && (
+                    <span className="text-muted-foreground"> ({programMeta.proPercent}%)</span>
+                  )}
+                </li>
+                <li>
+                  anti-climate = {programMeta.antiCount ?? "—"}
+                  {programMeta.antiPercent !== undefined && (
+                    <span className="text-muted-foreground"> ({programMeta.antiPercent}%)</span>
+                  )}
+                </li>
+                <li>neutral (vynechané) = {programMeta.neutralCount ?? "—"}</li>
+                <li>Tier 1 / 2 / 3 = {programMeta.tier1Count ?? 0} / {programMeta.tier2Count ?? 0} / {programMeta.tier3Count ?? 0}</li>
+                <li>effective pro (vážené) = {programMeta.effectivePro ?? "—"}</li>
+                <li>effective anti (vážené) = {programMeta.effectiveAnti ?? "—"}</li>
+                <li className="text-foreground">
+                  raw Carter skóre (pro% − anti%) = {programMeta.rawCarter ?? "—"}
+                </li>
+                <li className="text-foreground">
+                  normalizované (0–100) = {aiProgramNorm ?? "—"}
+                </li>
+                {programRow?.confidence !== null && programRow?.confidence !== undefined && (
+                  <li>spoľahlivosť = {Number(programRow.confidence).toFixed(2)}</li>
+                )}
+                {programRow?.agent_version && (
+                  <li className="text-[10px] opacity-70">agent: {programRow.agent_version}</li>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
       </details>
     </Card>
   );
