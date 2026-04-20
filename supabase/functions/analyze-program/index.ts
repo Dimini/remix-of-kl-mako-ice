@@ -204,12 +204,7 @@ async function extractPdfWithClaude(buf: ArrayBuffer): Promise<string> {
   // Call Anthropic API directly via fetch — avoids SDK header-construction bug in Deno.
   const resp = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-beta": "pdfs-2024-09-25",
-    },
+    headers: buildAnthropicHeaders(apiKey, true),
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 8192,
@@ -367,11 +362,7 @@ ${chunkText}
   for (let attempt = 0; attempt < 2; attempt++) {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
+      headers: buildAnthropicHeaders(apiKey),
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 8192,
@@ -444,19 +435,39 @@ function getAnthropicApiKey(): string {
   const raw = Deno.env.get("ANTHROPIC_API_KEY");
   if (!raw) return "";
 
-  const sanitized = raw.replace(/[\r\n]+/g, "").trim();
+  const sanitized = toHeaderValue(raw, "ANTHROPIC_API_KEY");
   if (!sanitized) {
     throw new Error("ANTHROPIC_API_KEY is empty after sanitization");
   }
 
-  for (const ch of sanitized) {
-    const code = ch.charCodeAt(0);
-    if (code > 0xff || (code < 0x20 && code !== 0x09) || code === 0x7f) {
-      throw new Error("ANTHROPIC_API_KEY contains invalid header characters");
-    }
+  return sanitized;
+}
+
+function buildAnthropicHeaders(apiKey: string, includePdfBeta = false): Headers {
+  const headers = new Headers();
+
+  headers.set("content-type", "application/json");
+  headers.set("x-api-key", toHeaderValue(apiKey, "ANTHROPIC_API_KEY"));
+  headers.set("anthropic-version", "2023-06-01");
+  if (includePdfBeta) {
+    headers.set("anthropic-beta", "pdfs-2024-09-25");
   }
 
-  return sanitized;
+  return headers;
+}
+
+function toHeaderValue(value: string, label: string): string {
+  const asciiOnly = value
+    .normalize("NFKC")
+    .replace(/[\r\n]+/g, "")
+    .replace(/[^\x20-\x7E]+/g, "")
+    .trim();
+
+  if (!asciiOnly) {
+    throw new Error(`${label} is empty after header sanitization`);
+  }
+
+  return asciiOnly;
 }
 
 function json(body: unknown, status = 200): Response {
