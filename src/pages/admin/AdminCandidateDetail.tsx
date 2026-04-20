@@ -42,6 +42,7 @@ import { EvidenceSection } from "@/components/admin/EvidenceSection";
 import { ScorePreview } from "@/components/admin/ScorePreview";
 import { AuditLogPanel } from "@/components/admin/AuditLogPanel";
 import { QuestionnaireLinkPanel } from "@/components/admin/QuestionnaireLinkPanel";
+import { CandidatePhotoUpload } from "@/components/admin/CandidatePhotoUpload";
 import { logAudit } from "@/lib/audit";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
@@ -356,8 +357,23 @@ export default function AdminCandidateDetail() {
               name="photoUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL fotografie (voliteľné)</FormLabel>
-                  <FormControl><Input {...field} placeholder="https://…" /></FormControl>
+                  <FormLabel>Fotografia kandidáta (voliteľné)</FormLabel>
+                  <FormControl>
+                    <CandidatePhotoUpload
+                      candidateId={isNew ? null : (existing?.id ?? null)}
+                      value={field.value || undefined}
+                      onChange={(url) => {
+                        field.onChange(url);
+                        // Persist immediately so the public scorecard reflects it
+                        // without requiring a separate "Save" click.
+                        if (existing) {
+                          void adminCandidatesRepo.update(existing.id, {
+                            photoUrl: url || undefined,
+                          });
+                        }
+                      }}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

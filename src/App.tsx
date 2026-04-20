@@ -22,6 +22,7 @@ import AdminCandidateDetail from "./pages/admin/AdminCandidateDetail";
 import AdminReviewQueue from "./pages/admin/AdminReviewQueue";
 import AdminExport from "./pages/admin/AdminExport";
 import AdminLogin from "./pages/admin/AdminLogin";
+import AdminUsers from "./pages/admin/AdminUsers";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
                 <Route path="candidate/:id" element={<AdminCandidateDetail />} />
                 <Route path="review" element={<AdminReviewQueue />} />
                 <Route path="export" element={<AdminExport />} />
+                <Route path="users" element={<AdminUsers />} />
               </Route>
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

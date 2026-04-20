@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, Inbox, Download, Menu, X } from "lucide-react";
+import { LogOut, Users, Inbox, Download, Menu, X, ShieldCheck } from "lucide-react";
 
 const navItem =
   "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap";
@@ -41,6 +41,15 @@ export function AdminLayout() {
         }
       >
         <Download className="w-4 h-4" /> Export
+      </NavLink>
+      <NavLink
+        to="/admin/users"
+        onClick={() => setOpen(false)}
+        className={({ isActive }) =>
+          `${navItem} ${isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`
+        }
+      >
+        <ShieldCheck className="w-4 h-4" /> Používatelia
       </NavLink>
     </>
   );
