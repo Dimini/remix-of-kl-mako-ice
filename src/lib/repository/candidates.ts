@@ -29,12 +29,13 @@ async function fetchLatestScores(candidateIds: string[]): Promise<Map<string, Sc
     .from("scores")
     .select("*")
     .in("candidate_id", candidateIds)
-    .eq("is_approved", true);
+    .eq("is_approved", true)
+    .order("version_number", { ascending: false });
   if (error) throw error;
   const out = new Map<string, ScoreBreakdown>();
+  // Rows ordered desc by version; first row per candidate is the latest approved.
   for (const row of data ?? []) {
-    const existing = out.get(row.candidate_id);
-    if (!existing || (row.version_number ?? 0) > 0) {
+    if (!out.has(row.candidate_id)) {
       out.set(row.candidate_id, scoreFromRow(row));
     }
   }
