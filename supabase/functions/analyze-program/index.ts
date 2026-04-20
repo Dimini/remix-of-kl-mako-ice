@@ -93,8 +93,16 @@ Deno.serve(async (req) => {
         clampNorm(analysis.rawScore, PROGRAM_CAP_MIN, PROGRAM_CAP_MAX) * 100,
       ) / 100;
 
-    // 7. Upsert into programs table.
-    console.log(`[analyze-program][step:upsert] candidate_id=${candidate_id} normalized=${normalizedScore}`);
+    // 7. Upsert into programs table. citations_json is wrapped as
+    // { meta, items } so the admin UI can show debug counts even after
+    // tier 3 / neutral filtering removes most rows from `items`.
+    const citationsPayload = {
+      meta: analysis.meta,
+      items: analysis.citations,
+    };
+    console.log(
+      `[analyze-program][step:upsert] candidate_id=${candidate_id} normalized=${normalizedScore} pro=${analysis.meta.proCount} anti=${analysis.meta.antiCount} neutral=${analysis.meta.neutralCount} total=${analysis.meta.totalSentences}`,
+    );
     const { error: uErr } = await svc.from("programs").upsert(
       {
         candidate_id,
@@ -102,7 +110,7 @@ Deno.serve(async (req) => {
         raw_text: rawText.slice(0, 100_000),
         raw_score: analysis.rawScore,
         normalized_score: normalizedScore,
-        citations_json: analysis.citations,
+        citations_json: citationsPayload,
         confidence: analysis.confidence,
         agent_version: AGENT_VERSION,
         processed_at: new Date().toISOString(),
@@ -270,10 +278,26 @@ interface CitationItem {
   reviewer_note: string | null;
 }
 
+interface AnalysisMeta {
+  totalSentences: number;
+  proCount: number;
+  antiCount: number;
+  neutralCount: number;
+  tier1Count: number;
+  tier2Count: number;
+  tier3Count: number;
+  proPercent: number;   // pro / total * 100
+  antiPercent: number;  // anti / total * 100
+  rawCarter: number;    // pre-normalisation Carter raw
+  effectivePro: number;
+  effectiveAnti: number;
+}
+
 interface AnalysisResult {
   rawScore: number;
   confidence: number;
   citations: CitationItem[];
+  meta: AnalysisMeta;
 }
 
 async function analyzeWithClaude(
