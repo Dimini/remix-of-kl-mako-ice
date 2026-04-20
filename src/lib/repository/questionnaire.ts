@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { logAudit } from "@/lib/audit";
 import { adminCandidatesRepo } from "./adminCandidates";
 import { candidateFromRow, questionnaireFromRow } from "./_adapters";
 import type { CandidateRecord, QuestionnaireResponseRecord } from "./types";
@@ -122,6 +121,7 @@ export async function submitFinal(uuid: string, payload: SubmitPayload): Promise
   if (existing?.status === "submitted") {
     throw new Error("Dotazník už bol odoslaný a nie je možné ho meniť.");
   }
+
   const now = new Date().toISOString();
   const rawScore = computeQuestionnaireRaw(payload.scaleAnswers);
 
@@ -142,28 +142,8 @@ export async function submitFinal(uuid: string, payload: SubmitPayload): Promise
     );
   if (respErr) throw respErr;
 
-  const fromState = candidate.state;
-  let nextState = fromState;
-  if (fromState === "REGISTERED" || fromState === "DATA_COLLECTION") nextState = "ANALYZED";
-  else if (fromState === "NEEDS_REVISION") nextState = "ANALYZED";
-
-  await adminCandidatesRepo.update(candidate.id, {
-    questionnaireResponded: true,
-    state: nextState !== fromState ? nextState : undefined,
-  });
-
-  await logAudit({
-    candidateId: candidate.id,
-    reviewer: `kandidát: ${payload.candidateName}`,
-    action: "QUESTIONNAIRE_SUBMITTED",
-    fromState: nextState !== fromState ? fromState : undefined,
-    toState: nextState !== fromState ? nextState : undefined,
-    note: `Raw skóre dotazníka: ${rawScore}`,
-  });
-
   return {
     candidateId: candidate.id,
     rawScore,
-    stateChangedTo: nextState !== fromState ? nextState : undefined,
   };
 }
