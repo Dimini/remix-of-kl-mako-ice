@@ -12,11 +12,12 @@ import { clampNorm } from "../_shared/scoring.ts";
 const PROGRAM_CAP_MIN = -35.30;
 const PROGRAM_CAP_MAX = 17.31;
 
-const AGENT_VERSION = "claude-sonnet-4-20250514-cap02-v1";
+const AGENT_VERSION = "claude-sonnet-4-20250514-cap02-v2";
 const MAX_CHUNK_CHARS = 80_000;
 const CHUNK_OVERLAP = 2_000;
 
 Deno.serve(async (req) => {
+  console.log("[analyze-program] boot v2 — SDK removed, using direct fetch");
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
 
