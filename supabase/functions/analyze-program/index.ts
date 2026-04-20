@@ -27,9 +27,12 @@ Deno.serve(async (req) => {
 
     // 2. Parse body.
     const body = await req.json().catch(() => null);
-    const { candidate_id, program_url } = body ?? {};
-    if (!candidate_id || !program_url) {
-      return json({ error: "candidate_id and program_url required" }, 400);
+    const { candidate_id, program_url, program_storage_path } = body ?? {};
+    if (!candidate_id || (!program_url && !program_storage_path)) {
+      return json(
+        { error: "candidate_id and (program_url or program_storage_path) required" },
+        400,
+      );
     }
 
     const svc = createServiceClient();
@@ -43,8 +46,24 @@ Deno.serve(async (req) => {
     if (cErr) throw cErr;
     if (!candidate) return json({ error: "Candidate not found" }, 404);
 
-    // 4. Fetch and extract program text.
-    const rawText = await fetchProgramText(program_url);
+    // 4. Fetch and extract program text — from URL or from Storage upload.
+    let rawText: string;
+    let sourceUrl: string;
+    if (program_storage_path) {
+      const { data: dl, error: dlErr } = await svc.storage
+        .from("candidate-programs")
+        .download(program_storage_path);
+      if (dlErr || !dl) {
+        return json({ error: `Failed to download PDF: ${dlErr?.message ?? "not found"}` }, 422);
+      }
+      const buf = await dl.arrayBuffer();
+      rawText = await extractPdfText(buf);
+      // Private bucket — record the storage path as a marker in source_url.
+      sourceUrl = `storage://candidate-programs/${program_storage_path}`;
+    } else {
+      rawText = await fetchProgramText(program_url);
+      sourceUrl = program_url;
+    }
     if (!rawText || rawText.trim().length < 50) {
       return json({ error: "Program text too short or empty after extraction" }, 422);
     }
@@ -62,7 +81,7 @@ Deno.serve(async (req) => {
     const { error: uErr } = await svc.from("programs").upsert(
       {
         candidate_id,
-        source_url: program_url,
+        source_url: sourceUrl,
         raw_text: rawText.slice(0, 100_000),
         raw_score: analysis.rawScore,
         normalized_score: normalizedScore,
