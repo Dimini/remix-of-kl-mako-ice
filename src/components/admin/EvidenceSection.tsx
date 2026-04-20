@@ -145,12 +145,6 @@ function EvidenceList({ items, onEdit, onDelete }: EvidenceListProps) {
     <ul className="divide-y">
       {items.map((ev) => {
         const def = ev.evidenceType ? getEvidenceType(ev.evidenceType) : undefined;
-        const tierVariant =
-          ev.climateRelevanceTier === 1
-            ? "default"
-            : ev.climateRelevanceTier === 2
-              ? "secondary"
-              : "destructive";
         return (
           <li key={ev.id} className="py-3 flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
