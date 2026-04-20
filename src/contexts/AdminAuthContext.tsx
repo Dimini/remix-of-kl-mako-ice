@@ -1,64 +1,116 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 // ---------------------------------------------------------------------------
-// Lightweight password gate for the admin UI.
+// Supabase-backed admin auth.
 //
-// Phase A: env-var password (VITE_ADMIN_PASSWORD), session-storage flag.
-// This is intentionally minimal — Supabase Auth replaces it once the
-// backend is online. Do NOT use this to protect anything sensitive in
-// production; it only keeps the local-first dev UI out of casual hands.
+// - `session`/`user` come from supabase.auth (email + password).
+// - `isReviewer` is true if the user has role 'reviewer' OR 'admin' in
+//   public.user_roles (checked via the has_role RPC, RLS-safe).
+// - `reviewer` is the display name used in audit log entries — derived
+//   from user.email; consumers may keep using it as-is.
+//
+// Bootstrap:
+//   1. Sign up via /admin/login (creates an auth.users row).
+//   2. Run in Supabase SQL editor (one-shot, requires service role):
+//        INSERT INTO public.user_roles (user_id, role)
+//        VALUES ('<your-uuid>', 'admin');
+//      Get <your-uuid> from the Supabase Dashboard → Authentication → Users.
 // ---------------------------------------------------------------------------
-
-const STORAGE_KEY = "kk_admin_unlocked";
-const REVIEWER_KEY = "kk_admin_reviewer";
-const ENV_PASSWORD = (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) ?? "klima2026";
 
 interface AdminAuthState {
-  unlocked: boolean;
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
+  isReviewer: boolean;
   reviewer: string;
-  setReviewer: (name: string) => void;
-  unlock: (password: string, reviewer?: string) => boolean;
-  lock: () => void;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
 }
 
 const Ctx = createContext<AdminAuthState | null>(null);
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [unlocked, setUnlocked] = useState(false);
-  const [reviewer, setReviewerState] = useState<string>("");
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isReviewer, setIsReviewer] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setUnlocked(sessionStorage.getItem(STORAGE_KEY) === "1");
-    setReviewerState(localStorage.getItem(REVIEWER_KEY) ?? "");
+    // Set up listener BEFORE getSession (per Supabase auth guidance).
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+      // Defer role check — never call other supabase APIs synchronously
+      // inside the auth callback.
+      if (newSession?.user) {
+        setTimeout(() => {
+          void checkReviewer(newSession.user.id).then(setIsReviewer);
+        }, 0);
+      } else {
+        setIsReviewer(false);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session: existing } }) => {
+      setSession(existing);
+      setUser(existing?.user ?? null);
+      if (existing?.user) {
+        void checkReviewer(existing.user.id).then((ok) => {
+          setIsReviewer(ok);
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => sub.subscription.unsubscribe();
   }, []);
 
-  const setReviewer = (name: string) => {
-    const trimmed = name.trim();
-    setReviewerState(trimmed);
-    if (trimmed) localStorage.setItem(REVIEWER_KEY, trimmed);
-    else localStorage.removeItem(REVIEWER_KEY);
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
   };
 
-  const unlock = (password: string, reviewerName?: string) => {
-    if (password === ENV_PASSWORD) {
-      sessionStorage.setItem(STORAGE_KEY, "1");
-      setUnlocked(true);
-      if (reviewerName !== undefined) setReviewer(reviewerName);
-      return true;
-    }
-    return false;
+  const signUp = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/admin` },
+    });
+    return { error: error?.message ?? null };
   };
 
-  const lock = () => {
-    sessionStorage.removeItem(STORAGE_KEY);
-    setUnlocked(false);
+  const signOut = async () => {
+    await supabase.auth.signOut();
   };
+
+  const reviewer = user?.email ?? "";
 
   return (
-    <Ctx.Provider value={{ unlocked, reviewer, setReviewer, unlock, lock }}>
+    <Ctx.Provider
+      value={{ session, user, loading, isReviewer, reviewer, signIn, signUp, signOut }}
+    >
       {children}
     </Ctx.Provider>
   );
+}
+
+async function checkReviewer(userId: string): Promise<boolean> {
+  // Check 'reviewer' first; if not found, check 'admin'.
+  const reviewerRes = await supabase.rpc("has_role", {
+    _user_id: userId,
+    _role: "reviewer",
+  });
+  if (reviewerRes.data === true) return true;
+  const adminRes = await supabase.rpc("has_role", {
+    _user_id: userId,
+    _role: "admin",
+  });
+  return adminRes.data === true;
 }
 
 export function useAdminAuth() {

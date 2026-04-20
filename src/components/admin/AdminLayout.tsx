@@ -8,7 +8,8 @@ const navItem =
   "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap";
 
 export function AdminLayout() {
-  const { lock, reviewer } = useAdminAuth();
+  const { signOut, reviewer } = useAdminAuth();
+  const lock = () => void signOut();
   const [open, setOpen] = useState(false);
 
   const links = (
