@@ -138,13 +138,21 @@ export function evidenceFromVote(row: VoteRow): EvidenceRecord {
 }
 
 export function evidenceFromProgram(row: ProgramRow): EvidenceRecord {
+  // Summary citation — the full raw_text can be 100k chars; the ScorePreview
+  // panel surfaces the Carter-method detail separately. Here we only show a
+  // short summary so EvidenceSection doesn't render the entire PDF.
+  const cj = row.citations_json as { meta?: { totalSentences?: number; proCount?: number; antiCount?: number; rawCarter?: number } } | unknown[] | null;
+  const meta = !Array.isArray(cj) ? cj?.meta : undefined;
+  const summary = meta
+    ? `Analýza programu (AI): ${meta.proCount ?? 0} pro / ${meta.antiCount ?? 0} anti z ${meta.totalSentences ?? 0} viet · raw Carter = ${meta.rawCarter ?? "—"} · normalizované = ${row.normalized_score ?? "—"}/100`
+    : (row.raw_text ?? "").slice(0, 280);
   return {
     id: row.id,
     candidateId: row.candidate_id,
     pillar: "slova",
     sourceType: "program",
     url: row.source_url,
-    citationText: row.raw_text ?? "",
+    citationText: summary,
     climateRelevanceTier: 1,
     dateAccessed: (row.processed_at ?? row.created_at).slice(0, 10),
     confidence: row.confidence !== null ? Number(row.confidence) : undefined,

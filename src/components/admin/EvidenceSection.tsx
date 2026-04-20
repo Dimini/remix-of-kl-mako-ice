@@ -6,6 +6,7 @@ import { adminEvidenceRepo } from "@/lib/repository/adminCandidates";
 import { getEvidenceType, PILLAR_FOR_SOURCE } from "@/lib/evidenceTypes";
 import { EvidenceForm } from "@/components/admin/EvidenceForm";
 import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,6 +18,32 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+
+// Parse storage://bucket/path URLs and produce a signed URL for private files.
+async function openSource(url: string) {
+  if (!url) return;
+  if (url.startsWith("storage://")) {
+    const rest = url.slice("storage://".length);
+    const slash = rest.indexOf("/");
+    if (slash === -1) return;
+    const bucket = rest.slice(0, slash);
+    const path = rest.slice(slash + 1);
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) {
+      toast({
+        title: "Nepodarilo sa otvoriť zdroj",
+        description: error?.message ?? "Signed URL nedostupná.",
+        variant: "destructive",
+      });
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
+}
 
 interface EvidenceSectionProps {
   candidateId: string;
@@ -143,14 +170,13 @@ function EvidenceList({ items, onEdit, onDelete }: EvidenceListProps) {
                   Pozn.: {ev.reviewerNote}
                 </p>
               )}
-              <a
-                href={ev.url}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => void openSource(ev.url)}
                 className="inline-flex items-center text-xs text-primary hover:underline mt-1"
               >
                 Zdroj <ExternalLink className="w-3 h-3 ml-1" />
-              </a>
+              </button>
             </div>
             <div className="flex gap-1">
               <Button size="icon" variant="ghost" onClick={() => onEdit(ev)} aria-label="Upraviť">
