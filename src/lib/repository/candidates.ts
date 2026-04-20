@@ -100,25 +100,58 @@ class SupabaseCandidatesRepository implements CandidatesRepository {
     if (error) throw error;
     if (!data) return null;
     const [hydrated] = await hydrate([data]);
-    // Also fetch citations for the public detail view.
-    const citations = await fetchCitations(id);
-    return { ...hydrated, citations };
+    // Fetch evidence + program row in parallel for sub-score computation.
+    const [evidence, programRes] = await Promise.all([
+      fetchEvidence(id),
+      supabase
+        .from("programs")
+        .select("normalized_score")
+        .eq("candidate_id", id)
+        .maybeSingle(),
+    ]);
+    // Compute sub-scores (programNorm/questionnaireNorm/votesNorm/actionsNorm)
+    // from evidence so the public detail page can show the breakdown grid.
+    // Pillar totals (slova/skutky/total/badge) keep the approved values from
+    // the `scores` row — we never recompute those on the public side.
+    const computed = computeScore({
+      evidence,
+      isNewCandidate: !hydrated.incumbent,
+      overallConfidence: meanConfidence(evidence),
+      questionnaireResponded: hydrated.questionnaireResponded,
+    });
+    const aiProgramNorm =
+      programRes.data?.normalized_score !== null && programRes.data?.normalized_score !== undefined
+        ? Math.round(Number(programRes.data.normalized_score) * 10) / 10
+        : null;
+    const enrichedScore: ScoreBreakdown = {
+      ...hydrated.score,
+      programNorm: aiProgramNorm ?? computed.programNorm,
+      questionnaireNorm: computed.questionnaireNorm,
+      socialNorm: computed.socialNorm,
+      votesNorm: computed.votesNorm,
+      actionsNorm: computed.actionsNorm,
+    };
+    const citations = evidenceToCitations(evidence);
+    return { ...hydrated, score: enrichedScore, citations };
   }
 }
 
-async function fetchCitations(candidateId: string): Promise<SourceCitation[]> {
+async function fetchEvidence(candidateId: string): Promise<EvidenceRecord[]> {
   const [citationsRes, actionsRes, votesRes, programsRes] = await Promise.all([
     supabase.from("source_citations").select("*").eq("candidate_id", candidateId),
     supabase.from("documented_actions").select("*").eq("candidate_id", candidateId),
     supabase.from("votes").select("*").eq("candidate_id", candidateId),
     supabase.from("programs").select("*").eq("candidate_id", candidateId),
   ]);
-  const items: EvidenceRecord[] = [
+  return [
     ...(citationsRes.data ?? []).map(evidenceFromCitation),
     ...(actionsRes.data ?? []).map(evidenceFromAction),
     ...(votesRes.data ?? []).map(evidenceFromVote),
     ...(programsRes.data ?? []).flatMap(evidenceFromProgram),
   ];
+}
+
+function evidenceToCitations(items: EvidenceRecord[]): SourceCitation[] {
   return items.map(({ candidateId: _c, pointValue: _p, evidenceType: _e, createdAt: _ca, updatedAt: _u, ...rest }) => rest);
 }
 
