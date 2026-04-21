@@ -103,11 +103,16 @@ class SupabaseCandidatesRepository implements CandidatesRepository {
     if (!data) return null;
     const [hydrated] = await hydrate([data]);
     // Fetch evidence + program row in parallel for sub-score computation.
-    const [evidence, programRes] = await Promise.all([
+    const [evidence, programRes, qrRes] = await Promise.all([
       fetchEvidence(id),
       supabase
         .from("programs")
         .select("normalized_score")
+        .eq("candidate_id", id)
+        .maybeSingle(),
+      supabase
+        .from("questionnaire_responses")
+        .select("questionnaire_score")
         .eq("candidate_id", id)
         .maybeSingle(),
     ]);
@@ -120,6 +125,7 @@ class SupabaseCandidatesRepository implements CandidatesRepository {
       isNewCandidate: !hydrated.incumbent,
       overallConfidence: meanConfidence(evidence),
       questionnaireResponded: hydrated.questionnaireResponded,
+      questionnaireRawScore: qrRes.data?.questionnaire_score ?? undefined,
     });
     const aiProgramNorm =
       programRes.data?.normalized_score !== null && programRes.data?.normalized_score !== undefined

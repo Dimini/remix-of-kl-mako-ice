@@ -84,12 +84,24 @@ export default function AdminReviewQueue() {
     "source_citations", "documented_actions", "votes", "programs",
   ]);
 
+  const qrFetcher = useCallback(async () => {
+    if (!candidate) return null;
+    const { data } = await supabase
+      .from("questionnaire_responses")
+      .select("questionnaire_score")
+      .eq("candidate_id", candidate.id)
+      .maybeSingle();
+    return data;
+  }, [candidate?.id]);
+  const { data: qrRow } = useSupabaseQuery(qrFetcher, [candidate?.id], ["questionnaire_responses"]);
+
   const aiResult = candidate
     ? computeScore({
         evidence: evidence ?? [],
         isNewCandidate: !candidate.incumbent,
         overallConfidence: meanConfidence(evidence ?? []),
         questionnaireResponded: candidate.questionnaireResponded,
+        questionnaireRawScore: qrRow?.questionnaire_score ?? undefined,
       })
     : null;
 

@@ -143,6 +143,7 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
     isNewCandidate: !candidate.incumbent,
     overallConfidence: meanConfidence(evidence),
     questionnaireResponded: candidate.questionnaireResponded,
+    questionnaireRawScore: questionnaireRow?.questionnaire_score ?? undefined,
   });
 
   const { debug, ...score } = result;
