@@ -1,8 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Candidate, KrajId, Position, ScoreBreakdown, SourceCitation } from "@/types/domain";
 import {
+  buildQuestionnaireSentimentMap,
   candidateFromRow,
   EMPTY_SCORE,
+  enrichQuestionnaireSentiment,
   evidenceFromAction,
   evidenceFromCitation,
   evidenceFromProgram,
@@ -137,14 +139,22 @@ class SupabaseCandidatesRepository implements CandidatesRepository {
 }
 
 async function fetchEvidence(candidateId: string): Promise<EvidenceRecord[]> {
-  const [citationsRes, actionsRes, votesRes, programsRes] = await Promise.all([
+  const [citationsRes, actionsRes, votesRes, programsRes, qrRes] = await Promise.all([
     supabase.from("source_citations").select("*").eq("candidate_id", candidateId),
     supabase.from("documented_actions").select("*").eq("candidate_id", candidateId),
     supabase.from("votes").select("*").eq("candidate_id", candidateId),
     supabase.from("programs").select("*").eq("candidate_id", candidateId),
+    supabase
+      .from("questionnaire_responses")
+      .select("analysis_json")
+      .eq("candidate_id", candidateId)
+      .maybeSingle(),
   ]);
+  const sentimentMap = buildQuestionnaireSentimentMap(qrRes.data?.analysis_json);
   return [
-    ...(citationsRes.data ?? []).map(evidenceFromCitation),
+    ...(citationsRes.data ?? []).map(evidenceFromCitation).map((ev) =>
+      enrichQuestionnaireSentiment(ev, sentimentMap),
+    ),
     ...(actionsRes.data ?? []).map(evidenceFromAction),
     ...(votesRes.data ?? []).map(evidenceFromVote),
     ...(programsRes.data ?? []).flatMap(evidenceFromProgram),
