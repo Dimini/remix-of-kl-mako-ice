@@ -1,8 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getEvidenceType } from "@/lib/evidenceTypes";
 import {
+  buildQuestionnaireSentimentMap,
   candidateFromRow,
   candidateToRow,
+  enrichQuestionnaireSentiment,
   evidenceFromAction,
   evidenceFromCitation,
   evidenceFromProgram,
@@ -138,18 +140,26 @@ function voteDirectionFor(ev: EvidenceRecord): Database["public"]["Enums"]["vote
 
 class SupabaseEvidenceRepo implements AdminEvidenceRepository {
   async listByCandidate(candidateId: string): Promise<EvidenceRecord[]> {
-    const [c, a, v, p] = await Promise.all([
+    const [c, a, v, p, qr] = await Promise.all([
       supabase.from("source_citations").select("*").eq("candidate_id", candidateId),
       supabase.from("documented_actions").select("*").eq("candidate_id", candidateId),
       supabase.from("votes").select("*").eq("candidate_id", candidateId),
       supabase.from("programs").select("*").eq("candidate_id", candidateId),
+      supabase
+        .from("questionnaire_responses")
+        .select("analysis_json")
+        .eq("candidate_id", candidateId)
+        .maybeSingle(),
     ]);
     if (c.error) throw c.error;
     if (a.error) throw a.error;
     if (v.error) throw v.error;
     if (p.error) throw p.error;
+    const sentimentMap = buildQuestionnaireSentimentMap(qr.data?.analysis_json);
     return [
-      ...(c.data ?? []).map(evidenceFromCitation),
+      ...(c.data ?? []).map(evidenceFromCitation).map((ev) =>
+        enrichQuestionnaireSentiment(ev, sentimentMap),
+      ),
       ...(a.data ?? []).map(evidenceFromAction),
       ...(v.data ?? []).map(evidenceFromVote),
       ...(p.data ?? []).flatMap(evidenceFromProgram),
