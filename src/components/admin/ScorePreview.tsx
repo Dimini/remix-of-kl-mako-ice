@@ -44,11 +44,64 @@ interface ProgramRow {
   source_url: string;
 }
 
+interface QuestionnaireMeasure {
+  measure_text: string;
+  points: 1 | -1;
+  local_relevance: 1.0 | 0.5;
+  tier: 1 | 2;
+  citation: string;
+  reviewer_note: string | null;
+}
+
+interface QuestionnaireMeta {
+  totalMeasures?: number;
+  tier1Count?: number;
+  tier2Count?: number;
+  rawTotal?: number;
+}
+
+interface QuestionnaireRow {
+  questionnaire_score: number | null;
+  analysis_json: unknown;
+  agent_version: string | null;
+  processed_at: string | null;
+  status: string;
+}
+
+interface QuestionnaireDebug {
+  meta: QuestionnaireMeta;
+  proCount: number;
+  antiCount: number;
+  proLocal: number;
+  antiLocal: number;
+  effectivePro: number;
+  effectiveAnti: number;
+}
+
 function readProgramMeta(row: ProgramRow | null): ProgramMeta | null {
   if (!row?.citations_json) return null;
   const cj = row.citations_json as { meta?: ProgramMeta } | unknown[];
   if (Array.isArray(cj)) return null; // legacy: plain array, no meta
   return cj?.meta ?? null;
+}
+
+function readQuestionnaireDebug(row: QuestionnaireRow | null): QuestionnaireDebug | null {
+  if (!row?.analysis_json) return null;
+  const aj = row.analysis_json as { meta?: QuestionnaireMeta; measures?: QuestionnaireMeasure[] };
+  const measures = Array.isArray(aj?.measures) ? aj.measures : [];
+  const pro = measures.filter((m) => m.points === 1);
+  const anti = measures.filter((m) => m.points === -1);
+  const effectivePro = pro.reduce((s, m) => s + m.points * (m.local_relevance ?? 0.5), 0);
+  const effectiveAnti = anti.reduce((s, m) => s + m.points * (m.local_relevance ?? 0.5), 0);
+  return {
+    meta: aj?.meta ?? {},
+    proCount: pro.length,
+    antiCount: anti.length,
+    proLocal: pro.filter((m) => m.local_relevance === 1.0).length,
+    antiLocal: anti.filter((m) => m.local_relevance === 1.0).length,
+    effectivePro: Math.round(effectivePro * 100) / 100,
+    effectiveAnti: Math.round(effectiveAnti * 100) / 100,
+  };
 }
 
 export function ScorePreview({ candidateId }: ScorePreviewProps) {
@@ -65,12 +118,22 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
     if (error) throw error;
     return data;
   }, [candidateId]);
+  const questionnaireFetcher = useCallback(async (): Promise<QuestionnaireRow | null> => {
+    const { data, error } = await supabase
+      .from("questionnaire_responses")
+      .select("questionnaire_score, analysis_json, agent_version, processed_at, status")
+      .eq("candidate_id", candidateId)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }, [candidateId]);
 
   const { data: candidate } = useSupabaseQuery(candFetcher, [candidateId], ["candidates"]);
   const { data: evidenceData } = useSupabaseQuery(evFetcher, [candidateId], [
     "source_citations", "documented_actions", "votes", "programs",
   ]);
   const { data: programRow } = useSupabaseQuery(programFetcher, [candidateId], ["programs"]);
+  const { data: questionnaireRow } = useSupabaseQuery(questionnaireFetcher, [candidateId], ["questionnaire_responses"]);
   const evidence = evidenceData ?? [];
 
   if (!candidate) return null;
@@ -93,6 +156,7 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
       : null;
   const programNormFinal = aiProgramNorm ?? score.programNorm;
   const programMeta = readProgramMeta(programRow ?? null);
+  const questionnaireDebug = readQuestionnaireDebug(questionnaireRow ?? null);
 
   // Recompute slova with the AI program score so total reflects Carter.
   const slovaFinal = (() => {
@@ -254,6 +318,37 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
                 )}
                 {programRow?.agent_version && (
                   <li className="text-[10px] opacity-70">agent: {programRow.agent_version}</li>
+                )}
+              </ul>
+            </div>
+          )}
+          {questionnaireDebug && (
+            <div>
+              <div className="font-semibold text-foreground mb-1">Dotazník — NRSR rubrika</div>
+              <ul className="space-y-1 font-mono">
+                <li>celkom opatrení = {questionnaireDebug.meta.totalMeasures ?? "—"}</li>
+                <li>
+                  pro-climate (+1) = {questionnaireDebug.proCount}
+                  <span className="text-muted-foreground"> ({questionnaireDebug.proLocal} lokálnych)</span>
+                </li>
+                <li>
+                  anti-climate (−1) = {questionnaireDebug.antiCount}
+                  <span className="text-muted-foreground"> ({questionnaireDebug.antiLocal} lokálnych)</span>
+                </li>
+                <li>Tier 1 / 2 = {questionnaireDebug.meta.tier1Count ?? 0} / {questionnaireDebug.meta.tier2Count ?? 0}</li>
+                <li>effective pro (vážené local_relevance) = {questionnaireDebug.effectivePro}</li>
+                <li>effective anti (vážené local_relevance) = {questionnaireDebug.effectiveAnti}</li>
+                <li className="text-foreground">
+                  raw NRSR skóre (Σ points × local_relevance) = {questionnaireDebug.meta.rawTotal ?? "—"}
+                </li>
+                <li className="text-foreground">
+                  questionnaire_score (0–54) = {questionnaireRow?.questionnaire_score ?? "—"}
+                </li>
+                <li className="text-muted-foreground">
+                  status = {questionnaireRow?.status ?? "—"}
+                </li>
+                {questionnaireRow?.agent_version && (
+                  <li className="text-[10px] opacity-70">agent: {questionnaireRow.agent_version}</li>
                 )}
               </ul>
             </div>

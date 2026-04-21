@@ -200,7 +200,7 @@ export function AIToolsPanel({ candidateId, defaultProgramUrl, questionnaireSubm
           <h2 className="text-sm font-semibold">AI nástroje</h2>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          Analýza programu trvá ~30–90 s. Výstupy sú návrhy — vyžadujú ľudské schválenie.
+          Analýza trvá ~30–90 s. Výstupy sú návrhy — vyžadujú ľudské schválenie.
         </p>
         <div className="flex flex-wrap gap-2">
           <Button
