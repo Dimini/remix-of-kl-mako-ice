@@ -23,6 +23,7 @@ import AdminReviewQueue from "./pages/admin/AdminReviewQueue";
 import AdminExport from "./pages/admin/AdminExport";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminVotingImport from "./pages/admin/AdminVotingImport";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
                 <Route path="review" element={<AdminReviewQueue />} />
                 <Route path="export" element={<AdminExport />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="voting-import" element={<AdminVotingImport />} />
               </Route>
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
