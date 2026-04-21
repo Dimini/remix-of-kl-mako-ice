@@ -99,6 +99,55 @@ export function evidenceFromCitation(row: CitationRow): EvidenceRecord {
   };
 }
 
+// Build a sentiment-by-citation-text map from a questionnaire analysis_json.
+// Used to enrich questionnaire-derived source_citations (which lack a
+// sentiment column) so the public + admin UIs can render Prospešné/Škodlivé.
+export interface QuestionnaireMeasureLite {
+  citation?: string;
+  measure_text?: string;
+  points?: 1 | -1;
+}
+
+export function buildQuestionnaireSentimentMap(
+  analysisJson: unknown,
+): Map<string, "pro_climate" | "anti_climate"> {
+  const map = new Map<string, "pro_climate" | "anti_climate">();
+  if (!analysisJson || typeof analysisJson !== "object") return map;
+  const measures = (analysisJson as { measures?: QuestionnaireMeasureLite[] })?.measures;
+  if (!Array.isArray(measures)) return map;
+  for (const m of measures) {
+    if (!m || (m.points !== 1 && m.points !== -1)) continue;
+    const sentiment = m.points === 1 ? "pro_climate" : "anti_climate";
+    const citationKey = (m.citation ?? "").slice(0, 280).trim();
+    const measureKey = (m.measure_text ?? "").slice(0, 280).trim();
+    if (citationKey) map.set(citationKey, sentiment);
+    if (measureKey) map.set(measureKey, sentiment);
+  }
+  return map;
+}
+
+// Apply sentiment to a questionnaire-source citation by best-effort matching
+// of the stored citation_text against the measure citation/measure_text.
+export function enrichQuestionnaireSentiment(
+  ev: EvidenceRecord,
+  sentimentMap: Map<string, "pro_climate" | "anti_climate">,
+): EvidenceRecord {
+  if (ev.sourceType !== "questionnaire" || sentimentMap.size === 0) return ev;
+  const text = (ev.citationText ?? "").trim();
+  // Exact stored text first.
+  const exact = sentimentMap.get(text);
+  if (exact) return { ...ev, sentiment: exact };
+  // Substring fallback: many stored citations are
+  // "<measure>. ODPOVEĎ: <answer>" while the AI's measure_text is "<measure>".
+  for (const [key, sentiment] of sentimentMap) {
+    if (!key) continue;
+    if (text.startsWith(key) || text.includes(key)) {
+      return { ...ev, sentiment };
+    }
+  }
+  return ev;
+}
+
 export function evidenceFromAction(row: ActionRow): EvidenceRecord {
   const pts = row.points !== null ? Number(row.points) : null;
   return {
