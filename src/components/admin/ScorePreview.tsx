@@ -118,12 +118,22 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
     if (error) throw error;
     return data;
   }, [candidateId]);
+  const questionnaireFetcher = useCallback(async (): Promise<QuestionnaireRow | null> => {
+    const { data, error } = await supabase
+      .from("questionnaire_responses")
+      .select("questionnaire_score, analysis_json, agent_version, processed_at, status")
+      .eq("candidate_id", candidateId)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }, [candidateId]);
 
   const { data: candidate } = useSupabaseQuery(candFetcher, [candidateId], ["candidates"]);
   const { data: evidenceData } = useSupabaseQuery(evFetcher, [candidateId], [
     "source_citations", "documented_actions", "votes", "programs",
   ]);
   const { data: programRow } = useSupabaseQuery(programFetcher, [candidateId], ["programs"]);
+  const { data: questionnaireRow } = useSupabaseQuery(questionnaireFetcher, [candidateId], ["questionnaire_responses"]);
   const evidence = evidenceData ?? [];
 
   if (!candidate) return null;
