@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { FileText, Loader2, Play, Eye, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { FileText, Loader2, Play, Eye, AlertTriangle, CheckCircle2, Info, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,8 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+const MAX_PDF_BYTES = 20 * 1024 * 1024;
 
 interface Jurisdiction {
   id: string;
@@ -65,9 +68,18 @@ export default function AdminVotingImport() {
 
   const [jurisdictionId, setJurisdictionId] = useState("");
   const [meetingDate, setMeetingDate] = useState("");
-  const [hlasovaineUrl, setHlasovaineUrl] = useState("");
-  const [uzneseniaUrl, setUzneseniaUrl] = useState("");
 
+  // Hlasovanie source
+  const [hlasovaineMode, setHlasovaineMode] = useState<"url" | "file">("url");
+  const [hlasovaineUrl, setHlasovaineUrl] = useState("");
+  const [hlasovaineFile, setHlasovaineFile] = useState<File | null>(null);
+
+  // Uznesenia source
+  const [uzneseniaMode, setUzneseniaMode] = useState<"url" | "file">("url");
+  const [uzneseniaUrl, setUzneseniaUrl] = useState("");
+  const [uzneseniaFile, setUzneseniaFile] = useState<File | null>(null);
+
+  const [uploading, setUploading] = useState(false);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
 
@@ -86,20 +98,68 @@ export default function AdminVotingImport() {
       });
   }, []);
 
+  async function uploadPdf(file: File, prefix: string): Promise<string> {
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${prefix}/${Date.now()}-${safe}`;
+    const { error } = await supabase.storage
+      .from("voting-records")
+      .upload(path, file, { contentType: "application/pdf", upsert: false });
+    if (error) throw error;
+    return path;
+  }
+
+  function validateFile(file: File | null, label: string): boolean {
+    if (!file) return true;
+    if (file.size > MAX_PDF_BYTES) {
+      toast({ title: `${label}: súbor je príliš veľký`, description: "Max 20 MB.", variant: "destructive" });
+      return false;
+    }
+    return true;
+  }
+
   async function run(dry: boolean) {
-    if (!jurisdictionId || !meetingDate || !hlasovaineUrl.trim()) {
+    const hlasovaineReady =
+      hlasovaineMode === "url" ? !!hlasovaineUrl.trim() : !!hlasovaineFile;
+    if (!jurisdictionId || !meetingDate || !hlasovaineReady) {
       toast({ title: "Vyplňte všetky povinné polia", variant: "destructive" });
       return;
     }
-    setRunning(true);
+    if (!validateFile(hlasovaineFile, "Hlasovanie")) return;
+    if (!validateFile(uzneseniaFile, "Uznesenia")) return;
+
+    setUploading(true);
     setResult(null);
+
+    let hlasovaineStoragePath: string | undefined;
+    let uzneseniaStoragePath: string | undefined;
+    try {
+      if (hlasovaineMode === "file" && hlasovaineFile) {
+        hlasovaineStoragePath = await uploadPdf(hlasovaineFile, jurisdictionId);
+      }
+      if (uzneseniaMode === "file" && uzneseniaFile) {
+        uzneseniaStoragePath = await uploadPdf(uzneseniaFile, jurisdictionId);
+      }
+    } catch (e) {
+      toast({
+        title: "Nahranie PDF zlyhalo",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+      setUploading(false);
+      return;
+    }
+    setUploading(false);
+    setRunning(true);
+
     try {
       const { data, error } = await supabase.functions.invoke("parse-voting-record", {
         body: {
           jurisdiction_id: jurisdictionId,
           meeting_date: meetingDate,
-          hlasovanie_url: hlasovaineUrl.trim(),
-          uznesenia_url: uzneseniaUrl.trim() || undefined,
+          hlasovanie_url: hlasovaineMode === "url" ? hlasovaineUrl.trim() : undefined,
+          hlasovanie_storage_path: hlasovaineStoragePath,
+          uznesenia_url: uzneseniaMode === "url" && uzneseniaUrl.trim() ? uzneseniaUrl.trim() : undefined,
+          uznesenia_storage_path: uzneseniaStoragePath,
           dry_run: dry,
         },
       });
@@ -129,7 +189,12 @@ export default function AdminVotingImport() {
     }
   }
 
-  const canSubmit = !!jurisdictionId && !!meetingDate && !!hlasovaineUrl.trim();
+  const busy = uploading || running;
+  const hlasovaineReady =
+    hlasovaineMode === "url" ? !!hlasovaineUrl.trim() : !!hlasovaineFile;
+  const canSubmit = !!jurisdictionId && !!meetingDate && hlasovaineReady;
+
+  const buttonLabel = uploading ? "Nahrávam PDF…" : running ? "Spúšťam…" : null;
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -146,7 +211,8 @@ export default function AdminVotingImport() {
             <FileText className="w-4 h-4" /> Zdroj hlasovaní
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
+          {/* Jurisdiction */}
           <div className="space-y-1.5">
             <Label htmlFor="jurisdiction">Zastupiteľstvo *</Label>
             {loadingJur ? (
@@ -168,6 +234,7 @@ export default function AdminVotingImport() {
             )}
           </div>
 
+          {/* Meeting date */}
           <div className="space-y-1.5">
             <Label htmlFor="meeting-date">Dátum zasadania *</Label>
             <Input
@@ -179,49 +246,109 @@ export default function AdminVotingImport() {
             />
           </div>
 
+          {/* Hlasovanie PDF — required */}
           <div className="space-y-1.5">
-            <Label htmlFor="hlasovanie-url">URL — Hlasovanie (PDF) *</Label>
-            <Input
-              id="hlasovanie-url"
-              type="url"
-              placeholder="https://www.mckvp.sk/…/hlasovanie.pdf"
-              value={hlasovaineUrl}
-              onChange={(e) => setHlasovaineUrl(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
+            <Label>Hlasovanie PDF *</Label>
+            <p className="text-xs text-muted-foreground -mt-0.5">
               Tabuľka hlasovaní — kto hlasoval ako za každé uznesenie.
             </p>
+            <Tabs
+              value={hlasovaineMode}
+              onValueChange={(v) => {
+                setHlasovaineMode(v as "url" | "file");
+                setHlasovaineFile(null);
+              }}
+            >
+              <TabsList className="grid w-52 grid-cols-2">
+                <TabsTrigger value="url">URL</TabsTrigger>
+                <TabsTrigger value="file">Nahrať PDF</TabsTrigger>
+              </TabsList>
+              <TabsContent value="url" className="pt-2">
+                <Input
+                  type="url"
+                  placeholder="https://www.mckvp.sk/…/hlasovanie.pdf"
+                  value={hlasovaineUrl}
+                  onChange={(e) => setHlasovaineUrl(e.target.value)}
+                />
+              </TabsContent>
+              <TabsContent value="file" className="pt-2">
+                <Input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(e) => setHlasovaineFile(e.target.files?.[0] ?? null)}
+                />
+                {hlasovaineFile && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {hlasovaineFile.name} ({(hlasovaineFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
+          {/* Uznesenia PDF — optional */}
           <div className="space-y-1.5">
-            <Label htmlFor="uznesenia-url">URL — Uznesenia (PDF, voliteľné)</Label>
-            <Input
-              id="uznesenia-url"
-              type="url"
-              placeholder="https://www.mckvp.sk/…/uznesenia.pdf"
-              value={uzneseniaUrl}
-              onChange={(e) => setUzneseniaUrl(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
+            <Label>Uznesenia PDF <span className="text-muted-foreground">(voliteľné)</span></Label>
+            <p className="text-xs text-muted-foreground -mt-0.5">
               Text uznesení — zlepší presnosť klasifikácie.
             </p>
+            <Tabs
+              value={uzneseniaMode}
+              onValueChange={(v) => {
+                setUzneseniaMode(v as "url" | "file");
+                setUzneseniaFile(null);
+              }}
+            >
+              <TabsList className="grid w-52 grid-cols-2">
+                <TabsTrigger value="url">URL</TabsTrigger>
+                <TabsTrigger value="file">Nahrať PDF</TabsTrigger>
+              </TabsList>
+              <TabsContent value="url" className="pt-2">
+                <Input
+                  type="url"
+                  placeholder="https://www.mckvp.sk/…/uznesenia.pdf"
+                  value={uzneseniaUrl}
+                  onChange={(e) => setUzneseniaUrl(e.target.value)}
+                />
+              </TabsContent>
+              <TabsContent value="file" className="pt-2">
+                <Input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(e) => setUzneseniaFile(e.target.files?.[0] ?? null)}
+                />
+                {uzneseniaFile && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {uzneseniaFile.name} ({(uzneseniaFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          {/* Action buttons */}
+          <div className="flex gap-3 pt-1">
             <Button
               variant="outline"
               onClick={() => run(true)}
-              disabled={!canSubmit || running}
+              disabled={!canSubmit || busy}
             >
-              {running ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Eye className="w-4 h-4 mr-1" />}
-              Dry run (náhľad)
+              {busy ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : (
+                <Eye className="w-4 h-4 mr-1" />
+              )}
+              {buttonLabel ?? "Dry run (náhľad)"}
             </Button>
-            <Button
-              onClick={() => run(false)}
-              disabled={!canSubmit || running}
-            >
-              {running ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1" />}
-              Importovať hlasovanie
+            <Button onClick={() => run(false)} disabled={!canSubmit || busy}>
+              {busy ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : uploading ? (
+                <Upload className="w-4 h-4 mr-1" />
+              ) : (
+                <Play className="w-4 h-4 mr-1" />
+              )}
+              {buttonLabel ?? "Importovať hlasovanie"}
             </Button>
           </div>
         </CardContent>
