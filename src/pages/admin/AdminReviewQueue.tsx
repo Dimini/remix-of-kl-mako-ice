@@ -179,8 +179,8 @@ export default function AdminReviewQueue() {
     const guard = canTransition(candidate.state, "APPROVED");
     if (!guard.ok) { toast({ title: "Chyba", description: guard.reason, variant: "destructive" }); return; }
     await persistReviewerScore(true);
-    await adminCandidatesRepo.update(candidate.id, { state: "APPROVED", isApproved: true });
-    await logAudit({ candidateId: candidate.id, reviewer: reviewer || "neznámy", action: "APPROVED", fromState: candidate.state, toState: "APPROVED", note: note.trim() || undefined });
+    await adminCandidatesRepo.update(candidate.id, { state: "PUBLISHED", isApproved: true });
+    await logAudit({ candidateId: candidate.id, reviewer: reviewer || "neznámy", action: "APPROVED", fromState: candidate.state, toState: "PUBLISHED", note: note.trim() || undefined });
     toast({ title: "Schválené ✓", description: candidate.name });
     refetchAll();
   }
