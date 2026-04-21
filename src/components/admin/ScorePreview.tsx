@@ -156,6 +156,7 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
       : null;
   const programNormFinal = aiProgramNorm ?? score.programNorm;
   const programMeta = readProgramMeta(programRow ?? null);
+  const questionnaireDebug = readQuestionnaireDebug(questionnaireRow ?? null);
 
   // Recompute slova with the AI program score so total reflects Carter.
   const slovaFinal = (() => {
