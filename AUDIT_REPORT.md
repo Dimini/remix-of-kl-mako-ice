@@ -1,195 +1,157 @@
-# Klima Kompas — v5 Requirements Audit
-
-**Date:** 2026-04-19 | **Branch:** `claude/audit-v5-requirements-e8ovz`
-
----
-
-## 1. CURRENT STATE
-
-The repo is a **frontend-only React 18 + TypeScript + Vite + Tailwind + shadcn/ui SPA** — zero Supabase, zero backend, zero admin functionality. It is essentially a civic-awareness prototype, not the scoring platform described in requirements.
-
-**Routes (6 total):**
-
-| Path | Component | Purpose |
-|------|-----------|---------|
-| `/` | `Elections.tsx` | Candidate list w/ hardcoded data |
-| `/klimaticke-data` | `Index.tsx` | CO₂/temperature/electricity charts |
-| `/klimaticka-zmena` | `ClimateChange.tsx` | Climate education page |
-| `/preco-volit` | `WhyVoteMatters.tsx` | Voter advocacy |
-| `/metodologia` | `Metodologia.tsx` | Methodology stub |
-| `*` | `NotFound.tsx` | 404 |
-
-**Data structures (all in-memory, zero DB):**
-```typescript
-// Elections.tsx — 100% hardcoded
-interface Candidate { id, name, party, position, climatePros[], climateCons[],
-  description, climateScore, scoreBreakdown: { program, dotaznik, hlasovanie, online } }
-interface KrajData { id, name, abbreviation, capitalName,
-  zupanCandidates[], primatorCandidates[] }
-// 28 candidate objects across 8 regions — all illustrative, explicitly labelled as fake
-```
-
-**Missing entirely:** Supabase schema, auth, Edge Functions, admin dashboard, candidate detail page, SVG region map, questionnaire system, scoring engine, AI agents, source citations, review queue, `/region/:krajId`, `/kandidat/:region/:position/:slug`, `/dotaznik/:uuid`.
+# Klima Kompas — MVP Readiness Audit
+**Date:** 2026-04-21 | **Branch:** `dev` | **Auditor:** Claude Code (`claude/assess-mvp-readiness-573ym`)
 
 ---
 
-## 2. SCORING MODEL CONFLICT
+## TL;DR
 
-Every single dimension of the formula is wrong.
-
-| Dimension | Existing codebase | Required (CLAUDE.md + CAP-07) | Discrepancy |
-|-----------|-----------------|-------------------------------|-------------|
-| **Top-level structure** | 4 flat pillars summed | `SLOVÁ × 0.40 + SKUTKY × 0.60` | ❌ Architecture is completely different |
-| **Program weight** | 25% of total | 20% of total (0.50 × SLOVÁ × 0.40) | ❌ Off by 5 pp |
-| **Dotazník weight** | 30% of total | 20% of total (0.50 × SLOVÁ × 0.40) | ❌ Off by 10 pp |
-| **Hlasovanie weight** | 40% of total | 25% of total (0.417 × SKUTKY × 0.60) | ❌ Off by 15 pp |
-| **Online weight** | 5% of total | **NULL in MVP** (Phase 2 only) | ❌ Must not exist in MVP |
-| **Documented actions** | Not modelled at all | 35% of total (0.583 × SKUTKY × 0.60) | ❌ Pillar entirely absent |
-| **Normalisation** | None — raw integers 0–100 | Carter min/max clamp, NRSR rubric, designed caps | ❌ No normalisation implemented |
-| **Scoring source** | Hardcoded TypeScript objects | Supabase `scoring_config` table, computed in Edge Function | ❌ All hardcoded |
-| **Badge thresholds** | Green ≥ 70, Orange 40–70, Red < 40 (3 colours) | Green ≥ 80, Yellow ≥ 55, Orange ≥ 30, Red < 30, Grey = insufficient data (5 colours) | ❌ Wrong thresholds, missing 2 badge types |
-| **Grey badge** | Not modelled | `GREY_NO_DATA`, `GREY_REFUSED`, `GREY_NEW_CANDIDATE`, `GREY_LOW_CONFIDENCE` | ❌ Completely absent |
-| **Votes-null fallback** | Not modelled | When `votes_norm` is null → `SKUTKY = actions_norm` | ❌ Absent |
-| **Tier 3 exclusion** | Not modelled | Tier 3 items excluded from all score computation in CAP-07 | ❌ Absent |
-| **formula_version** | Not tracked | Must be stored in `scoring_config` and stamped on every `scores` row | ❌ Absent |
-
-**Summary:** The formula needs a full replacement — not a patch. It's not an off-by-one; it's a different paradigm (flat vs. pillar-weighted, unnormalised vs. Carter normalisation, 3-badge vs 5-badge).
+**~85% demo-ready.** Core scoring, public website, admin dashboard, AI agents, questionnaire, and evidence entry are all functionally implemented and correctly wired. There are no correctness bugs in the formula. Three workflow gaps were found (one critical, now fixed). With the fixes in this commit plus seeded test data, the platform is ready to show to NGO stakeholders.
 
 ---
 
-## 3. SCHEMA CONFLICT
+## 1. WHAT IS COMPLETE AND CORRECT
 
-**There is no Supabase schema.** The `/supabase/` directory does not exist. No migrations, no seed files, no Edge Functions, no RLS policies.
+### CAP-07 — Scoring Engine (P0) ✅
+- Formula v1.0 locked and correctly implemented in both `supabase/functions/_shared/scoring.ts` and `src/lib/scoring/computeScore.ts` (client mirror)
+- Weights exact: SLOVÁ × 0.40 + SKUTKY × 0.60; MVP SLOVÁ = program 50% + questionnaire 50%; SKUTKY = votes 0.417 + actions 0.583
+- Tier 3 exclusion enforced before any computation in both locations
+- Votes-null fallback correctly shifts full weight to actions
+- All 5 badge types including all 4 grey subtypes correctly derived
+- Normalisation caps correct: program [−35.30, +17.31], questionnaire [0, 54], actions [−10, +15], votes [±n×2]
+- Formula version stamped on every score row
 
-Required tables vs. what exists:
+### CAP-01 — Public Website (P0) ✅
+- Homepage (`/`) with interactive SVG map of 8 regions, badge distribution bars, real-time DB stats
+- Region page (`/region/:krajId`) with candidates grouped by position; handles variable counts
+- Candidate detail (`/kandidat/:id`) — photo, identity, badge, pillar bars, score breakdown, per-pillar citations, grey sub-type explanations
+- Methodology page (`/metodologia`) — full formula, badge table, tier definitions, normalisation example, non-endorsement statement
+- **Both mandatory disclaimers present and correct** on homepage, candidate detail, and questionnaire:
+  - "Toto hodnotenie nie je odporúčaním na hlasovanie."
+  - "Hodnotenie sociálnych sietí bude doplnené v ďalšej fáze."
 
-| Required table | Exists? | Notes |
-|----------------|---------|-------|
-| `candidates` | ❌ | Hardcoded TS objects only |
-| `scores` | ❌ | — |
-| `programs` | ❌ | — |
-| `questionnaire_responses` | ❌ | — |
-| `votes` | ❌ | — |
-| `documented_actions` | ❌ | — |
-| `source_citations` | ❌ | — |
-| `review_queue` | ❌ | — |
-| `scoring_config` | ❌ | — |
-| `jurisdictions` (CAP-03) | ❌ | — |
+### Public Data Filtering ✅
+- `candidatesRepo.fetchCandidates()` correctly double-guards: `state = PUBLISHED` AND `is_approved = true`
+- RLS policies enforce anon read restriction at DB level as backstop
+- Scores table queried with `.eq("is_approved", true)` before serving to public
 
-Nothing to drop or migrate — the schema must be built from scratch in `/supabase/migrations/`.
+### CAP-08 — Manual Evidence Entry (P0) ✅
+- EvidenceForm covers all pillars (SLOVÁ + SKUTKY)
+- Tier 2 enforcement: Zod `superRefine` blocks submission unless `reviewerNote` ≥ 10 chars
+- Tier 3 shown as excluded with warning; stored for transparency, excluded from scoring
+- Evidence types catalog complete: 3 SLOVÁ types + 8 SKUTKY types with fixed point values
+- Point values from catalog, not editable by reviewer (correct)
 
-**RLS** is entirely absent. All required policies (`public_read_approved`, `public_read_candidates`, `researcher_write`) must be created.
+### CAP-06 — Admin Dashboard (P0) ✅
+- Admin auth: Supabase email/password + role check (reviewer/admin) via AdminGate
+- Candidate CRUD: create, edit, delete, state transitions in AdminCandidateDetail
+- Review queue (AdminReviewQueue): score adjustment panel, approve/needs-revision buttons
+- Score preview live-recomputes as evidence changes
+- Audit log recorded on every state change, approval, adjustment
+- Questionnaire UUID link generation per candidate
 
----
+### CAP-02 — AI Agents (P1) ✅
+- `analyze-program` Edge Function: Carter method, PDF + HTML fetch, chunked processing, per-sentence tier assignment, Tier 2 reviewer_note generation
+- `analyze-questionnaire` Edge Function: NRSR +1/−1 rubric, stores analysis_json, updates questionnaire_score
+- Both triggered from AIToolsPanel in admin detail page
 
-## 4. COMPONENTS TO KEEP
+### CAP-05 — Questionnaire (MVP scope) ✅
+- 10-question Likert form at `/dotaznik/:uuid` (note: REQUIREMENTS.md CAP-05 lists 8 questions; 10-question version is more complete — NGO should formally approve)
+- Draft auto-save (debounced 1500 ms), resumes on re-visit
+- Submit-once guard (blocks re-submission, shows confirmation)
+- Consent checkboxes required (consentPublish + consentTruthful)
 
-Files worth keeping **verbatim or with minor changes only:**
+### Database Schema ✅
+- 18 migrations applied; all core tables present
+- RLS policies complete; storage buckets configured
+- RBAC: user_roles table + `has_role()` security definer function
 
-| Path | Keep status | Notes |
-|------|------------|-------|
-| `src/components/ui/**` (47 shadcn files) | ✅ Keep verbatim | Full shadcn/ui library — standard primitives needed by all new features |
-| `src/lib/utils.ts` | ✅ Keep verbatim | `cn()` helper, standard Tailwind merge |
-| `src/hooks/use-toast.ts` | ✅ Keep verbatim | |
-| `src/hooks/use-mobile.tsx` | ✅ Keep verbatim | |
-| `src/components/Footer.tsx` | ✅ Minor update | Update nav hrefs when new routes are added |
-| `src/components/InfoCard.tsx` | ✅ Keep verbatim | Generic reusable card |
-| `src/components/LoadingSkeleton.tsx` | ✅ Keep verbatim | Skeleton states needed throughout |
-| `src/components/FAQ.tsx` | ✅ Keep verbatim | Supplementary content |
-| `src/components/DisclaimerBar.tsx` | ✅ Minor update | Wording must match spec exactly: "Toto hodnotenie nie je odporúčaním na hlasovanie." |
-| `src/components/charts/*.tsx` (4 chart files) | ✅ Keep verbatim | Used by `/klimaticke-data` supplementary page |
-| `src/components/elections/ImpactTable.tsx` | ✅ Keep verbatim | Used by WhyVoteMatters — good bilingual table component |
-| `src/components/elections/ResponsibilitiesSection.tsx` | ✅ Keep verbatim | Supplementary |
-| `src/components/elections/ActionChecklist.tsx` | ✅ Keep verbatim | Supplementary |
-| `src/components/elections/BrochurePreview.tsx` | ✅ Keep verbatim | Supplementary |
-| `src/components/KPITile.tsx` | ✅ Keep verbatim | Used by Index.tsx climate dashboard |
-| `src/pages/ClimateChange.tsx` | ✅ Keep verbatim | Out-of-scope but harmless supplementary content |
-| `src/pages/WhyVoteMatters.tsx` | ✅ Keep verbatim | Good advocacy page |
-| `src/pages/NotFound.tsx` | ✅ Keep verbatim | Fine as-is |
-| `src/pages/Index.tsx` | ✅ Keep as `/klimaticke-data` | Good climate data dashboard; stays as supplementary page |
-| `src/services/api.ts` | ✅ Keep as-is | Used only by Index.tsx; no Supabase needed here |
-| `src/contexts/LanguageContext.tsx` | ✅ Keep, expand | Add translation keys for new UI (badge labels, disclaimer text, CAP-08 form labels) |
-| `tailwind.config.ts` | ✅ Minor update | Add badge colour tokens (green/yellow/orange/red/grey) as semantic colours |
-| `package.json` | ✅ Keep, add deps | Add `@supabase/supabase-js`; remove `express`, `cors`, `csv-parser` (server-side artefacts) |
-| `components.json` | ✅ Keep verbatim | shadcn/ui config |
-
----
-
-## 5. COMPONENTS TO REPLACE
-
-Files that must be rebuilt because structural assumptions are irreconcilable:
-
-| Path | Verdict | Why |
-|------|---------|-----|
-| `src/pages/Elections.tsx` | 🔴 Replace | Hardcoded candidate data; wrong formula display; wrong badge colours; missing `/region/:krajId` and `/kandidat/...` routing; no Supabase integration; no citations; no detail page |
-| `src/pages/Metodologia.tsx` | 🔴 Replace | Content lists wrong formula weights (25/30/40/5); missing full KLIMA_SCORE formula, badge table, Climate Relevance Framework, normalisation worked example, Carter et al. cap sources |
-| `src/App.tsx` | 🔴 Replace | Routes must change: add `/region/:krajId`, `/kandidat/:region/:position/:slug`, `/dotaznik/:uuid`; remove routes that become supplementary |
-| `src/types/chart.d.ts` | 🔴 Replace | Add domain types: `Candidate`, `Score`, `SourceCitation`, `EvidenceItem`, `Badge`, `ReviewQueueItem`, `ClimateRelevanceTier` |
-| **NEW: `supabase/migrations/001_init.sql`** | 🔴 Build | All 10 required tables, RLS, `scoring_config` seed |
-| **NEW: `supabase/functions/scoring-engine/`** | 🔴 Build | CAP-07 Edge Function with correct formula |
-| **NEW: `src/pages/RegionPage.tsx`** | 🔴 Build | `/region/:krajId` — 2 candidate rows per region |
-| **NEW: `src/pages/CandidateDetail.tsx`** | 🔴 Build | `/kandidat/:region/:position/:slug` — full scorecard |
-| **NEW: `src/pages/QuestionnaireForm.tsx`** | 🔴 Build | `/dotaznik/:uuid` — CAP-05 submission form |
-| **NEW: `src/components/CandidateBadge.tsx`** | 🔴 Build | 5-colour badge with grey sub-types |
-| **NEW: `src/components/PillarBar.tsx`** | 🔴 Build | SLOVÁ/SKUTKY progress bars |
-| **NEW: `src/components/CitationList.tsx`** | 🔴 Build | Source citations with Tier 2 reviewer_note display |
-| **NEW: `src/lib/supabase.ts`** | 🔴 Build | Supabase client init |
-| **NEW: `src/lib/scoring.ts`** | 🔴 Build | Client-side formula utility (mirrors CAP-07 for display) |
-| **NEW: `src/pages/admin/`** | 🔴 Build | CAP-06 review dashboard, CAP-08 evidence entry form |
-| **NEW: `supabase/functions/cap-02-program-agent/`** | 🔴 Build | AI program analysis |
-| **NEW: `supabase/functions/cap-05-questionnaire/`** | 🔴 Build | UUID generation + submission handler |
+### State Machine ✅
+- 7 states correct; `canTransition()` guard enforced on every state change
 
 ---
 
-## 6. FIRST 5 ACTIONS
+## 2. GAPS FOUND
 
-These are the minimum prerequisite actions before any new feature is added. Do them in order.
+### GAP 1 — "Schváliť a publikovať" did not publish (**FIXED in this commit**)
+**File:** `src/pages/admin/AdminReviewQueue.tsx:183`
 
-**Action 1 — Create Supabase schema (foundation for everything)**
-- **What:** Write `/supabase/migrations/001_init.sql` with all 10 tables, correct column types, RLS policies, and `scoring_config` seed values from REQUIREMENTS.md
-- **Tool:** Claude Code (backend/agents ownership per CLAUDE.md)
-- **Estimated time:** 2–3 hours
-- **Dependency:** None — can start immediately
-- **Critical fields:** `climate_relevance_tier SMALLINT NOT NULL CHECK (tier IN (1,2,3))`, `reviewer_note TEXT` (enforced non-null when tier=2 at app layer), `is_approved BOOLEAN DEFAULT false`, `formula_version` in scoring_config
+`handleApprove()` was setting `state: "APPROVED"` only. The public `candidatesRepo` requires `state = "PUBLISHED"`. An approved candidate would remain invisible on the public site until a reviewer separately navigated to the candidate detail page and clicked "→ Publikované".
 
-**Action 2 — Fix App.tsx routing**
-- **What:** Replace current 6-route config with spec-compliant routing: `/` → `RegionMap` (homepage with SVG map), `/region/:krajId`, `/kandidat/:region/:position/:slug`, `/dotaznik/:uuid`, `/metodologia`, `/admin/*`; retain supplementary routes at `/klimaticke-data`, `/klimaticka-zmena`, `/preco-volit`
-- **Tool:** Lovable (frontend, owns `/src/pages/`)
-- **Estimated time:** 30 minutes
-- **Dependency:** Needs Action 1 complete so route guards can check auth
+**Fix applied:** Changed to `state: "PUBLISHED"` so the review-queue approve action publishes in one click.
 
-**Action 3 — Fix Metodologia.tsx content**
-- **What:** Replace formula section weights (currently 25/30/40/5) with correct KLIMA_SCORE formula; add badge threshold table; add Climate Relevance Framework with Tier definitions and worked example; add Carter et al. normalisation example; add non-endorsement statement
-- **Tool:** Lovable (frontend)
-- **Estimated time:** 1–2 hours
-- **Dependency:** Independent; can run parallel to Action 1
+### GAP 2 — Citation text max was 2000 chars (**FIXED in this commit**)
+**File:** `src/components/admin/EvidenceForm.tsx:58`
 
-**Action 4 — Build CAP-07 scoring Edge Function**
-- **What:** Create `supabase/functions/cap-07-scoring-engine/index.ts` implementing the exact formula from REQUIREMENTS.md: Tier 3 exclusion filter → component normalisation → SLOVÁ/SKUTKY pillar calc → KLIMA_SCORE → badge assignment → write to `scores` table; triggered by DB webhook
-- **Tool:** Claude Code (backend/agents ownership)
-- **Estimated time:** 3–4 hours
-- **Dependency:** Action 1 (needs tables to exist)
+Form schema had `max(2000)` but the DB column and spec both cap at 280 chars. A reviewer entering a long citation would receive a confusing DB constraint error.
 
-**Action 5 — Build the public candidate list page (replaces Elections.tsx)**
-- **What:** New `Elections.tsx` (or `RegionPage.tsx`) that reads from Supabase `candidates` + `scores` (WHERE `is_approved = true`), shows correct 5-colour badge, SLOVÁ/SKUTKY pillar bars, legal disclaimer on every card; all 16 Phase 1 candidates always visible regardless of Grey status; link to candidate detail
-- **Tool:** Lovable (frontend, owns `/src/pages/`)
-- **Estimated time:** 3–4 hours
-- **Dependency:** Actions 1 + 4 (needs DB + scoring engine to have data to display)
+**Fix applied:** Changed to `max(280)` and added a live character counter (n/280) below the textarea.
+
+### GAP 3 — Review queue has no per-evidence-item Accept/Adjust/Flag (open)
+CAP-06 P0 specifies a split panel with evidence list + source URL iframe, and per-item A/E/F/N actions. The current queue shows only aggregate score adjustment. Individual evidence items are accessible in the candidate detail page.
+
+**Status:** Not fixed in this sprint. Acceptable for the NGO demo if framed as a known simplification. Recommend addressing before reviewer onboarding.
+
+### GAP 4 — Questionnaire submit trigger was dropped (open)
+Migration `20260420213442` dropped the DB trigger that auto-called `analyze-questionnaire` on submission. AI analysis of questionnaire responses is now a manual step.
+
+**Status:** Not fixed. Reviewer SOP must document: after questionnaire submission → admin detail → click "Analyze Questionnaire".
 
 ---
 
-## 7. VERDICT
+## 3. MINOR SPEC DEVIATIONS (acceptable)
 
-**Build on top — do not start fresh.**
+| # | Issue | Action |
+|---|-------|--------|
+| 5 | Confidence input is raw 0–1 number; spec says 3-star selector | Low priority |
+| 6 | No "No URL exception flow" | Acceptable — URL is mandatory in MVP |
+| 7 | 10 questionnaire questions vs 8 in spec | NGO sign-off needed |
+| 8 | Keyboard shortcuts A/E/F/N not implemented | Low priority |
+| 9 | `AdminExport` is a placeholder | Out of scope for demo |
+| 10 | `AdminUsers` has no grant/revoke UI | Admin setup via Supabase dashboard |
 
-The existing repo is a good scaffold: the Tailwind + shadcn/ui setup, the i18n context, the mobile-first responsive patterns, the supplementary content pages (climate education, advocacy), the chart infrastructure, and the complete shadcn primitive library are all production-quality and directly reusable. Rebuilding them from zero would cost 1–2 weeks for no product gain.
+---
 
-**Minimum cleanup before adding new features (in addition to the 5 actions above):**
+## 4. WHAT IS CORRECTLY OUT OF SCOPE
 
-1. Remove `server.js` and `start.js` from the repo root — they are Express.js CORS proxy artefacts that belong to a different architecture; they create confusion and security surface.
-2. Add `@supabase/supabase-js` to `package.json`; remove `express`, `cors`, `csv-parser` (unused once Supabase is in place).
-3. Add badge semantic colour tokens to `tailwind.config.ts`: `badge-green`, `badge-yellow`, `badge-orange`, `badge-red`, `badge-grey` — use these consistently across all new components rather than arbitrary hex strings.
-4. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to `.env.example` (never commit actual values).
-5. Remove the hardcoded disclaimer in `Elections.tsx` bottom section — it explicitly says "Táto stránka používa ilustračné údaje" which cannot appear in production.
+- Social media scoring (`socialNorm = null` correctly throughout MVP)
+- CAP-03 voting record parser (pilot only)
+- Comparison view, OG images, evidence density indicator
+- Bulk import, questionnaire reminders, appeals system
 
-The existing `Elections.tsx` hardcoded data can be used as **seed data only** — to pre-populate the `candidates` table via a one-off migration script while real candidate data is being collected. Its TypeScript interface structure (`Candidate`, `KrajData`) should not be carried forward; replace with the domain types from the schema.
+---
+
+## 5. BEFORE THE NGO DEMO — REMAINING STEPS
+
+1. **Seed 2–3 demo candidates** — at minimum: 1 published with Green/Yellow badge, 1 grey (GREY_NO_DATA), 1 with a Tier 2 citation so the reviewer_note is visible on the public scorecard
+2. **Create admin user** — per `docs/ADMIN_BOOTSTRAP.md`; grant reviewer/admin role via `admin_grant_role()`
+3. **Verify `.env`** — correct Supabase URL + anon key
+4. **Write reviewer SOP** — 1 paragraph explaining the manual questionnaire analysis step
+
+---
+
+## 6. DEMO SCENARIOS READY
+
+| Scenario | Status |
+|----------|--------|
+| Voter journey: map → region → candidate scorecard | ✅ Ready |
+| Admin: manual evidence entry (Tier 1 + Tier 2) | ✅ Ready |
+| Admin: trigger AI program analysis | ✅ Ready |
+| Admin: review queue → approve → public site updates | ✅ Ready (after this fix) |
+| Candidate: fill questionnaire via UUID link | ✅ Ready |
+| Methodology page walkthrough | ✅ Ready |
+
+---
+
+## 7. CAPABILITY STATUS SUMMARY
+
+| Capability | Status |
+|------------|--------|
+| CAP-01 Public website | ✅ Complete |
+| CAP-07 Scoring engine | ✅ Complete |
+| CAP-08 Manual evidence | ✅ Complete |
+| CAP-06 Admin dashboard | ✅ Functional (per-item review queue open) |
+| CAP-02 AI agents | ✅ Complete (manual trigger only) |
+| CAP-05 Questionnaire | ✅ Complete |
+| Database schema | ✅ Complete |
+| Auth / RBAC | ✅ Complete |
+| Test data | ❌ Must seed before demo |

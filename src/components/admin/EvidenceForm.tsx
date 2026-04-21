@@ -56,7 +56,7 @@ const baseSchema = z.object({
     .string()
     .trim()
     .min(10, "Citácia min. 10 znakov")
-    .max(2000, "Max 2000 znakov"),
+    .max(280, "Max 280 znakov"),
   climateRelevanceTier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   reviewerNote: z.string().trim().max(2000).optional().or(z.literal("")),
   dateAccessed: z.string().min(8, "Dátum je povinný"),
@@ -222,8 +222,11 @@ export function EvidenceForm({ candidateId, initial, onSaved, onCancel }: Eviden
               <FormItem>
                 <FormLabel>Citácia / verbatim text</FormLabel>
                 <FormControl>
-                  <Textarea {...field} rows={4} placeholder="Doslovná citácia zo zdroja…" />
+                  <Textarea {...field} rows={4} placeholder="Doslovná citácia zo zdroja…" maxLength={280} />
                 </FormControl>
+                <div className="flex justify-end text-xs text-muted-foreground">
+                  {(field.value?.length ?? 0)} / 280
+                </div>
                 <FormMessage />
               </FormItem>
             )}
