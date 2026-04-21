@@ -571,6 +571,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      questionnaire_already_submitted: {
+        Args: { _candidate_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "reviewer" | "user"

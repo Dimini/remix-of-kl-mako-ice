@@ -13,6 +13,7 @@ import {
 } from "@/lib/stateMachine";
 import type { CandidateState, KrajId, Position } from "@/types/domain";
 import { adminCandidatesRepo } from "@/lib/repository/adminCandidates";
+import { getResponseForCandidate } from "@/lib/repository/questionnaire";
 import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 
 import { Button } from "@/components/ui/button";
