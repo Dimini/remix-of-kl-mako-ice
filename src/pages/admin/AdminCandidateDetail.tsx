@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Trash2, EyeOff } from "lucide-react";
 
 import { KRAJS, getKraj } from "@/lib/krajs";
 import {
@@ -22,6 +22,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge as UiBadge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -135,6 +145,10 @@ export default function AdminCandidateDetail() {
     [existing],
   );
 
+  const [unpublishDialogOpen, setUnpublishDialogOpen] = useState(false);
+  const [unpublishNote, setUnpublishNote] = useState("");
+  const [unpublishing, setUnpublishing] = useState(false);
+
   async function onSubmit(values: FormValues) {
     try {
       if (isNew) {
@@ -219,6 +233,48 @@ export default function AdminCandidateDetail() {
     navigate("/admin", { replace: true });
   }
 
+  async function handleUnpublish() {
+    if (!existing || !unpublishNote.trim()) return;
+    setUnpublishing(true);
+    try {
+      // Demote all approved scores so the public site stops serving them.
+      const { error: scoreErr } = await supabase
+        .from("scores")
+        .update({ is_approved: false })
+        .eq("candidate_id", existing.id)
+        .eq("is_approved", true);
+      if (scoreErr) throw scoreErr;
+      // Pull candidate off public site and send back to review queue.
+      await adminCandidatesRepo.update(existing.id, {
+        state: "NEEDS_REVISION",
+        isApproved: false,
+      });
+      await logAudit({
+        candidateId: existing.id,
+        reviewer: reviewer || "neznámy",
+        action: "NEEDS_REVISION",
+        fromState: "PUBLISHED",
+        toState: "NEEDS_REVISION",
+        note: unpublishNote.trim(),
+      });
+      setUnpublishDialogOpen(false);
+      setUnpublishNote("");
+      toast({
+        title: "Publikovanie zrušené",
+        description: `${existing.name} bol odstránený z verejného webu a vrátený do frontu.`,
+      });
+      refetch();
+    } catch (e) {
+      toast({
+        title: "Chyba",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setUnpublishing(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <Button variant="ghost" size="sm" asChild>
@@ -249,7 +305,8 @@ export default function AdminCandidateDetail() {
         <Card className="p-4">
           <div className="text-sm font-medium mb-2">Stav kandidáta</div>
           <p className="text-xs text-muted-foreground mb-3">
-            Linear progression. Spätný prechod len IN_REVIEW → NEEDS_REVISION → ANALYZED.
+            Linear progression. Spätný prechod: IN_REVIEW → NEEDS_REVISION → ANALYZED.
+            Publikované karty možno zrušiť tlačidlom nižšie — kandidát sa vráti do frontu kontroly.
           </p>
           <div className="flex flex-wrap gap-2">
             {transitions.map((t) => (
@@ -257,14 +314,64 @@ export default function AdminCandidateDetail() {
                 key={t.to}
                 size="sm"
                 variant={t.variant ?? "default"}
-                onClick={() => handleTransition(t.to)}
+                onClick={() =>
+                  existing.state === "PUBLISHED" && t.to === "NEEDS_REVISION"
+                    ? setUnpublishDialogOpen(true)
+                    : handleTransition(t.to)
+                }
               >
+                {t.to === "NEEDS_REVISION" && existing.state === "PUBLISHED" && (
+                  <EyeOff className="w-4 h-4 mr-1" />
+                )}
                 {t.label}
               </Button>
             ))}
           </div>
         </Card>
       )}
+
+      {/* Unpublish confirmation dialog */}
+      <Dialog open={unpublishDialogOpen} onOpenChange={(open) => { setUnpublishDialogOpen(open); if (!open) setUnpublishNote(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <EyeOff className="w-5 h-5 text-destructive" />
+              Zrušiť publikovanie
+            </DialogTitle>
+            <DialogDescription>
+              Kandidát <strong>{existing?.name}</strong> bude okamžite odstránený z verejného webu.
+              Skóre bude označené ako neschválené. Kandidát sa vráti do frontu kontroly (stav: Vyžaduje úpravy).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="unpublish-note" className="text-sm font-medium">
+              Dôvod zrušenia publikovania <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              id="unpublish-note"
+              rows={3}
+              value={unpublishNote}
+              onChange={(e) => setUnpublishNote(e.target.value)}
+              placeholder="Napr.: Chybné skóre — program nebol analyzovaný správne. / Kandidát stiahol kandidatúru."
+            />
+            <p className="text-xs text-muted-foreground">
+              Dôvod bude zaznamenaný v audit logu a viditeľný pre všetkých recenzentov.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setUnpublishDialogOpen(false); setUnpublishNote(""); }}>
+              Zrušiť
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!unpublishNote.trim() || unpublishing}
+              onClick={handleUnpublish}
+            >
+              {unpublishing ? "Odstraňujem…" : "Potvrdiť zrušenie"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card className="p-6">
         <Form {...form}>

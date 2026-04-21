@@ -2,6 +2,8 @@ import type { CandidateState } from "@/types/domain";
 
 // Linear progression with one allowed regression: NEEDS_REVISION → ANALYZED.
 // CLAUDE.md: "Never skip states. Never go backward except NEEDS_REVISION → ANALYZED."
+// Exception: PUBLISHED → NEEDS_REVISION is allowed as an explicit unpublish action
+// (requires a mandatory reason and demotes the live scores row).
 const FORWARD: Record<CandidateState, CandidateState | null> = {
   REGISTERED: "DATA_COLLECTION",
   DATA_COLLECTION: "ANALYZED",
@@ -50,6 +52,15 @@ export function nextStates(current: CandidateState): StateTransition[] {
       to: "NEEDS_REVISION",
       label: "Vrátiť na úpravy",
       variant: "outline",
+    });
+  }
+  // From PUBLISHED: unpublish is the only allowed action. Requires a mandatory
+  // reason and demotes the live scores row (handled in AdminCandidateDetail).
+  if (current === "PUBLISHED") {
+    transitions.push({
+      to: "NEEDS_REVISION",
+      label: "Zrušiť publikovanie",
+      variant: "destructive",
     });
   }
   return transitions;
