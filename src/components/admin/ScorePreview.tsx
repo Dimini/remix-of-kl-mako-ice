@@ -322,6 +322,37 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
               </ul>
             </div>
           )}
+          {questionnaireDebug && (
+            <div>
+              <div className="font-semibold text-foreground mb-1">Dotazník — NRSR rubrika</div>
+              <ul className="space-y-1 font-mono">
+                <li>celkom opatrení = {questionnaireDebug.meta.totalMeasures ?? "—"}</li>
+                <li>
+                  pro-climate (+1) = {questionnaireDebug.proCount}
+                  <span className="text-muted-foreground"> ({questionnaireDebug.proLocal} lokálnych)</span>
+                </li>
+                <li>
+                  anti-climate (−1) = {questionnaireDebug.antiCount}
+                  <span className="text-muted-foreground"> ({questionnaireDebug.antiLocal} lokálnych)</span>
+                </li>
+                <li>Tier 1 / 2 = {questionnaireDebug.meta.tier1Count ?? 0} / {questionnaireDebug.meta.tier2Count ?? 0}</li>
+                <li>effective pro (vážené local_relevance) = {questionnaireDebug.effectivePro}</li>
+                <li>effective anti (vážené local_relevance) = {questionnaireDebug.effectiveAnti}</li>
+                <li className="text-foreground">
+                  raw NRSR skóre (Σ points × local_relevance) = {questionnaireDebug.meta.rawTotal ?? "—"}
+                </li>
+                <li className="text-foreground">
+                  questionnaire_score (0–54) = {questionnaireRow?.questionnaire_score ?? "—"}
+                </li>
+                <li className="text-muted-foreground">
+                  status = {questionnaireRow?.status ?? "—"}
+                </li>
+                {questionnaireRow?.agent_version && (
+                  <li className="text-[10px] opacity-70">agent: {questionnaireRow.agent_version}</li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       </details>
     </Card>
