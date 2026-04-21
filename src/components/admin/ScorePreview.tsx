@@ -44,11 +44,64 @@ interface ProgramRow {
   source_url: string;
 }
 
+interface QuestionnaireMeasure {
+  measure_text: string;
+  points: 1 | -1;
+  local_relevance: 1.0 | 0.5;
+  tier: 1 | 2;
+  citation: string;
+  reviewer_note: string | null;
+}
+
+interface QuestionnaireMeta {
+  totalMeasures?: number;
+  tier1Count?: number;
+  tier2Count?: number;
+  rawTotal?: number;
+}
+
+interface QuestionnaireRow {
+  questionnaire_score: number | null;
+  analysis_json: unknown;
+  agent_version: string | null;
+  processed_at: string | null;
+  status: string;
+}
+
+interface QuestionnaireDebug {
+  meta: QuestionnaireMeta;
+  proCount: number;
+  antiCount: number;
+  proLocal: number;
+  antiLocal: number;
+  effectivePro: number;
+  effectiveAnti: number;
+}
+
 function readProgramMeta(row: ProgramRow | null): ProgramMeta | null {
   if (!row?.citations_json) return null;
   const cj = row.citations_json as { meta?: ProgramMeta } | unknown[];
   if (Array.isArray(cj)) return null; // legacy: plain array, no meta
   return cj?.meta ?? null;
+}
+
+function readQuestionnaireDebug(row: QuestionnaireRow | null): QuestionnaireDebug | null {
+  if (!row?.analysis_json) return null;
+  const aj = row.analysis_json as { meta?: QuestionnaireMeta; measures?: QuestionnaireMeasure[] };
+  const measures = Array.isArray(aj?.measures) ? aj.measures : [];
+  const pro = measures.filter((m) => m.points === 1);
+  const anti = measures.filter((m) => m.points === -1);
+  const effectivePro = pro.reduce((s, m) => s + m.points * (m.local_relevance ?? 0.5), 0);
+  const effectiveAnti = anti.reduce((s, m) => s + m.points * (m.local_relevance ?? 0.5), 0);
+  return {
+    meta: aj?.meta ?? {},
+    proCount: pro.length,
+    antiCount: anti.length,
+    proLocal: pro.filter((m) => m.local_relevance === 1.0).length,
+    antiLocal: anti.filter((m) => m.local_relevance === 1.0).length,
+    effectivePro: Math.round(effectivePro * 100) / 100,
+    effectiveAnti: Math.round(effectiveAnti * 100) / 100,
+  };
 }
 
 export function ScorePreview({ candidateId }: ScorePreviewProps) {
