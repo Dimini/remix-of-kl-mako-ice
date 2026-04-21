@@ -66,18 +66,20 @@ Deno.serve(async (req) => {
       jurisdiction_id,
       meeting_date,
       hlasovanie_url,
+      hlasovanie_storage_path,
       uznesenia_url,
+      uznesenia_storage_path,
       dry_run = false,
     } = body ?? {};
 
-    if (!jurisdiction_id || !meeting_date || !hlasovanie_url) {
-      return json({ error: "jurisdiction_id, meeting_date and hlasovanie_url are required" }, 400);
+    if (!jurisdiction_id || !meeting_date || (!hlasovanie_url && !hlasovanie_storage_path)) {
+      return json({ error: "jurisdiction_id, meeting_date and (hlasovanie_url or hlasovanie_storage_path) are required" }, 400);
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(meeting_date)) {
       return json({ error: "meeting_date must be YYYY-MM-DD" }, 400);
     }
 
-    console.log(`[parse-voting-record] jurisdiction=${jurisdiction_id} date=${meeting_date} dry=${dry_run}`);
+    console.log(`[parse-voting-record] jurisdiction=${jurisdiction_id} date=${meeting_date} dry=${dry_run} storage=${!!(hlasovanie_storage_path || uznesenia_storage_path)}`);
 
     const svc = createServiceClient();
 
@@ -90,10 +92,16 @@ Deno.serve(async (req) => {
     if (jurErr) throw jurErr;
     if (!jur) return json({ error: "Jurisdiction not found" }, 404);
 
-    // Fetch PDFs in parallel.
+    // Fetch PDFs in parallel — prefer storage path over URL when both provided.
     const [hlasText, uznesText] = await Promise.all([
-      fetchAndExtractPdf(hlasovanie_url),
-      uznesenia_url ? fetchAndExtractPdf(uznesenia_url) : Promise.resolve(null),
+      hlasovanie_storage_path
+        ? downloadFromStorage(svc, hlasovanie_storage_path)
+        : fetchAndExtractPdf(hlasovanie_url),
+      uznesenia_storage_path
+        ? downloadFromStorage(svc, uznesenia_storage_path)
+        : uznesenia_url
+        ? fetchAndExtractPdf(uznesenia_url)
+        : Promise.resolve(null),
     ]);
     console.log(`[parse-voting-record] hlasovanie chars=${hlasText.length} uznesenia chars=${uznesText?.length ?? 0}`);
 
@@ -248,6 +256,17 @@ Deno.serve(async (req) => {
 
 // ---------------------------------------------------------------------------
 // PDF fetch + extraction (same pattern as analyze-program)
+
+// deno-lint-ignore no-explicit-any
+async function downloadFromStorage(svc: any, path: string): Promise<string> {
+  const { data, error } = await svc.storage.from("voting-records").download(path);
+  if (error || !data) {
+    throw new Error(`Storage download failed: ${error?.message ?? "not found"}`);
+  }
+  const buf = await data.arrayBuffer();
+  console.log(`[parse-voting-record][storage] downloaded path=${path} bytes=${buf.byteLength}`);
+  return extractPdfText(buf);
+}
 
 async function fetchAndExtractPdf(url: string): Promise<string> {
   let lastErr: unknown;
