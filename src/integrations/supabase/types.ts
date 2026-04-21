@@ -188,6 +188,7 @@ export type Database = {
       }
       questionnaire_responses: {
         Row: {
+          agent_version: string | null
           candidate_id: string
           candidate_name: string | null
           created_at: string
@@ -202,6 +203,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agent_version?: string | null
           candidate_id: string
           candidate_name?: string | null
           created_at?: string
@@ -216,6 +218,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agent_version?: string | null
           candidate_id?: string
           candidate_name?: string | null
           created_at?: string
