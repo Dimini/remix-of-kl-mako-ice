@@ -53,6 +53,12 @@ export interface ScoreInput {
   overallConfidence?: number;
   /** Whether the candidate responded to the questionnaire */
   questionnaireResponded?: boolean;
+  /**
+   * Raw NRSR score (0–54) from the analyze-questionnaire Edge Function.
+   * When provided, used directly for questionnaireNorm instead of the
+   * confidence-proxy fallback (which ignores pro/anti direction).
+   */
+  questionnaireRawScore?: number | null;
 }
 
 export interface ScoreDebug {
@@ -129,19 +135,24 @@ export function computeScore(input: ScoreInput): ScoreResult {
           return clampNorm(rawAvg, SCORING_CAPS.program.min, SCORING_CAPS.program.max);
         })();
 
-  // QUESTIONNAIRE: same approach — average confidence × cap max.
+  // QUESTIONNAIRE: use the NRSR raw score (0–54) from the Edge Function when
+  // available. The confidence-proxy fallback (confidence × 54) cannot capture
+  // the pro/anti direction of individual measures and must not be used when the
+  // AI-derived score is present.
   const questionnaireNorm =
-    questionnaire.length === 0
-      ? null
-      : (() => {
-          const rawAvg = avg(
-            questionnaire.map((e) => {
-              const conf = e.confidence ?? 1;
-              return conf * SCORING_CAPS.questionnaire.max;
-            }),
-          );
-          return clampNorm(rawAvg, SCORING_CAPS.questionnaire.min, SCORING_CAPS.questionnaire.max);
-        })();
+    input.questionnaireRawScore !== null && input.questionnaireRawScore !== undefined
+      ? clampNorm(input.questionnaireRawScore, SCORING_CAPS.questionnaire.min, SCORING_CAPS.questionnaire.max)
+      : questionnaire.length === 0
+        ? null
+        : (() => {
+            const rawAvg = avg(
+              questionnaire.map((e) => {
+                const conf = e.confidence ?? 1;
+                return conf * SCORING_CAPS.questionnaire.max;
+              }),
+            );
+            return clampNorm(rawAvg, SCORING_CAPS.questionnaire.min, SCORING_CAPS.questionnaire.max);
+          })();
 
   // SOCIAL: Phase 2 — always null in MVP per CLAUDE.md.
   const socialNorm: number | null = null;
