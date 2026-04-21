@@ -13,6 +13,7 @@ import {
 } from "@/lib/stateMachine";
 import type { CandidateState, KrajId, Position } from "@/types/domain";
 import { adminCandidatesRepo } from "@/lib/repository/adminCandidates";
+import { getResponseForCandidate } from "@/lib/repository/questionnaire";
 import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,22 @@ export default function AdminCandidateDetail() {
     [id, isNew],
   );
   const { data: existing, refetch } = useSupabaseQuery(fetcher, [id, isNew], isNew ? [] : ["candidates"]);
+
+  const questionnaireFetcher = useCallback(
+    () => (isNew ? Promise.resolve(null) : getResponseForCandidate(id!)),
+    [id, isNew],
+  );
+  const { data: questionnaireResponse, refetch: refetchQuestionnaire } = useSupabaseQuery(
+    questionnaireFetcher,
+    [id, isNew, "q-response"],
+    isNew ? [] : ["questionnaire_responses"],
+  );
+
+  const handleQuestionnaireRefresh = useCallback(() => {
+    refetch();
+    refetchQuestionnaire();
+  }, [refetch, refetchQuestionnaire]);
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(candidateSchema),
@@ -418,8 +435,8 @@ export default function AdminCandidateDetail() {
       {!isNew && existing && (
         <AIToolsPanel
           candidateId={existing.id}
-          questionnaireSubmitted={existing.questionnaireResponded}
-          onComplete={refetch}
+          questionnaireSubmitted={questionnaireResponse?.status === "submitted"}
+          onComplete={handleQuestionnaireRefresh}
         />
       )}
       {!isNew && existing && <ScorePreview candidateId={existing.id} />}
