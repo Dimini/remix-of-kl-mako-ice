@@ -189,12 +189,14 @@ export type Database = {
       questionnaire_responses: {
         Row: {
           agent_version: string | null
+          analysis_json: Json | null
           candidate_id: string
           candidate_name: string | null
           created_at: string
           email: string | null
           id: string
           link_uuid: string
+          processed_at: string | null
           questionnaire_score: number | null
           responded_at: string | null
           response_json: Json
@@ -204,12 +206,14 @@ export type Database = {
         }
         Insert: {
           agent_version?: string | null
+          analysis_json?: Json | null
           candidate_id: string
           candidate_name?: string | null
           created_at?: string
           email?: string | null
           id?: string
           link_uuid?: string
+          processed_at?: string | null
           questionnaire_score?: number | null
           responded_at?: string | null
           response_json?: Json
@@ -219,12 +223,14 @@ export type Database = {
         }
         Update: {
           agent_version?: string | null
+          analysis_json?: Json | null
           candidate_id?: string
           candidate_name?: string | null
           created_at?: string
           email?: string | null
           id?: string
           link_uuid?: string
+          processed_at?: string | null
           questionnaire_score?: number | null
           responded_at?: string | null
           response_json?: Json
