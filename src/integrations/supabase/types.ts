@@ -133,6 +133,45 @@ export type Database = {
           },
         ]
       }
+      jurisdictions: {
+        Row: {
+          base_url: string | null
+          city: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          kraj_id: Database["public"]["Enums"]["kraj_id"] | null
+          name: string
+          notes: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          base_url?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kraj_id?: Database["public"]["Enums"]["kraj_id"] | null
+          name: string
+          notes?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kraj_id?: Database["public"]["Enums"]["kraj_id"] | null
+          name?: string
+          notes?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           agent_version: string | null
@@ -459,6 +498,7 @@ export type Database = {
           entered_by: string | null
           id: string
           is_ai_generated: boolean
+          jurisdiction_id: string | null
           meeting_id: string | null
           points: number | null
           requires_second_reviewer: boolean
@@ -477,6 +517,7 @@ export type Database = {
           entered_by?: string | null
           id?: string
           is_ai_generated?: boolean
+          jurisdiction_id?: string | null
           meeting_id?: string | null
           points?: number | null
           requires_second_reviewer?: boolean
@@ -495,6 +536,7 @@ export type Database = {
           entered_by?: string | null
           id?: string
           is_ai_generated?: boolean
+          jurisdiction_id?: string | null
           meeting_id?: string | null
           points?: number | null
           requires_second_reviewer?: boolean
@@ -510,6 +552,13 @@ export type Database = {
             columns: ["candidate_id"]
             isOneToOne: false
             referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_jurisdiction_id_fkey"
+            columns: ["jurisdiction_id"]
+            isOneToOne: false
+            referencedRelation: "jurisdictions"
             referencedColumns: ["id"]
           },
         ]
