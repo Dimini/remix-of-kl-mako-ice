@@ -95,11 +95,12 @@ export function CandidatePhotoUpload({ candidateId, value, onChange }: Props) {
           )}
         </div>
         <div className="flex-1 space-y-2">
-          <Input
+          <input
             ref={inputRef}
             type="file"
             accept={ALLOWED.join(",")}
             disabled={busy || !candidateId}
+            className="sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void handleFile(f);

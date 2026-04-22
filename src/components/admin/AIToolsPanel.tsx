@@ -4,6 +4,7 @@ import { Sparkles, Calculator, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { FileUploadButton } from "@/components/ui/file-upload-button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -274,17 +275,13 @@ export function AIToolsPanel({ candidateId, defaultProgramUrl, questionnaireSubm
 
             <TabsContent value="pdf" className="space-y-2 pt-3">
               <Label htmlFor="program-pdf">PDF súbor (max 20 MB)</Label>
-              <Input
+              <FileUploadButton
                 id="program-pdf"
-                type="file"
                 accept="application/pdf,.pdf"
-                onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                file={pdfFile}
+                onChange={setPdfFile}
+                label="Vybrať PDF súbor"
               />
-              {pdfFile && (
-                <p className="text-xs text-muted-foreground">
-                  Vybraný súbor: {pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
-                </p>
-              )}
             </TabsContent>
           </Tabs>
 

@@ -3,6 +3,7 @@ import { FileText, Loader2, Play, Eye, AlertTriangle, CheckCircle2, Info, Upload
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { FileUploadButton } from "@/components/ui/file-upload-button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -279,16 +280,12 @@ export default function AdminVotingImport() {
                 />
               </TabsContent>
               <TabsContent value="file" className="pt-2">
-                <Input
-                  type="file"
+                <FileUploadButton
                   accept="application/pdf,.pdf"
-                  onChange={(e) => setHlasovaineFile(e.target.files?.[0] ?? null)}
+                  file={hlasovaineFile}
+                  onChange={setHlasovaineFile}
+                  label="Vybrať hlasovanie PDF"
                 />
-                {hlasovaineFile && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {hlasovaineFile.name} ({(hlasovaineFile.size / 1024 / 1024).toFixed(2)} MB)
-                  </p>
-                )}
               </TabsContent>
             </Tabs>
           </div>
@@ -319,16 +316,12 @@ export default function AdminVotingImport() {
                 />
               </TabsContent>
               <TabsContent value="file" className="pt-2">
-                <Input
-                  type="file"
+                <FileUploadButton
                   accept="application/pdf,.pdf"
-                  onChange={(e) => setUzneseniaFile(e.target.files?.[0] ?? null)}
+                  file={uzneseniaFile}
+                  onChange={setUzneseniaFile}
+                  label="Vybrať uznesenia PDF"
                 />
-                {uzneseniaFile && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {uzneseniaFile.name} ({(uzneseniaFile.size / 1024 / 1024).toFixed(2)} MB)
-                  </p>
-                )}
               </TabsContent>
             </Tabs>
           </div>
