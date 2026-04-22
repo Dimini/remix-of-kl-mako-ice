@@ -50,6 +50,12 @@ interface ImportResult {
   tier2: number;
   tier3: number;
   votes_inserted: number;
+  vote_breakdown?: {
+    for_beneficial: number;
+    for_harmful: number;
+    against_beneficial: number;
+    against_harmful: number;
+  };
   unmatched_members: string[];
   rescored_candidates: number;
   resolutions?: ResolutionPreview[];
