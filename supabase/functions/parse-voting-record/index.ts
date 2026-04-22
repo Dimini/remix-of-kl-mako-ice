@@ -290,7 +290,7 @@ async function fetchAndExtractPdf(url: string): Promise<string> {
 async function extractPdfText(buf: ArrayBuffer): Promise<string> {
   try {
     const { Buffer: NodeBuffer } = await import("node:buffer");
-    const { default: pdf } = await import("npm:pdf-parse@1.1.1");
+    const { default: pdf } = await import("pdf-parse");
     const data = await pdf(NodeBuffer.from(buf));
     const text = data.text ?? "";
     if (text.length > 200) return text;
