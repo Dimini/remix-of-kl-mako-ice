@@ -333,29 +333,29 @@ export default function AdminVotingImport() {
             </Tabs>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons — text never changes; only the active button shows a spinner. */}
           <div className="flex gap-3 pt-1">
             <Button
               variant="outline"
               onClick={() => run(true)}
               disabled={!canSubmit || busy}
             >
-              {busy ? (
+              {runningDry || (uploading && !runningImport) ? (
                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
               ) : (
                 <Eye className="w-4 h-4 mr-1" />
               )}
-              {buttonLabel ?? "Dry run (náhľad)"}
+              Dry run (náhľad)
             </Button>
             <Button onClick={() => run(false)} disabled={!canSubmit || busy}>
-              {busy ? (
+              {runningImport ? (
                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-              ) : uploading ? (
+              ) : uploading && !runningDry ? (
                 <Upload className="w-4 h-4 mr-1" />
               ) : (
                 <Play className="w-4 h-4 mr-1" />
               )}
-              {buttonLabel ?? "Importovať hlasovanie"}
+              Importovať hlasovanie
             </Button>
           </div>
         </CardContent>
