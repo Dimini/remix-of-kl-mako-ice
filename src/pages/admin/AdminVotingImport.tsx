@@ -381,14 +381,33 @@ function ImportResultPanel({ result }: { result: ImportResult }) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             <Stat label="Uznesenia celkom" value={result.resolutions_total} />
             <Stat label="Klíma relevanté" value={result.keyword_matched} />
-            <Stat label="Hlasovaní vložených" value={result.votes_inserted} />
+            <Stat
+              label={result.dry_run ? "Po importe sa vloží hlasovaní" : "Hlasovaní vložených"}
+              value={result.votes_inserted}
+            />
             {!result.dry_run && <Stat label="Kandidátov prepočítaných" value={result.rescored_candidates} />}
           </div>
           <div className="flex gap-2 mt-4 flex-wrap">
             <Badge variant="secondary">Tier 1 (explicitná): {result.tier1}</Badge>
             <Badge variant="outline">Tier 2 (implicitná): {result.tier2}</Badge>
-            <Badge variant="outline" className="text-muted-foreground">Tier 3 (vylúčená): {result.tier3}</Badge>
+            <Badge variant="outline" className="text-muted-foreground">
+              Tier 3 (vylúčená, nevkladané): {result.tier3}
+            </Badge>
           </div>
+
+          {result.vote_breakdown && (
+            <div className="mt-5 pt-4 border-t">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Rozpis hlasov (klíma relevantné)
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                <Stat label="ZA prospešné opatrenie" value={result.vote_breakdown.for_beneficial} />
+                <Stat label="PROTI škodlivému opatreniu" value={result.vote_breakdown.against_harmful} />
+                <Stat label="ZA škodlivé opatrenie" value={result.vote_breakdown.for_harmful} />
+                <Stat label="PROTI prospešnému opatreniu" value={result.vote_breakdown.against_beneficial} />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
