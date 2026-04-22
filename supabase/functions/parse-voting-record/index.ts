@@ -114,7 +114,14 @@ Deno.serve(async (req) => {
     console.log(`[parse-voting-record] parsed ${resolutions.length} resolutions`);
 
     if (resolutions.length === 0) {
-      return json({ error: "No resolutions found in PDF — check PDF format" }, 422);
+      // Log a sample so we can debug PDF format mismatches.
+      console.log(`[parse-voting-record][debug] hlasText sample (first 2000 chars): ${hlasText.slice(0, 2000)}`);
+      console.log(`[parse-voting-record][debug] hlasText sample (chars 2000-4000): ${hlasText.slice(2000, 4000)}`);
+      return json({
+        error: "No resolutions found in PDF — check PDF format",
+        hint: "Parser looks for 'Uznesenie č. N' or 'Hlasovanie č. N' markers. See edge function logs for a text sample.",
+        sample: hlasText.slice(0, 500),
+      }, 422);
     }
 
     // Enrich resolution topics from Uznesenia if available.
@@ -307,26 +314,27 @@ async function extractPdfText(buf: ArrayBuffer): Promise<string> {
 function parseHlasovanie(text: string): ParsedResolution[] {
   const results: ParsedResolution[] = [];
 
-  // Split on resolution boundaries — try various spellings
-  const blocks = text.split(/(?=Uznesenie\s+(?:č\.|číslo|c\.)\s*[\d/]+)/i);
+  // Split on resolution boundaries — accept both "Uznesenie č." and "Hlasovanie č." headers,
+  // with various spellings (č./číslo/c./No./Nr.) and optional whitespace/newlines.
+  const headerRe = /(?=(?:Uznesenie|Hlasovanie)\s*(?:č\.?|číslo|c\.|No\.?|Nr\.?)?\s*[\d/\-]+)/i;
+  const blocks = text.split(headerRe);
 
   for (const block of blocks) {
     if (!block.trim()) continue;
 
     // Extract resolution reference (e.g. "1/2023" or "5")
-    const refMatch = block.match(/Uznesenie\s+(?:č\.|číslo|c\.)\s*([\d/\-]+)/i);
+    const refMatch = block.match(/(?:Uznesenie|Hlasovanie)\s*(?:č\.?|číslo|c\.|No\.?|Nr\.?)?\s*([\d/\-]+)/i);
     if (!refMatch) continue;
     const ref = refMatch[1].trim();
 
-    // Topic: first non-empty line after the ref line, or line containing "Predmet:"
+    // Topic: first non-empty line after the ref line, or line containing "Predmet:" / "Názov:"
     const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
     let topic = "";
-    const predmetLine = lines.find((l) => /^Predmet\s*:/i.test(l));
-    if (predmetLine) {
-      topic = predmetLine.replace(/^Predmet\s*:\s*/i, "").trim();
+    const labelLine = lines.find((l) => /^(Predmet|Názov|Nazov|Bod programu)\s*:/i.test(l));
+    if (labelLine) {
+      topic = labelLine.replace(/^(Predmet|Názov|Nazov|Bod programu)\s*:\s*/i, "").trim();
     } else {
-      // Skip the ref line itself, take the next meaningful line
-      const refLineIdx = lines.findIndex((l) => /Uznesenie/i.test(l));
+      const refLineIdx = lines.findIndex((l) => /(Uznesenie|Hlasovanie)/i.test(l));
       const nextLine = lines.slice(refLineIdx + 1).find((l) => l.length > 5 && !/^Výsledok/i.test(l));
       topic = nextLine ?? `Uznesenie ${ref}`;
     }
@@ -334,7 +342,6 @@ function parseHlasovanie(text: string): ParsedResolution[] {
     // Extract member votes
     const memberVotes: MemberVote[] = [];
     for (const line of lines) {
-      // Match lines like: "Novák Ján    ZA" or "Kováčová Mária    ZDRŽAL SA"
       const voteMatch = matchVoteLine(line);
       if (voteMatch) memberVotes.push(voteMatch);
     }
