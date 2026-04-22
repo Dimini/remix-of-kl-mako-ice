@@ -274,6 +274,12 @@ Deno.serve(async (req) => {
       tier2,
       tier3: tier3count,
       votes_inserted: votesInserted,
+      vote_breakdown: {
+        for_beneficial: forBeneficial,
+        for_harmful: forHarmful,
+        against_beneficial: againstBeneficial,
+        against_harmful: againstHarmful,
+      },
       unmatched_members: [...unmatchedSet],
       rescored_candidates: !dry_run ? scoredCandidateIds.size : 0,
       // Include parsed resolution list in dry_run for admin review.
