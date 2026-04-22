@@ -365,9 +365,38 @@ function parseHlasovanie(text: string): ParsedResolution[] {
     // Extract member votes.
     const memberVotes: MemberVote[] = [];
     const TOKENS = "ZA|PROTI|ZDRŽAL SA|ZDRŽALA SA|NEHLASOVAL|NEHLASOVALA|NEPRÍTOMNÝ|NEPRÍTOMNÁ|AKLAMAČNE";
+    // H.E.R. Systém: vote rows look like "10NEPRÍTOMNÝ", "23ZA", "1011ZA"
+    // (Riadok+Karta digits glued directly to vote token, no separator).
+    const gluedVoteRe = new RegExp(`^\\d{1,5}(${TOKENS})$`, "i");
+    // Lines to ignore when reaching backward for a name.
+    const skipForName = (s: string) =>
+      !s ||
+      /^\d+$/.test(s) ||
+      gluedVoteRe.test(s) ||
+      VOTE_TOKEN_RE.test(s) ||
+      /^(Titul|Riadok|Karta|Strana|Hlasoval|Zasadnutie|Dňa|VÝSLEDOK|BOD|Mestská|POČET|ZA HLASOVALO|PROTI HLASOVALO|ZDRŽALO|NEHLASOVALO|H\.E\.R\.|\(|Uznesenie|Hlasovanie|Výsledok)/i.test(s);
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+
+      // H.E.R. glued format: "<digits><VOTE>" — name is the previous 1-2 lines.
+      const glued = line.match(gluedVoteRe);
+      if (glued) {
+        const dir = VOTE_MAP[glued[1].toUpperCase()];
+        if (dir) {
+          // Walk backward up to 3 lines collecting name fragments.
+          const nameParts: string[] = [];
+          for (let k = i - 1; k >= Math.max(0, i - 3) && nameParts.length < 2; k--) {
+            const prev = lines[k];
+            if (skipForName(prev)) break;
+            nameParts.unshift(prev);
+          }
+          if (nameParts.length > 0) {
+            memberVotes.push({ name: cleanName(nameParts.join(" ")), direction: dir as MemberVote["direction"] });
+          }
+        }
+        continue;
+      }
 
       // Same-line: "1    1    Iveta Adamčíková    ZA"
       const sameLine = line.match(new RegExp(`^\\d{1,3}\\s+\\d{1,3}\\s+(.+?)\\s+(${TOKENS})\\s*$`, "i"));
