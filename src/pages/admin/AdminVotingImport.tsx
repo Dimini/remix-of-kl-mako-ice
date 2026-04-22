@@ -50,6 +50,12 @@ interface ImportResult {
   tier2: number;
   tier3: number;
   votes_inserted: number;
+  vote_breakdown?: {
+    for_beneficial: number;
+    for_harmful: number;
+    against_beneficial: number;
+    against_harmful: number;
+  };
   unmatched_members: string[];
   rescored_candidates: number;
   resolutions?: ResolutionPreview[];
@@ -80,7 +86,8 @@ export default function AdminVotingImport() {
   const [uzneseniaFile, setUzneseniaFile] = useState<File | null>(null);
 
   const [uploading, setUploading] = useState(false);
-  const [running, setRunning] = useState(false);
+  const [runningDry, setRunningDry] = useState(false);
+  const [runningImport, setRunningImport] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
 
   useEffect(() => {
@@ -149,7 +156,8 @@ export default function AdminVotingImport() {
       return;
     }
     setUploading(false);
-    setRunning(true);
+    if (dry) setRunningDry(true);
+    else setRunningImport(true);
 
     try {
       const { data, error } = await supabase.functions.invoke("parse-voting-record", {
@@ -185,16 +193,15 @@ export default function AdminVotingImport() {
         variant: "destructive",
       });
     } finally {
-      setRunning(false);
+      if (dry) setRunningDry(false);
+      else setRunningImport(false);
     }
   }
 
-  const busy = uploading || running;
+  const busy = uploading || runningDry || runningImport;
   const hlasovaineReady =
     hlasovaineMode === "url" ? !!hlasovaineUrl.trim() : !!hlasovaineFile;
   const canSubmit = !!jurisdictionId && !!meetingDate && hlasovaineReady;
-
-  const buttonLabel = uploading ? "Nahrávam PDF…" : running ? "Spúšťam…" : null;
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -326,29 +333,29 @@ export default function AdminVotingImport() {
             </Tabs>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons — text never changes; only the active button shows a spinner. */}
           <div className="flex gap-3 pt-1">
             <Button
               variant="outline"
               onClick={() => run(true)}
               disabled={!canSubmit || busy}
             >
-              {busy ? (
+              {runningDry || (uploading && !runningImport) ? (
                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
               ) : (
                 <Eye className="w-4 h-4 mr-1" />
               )}
-              {buttonLabel ?? "Dry run (náhľad)"}
+              Dry run (náhľad)
             </Button>
             <Button onClick={() => run(false)} disabled={!canSubmit || busy}>
-              {busy ? (
+              {runningImport ? (
                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-              ) : uploading ? (
+              ) : uploading && !runningDry ? (
                 <Upload className="w-4 h-4 mr-1" />
               ) : (
                 <Play className="w-4 h-4 mr-1" />
               )}
-              {buttonLabel ?? "Importovať hlasovanie"}
+              Importovať hlasovanie
             </Button>
           </div>
         </CardContent>
@@ -374,14 +381,33 @@ function ImportResultPanel({ result }: { result: ImportResult }) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             <Stat label="Uznesenia celkom" value={result.resolutions_total} />
             <Stat label="Klíma relevanté" value={result.keyword_matched} />
-            <Stat label="Hlasovaní vložených" value={result.votes_inserted} />
+            <Stat
+              label={result.dry_run ? "Po importe sa vloží hlasovaní" : "Hlasovaní vložených"}
+              value={result.votes_inserted}
+            />
             {!result.dry_run && <Stat label="Kandidátov prepočítaných" value={result.rescored_candidates} />}
           </div>
           <div className="flex gap-2 mt-4 flex-wrap">
             <Badge variant="secondary">Tier 1 (explicitná): {result.tier1}</Badge>
             <Badge variant="outline">Tier 2 (implicitná): {result.tier2}</Badge>
-            <Badge variant="outline" className="text-muted-foreground">Tier 3 (vylúčená): {result.tier3}</Badge>
+            <Badge variant="outline" className="text-muted-foreground">
+              Tier 3 (vylúčená, nevkladané): {result.tier3}
+            </Badge>
           </div>
+
+          {result.vote_breakdown && (
+            <div className="mt-5 pt-4 border-t">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Rozpis hlasov (klíma relevantné)
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                <Stat label="ZA prospešné opatrenie" value={result.vote_breakdown.for_beneficial} />
+                <Stat label="PROTI škodlivému opatreniu" value={result.vote_breakdown.against_harmful} />
+                <Stat label="ZA škodlivé opatrenie" value={result.vote_breakdown.for_harmful} />
+                <Stat label="PROTI prospešnému opatreniu" value={result.vote_breakdown.against_beneficial} />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

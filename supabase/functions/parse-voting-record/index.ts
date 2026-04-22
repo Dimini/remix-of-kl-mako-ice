@@ -174,6 +174,11 @@ Deno.serve(async (req) => {
     const unmatchedSet = new Set<string>();
     const scoredCandidateIds = new Set<string>();
     let tier1 = 0, tier2 = 0, tier3count = 0;
+    // Debug counters: aggregate vote behaviour across all climate-relevant resolutions.
+    let forBeneficial = 0;   // ZA pro_climate
+    let forHarmful = 0;      // ZA anti_climate
+    let againstBeneficial = 0; // PROTI pro_climate
+    let againstHarmful = 0;    // PROTI anti_climate
 
     for (const resolution of resolutions) {
       const cls = classMap.get(resolution.ref) ?? { tier: 3 as const, sentiment: "neutral" as const, reviewer_note: "", confidence: 0.5 };
@@ -182,6 +187,10 @@ Deno.serve(async (req) => {
       else if (cls.tier === 2) tier2++;
       else tier3count++;
 
+      // Skip Tier 3 entirely — never insert and never count toward votes_inserted.
+      // Tier 3 items are still surfaced in dry_run resolutions list for transparency.
+      if (cls.tier === 3) continue;
+
       for (const mv of resolution.memberVotes) {
         const candidateId = matchCandidate(mv.name, allCandidates ?? []);
         if (!candidateId) {
@@ -189,6 +198,12 @@ Deno.serve(async (req) => {
           continue;
         }
         const pts = calcPoints(cls.sentiment, mv.direction);
+
+        // Aggregate debug counters (climate-relevant only — Tier 3 already skipped).
+        if (mv.direction === "for" && cls.sentiment === "pro_climate") forBeneficial++;
+        else if (mv.direction === "for" && cls.sentiment === "anti_climate") forHarmful++;
+        else if (mv.direction === "against" && cls.sentiment === "pro_climate") againstBeneficial++;
+        else if (mv.direction === "against" && cls.sentiment === "anti_climate") againstHarmful++;
 
         if (!dry_run) {
           const { error: insErr } = await svc.from("votes").insert({
@@ -211,7 +226,7 @@ Deno.serve(async (req) => {
             continue;
           }
           votesInserted++;
-          if (cls.tier !== 3) scoredCandidateIds.add(candidateId);
+          scoredCandidateIds.add(candidateId);
         } else {
           votesInserted++; // count what would be inserted
         }
@@ -259,6 +274,12 @@ Deno.serve(async (req) => {
       tier2,
       tier3: tier3count,
       votes_inserted: votesInserted,
+      vote_breakdown: {
+        for_beneficial: forBeneficial,
+        for_harmful: forHarmful,
+        against_beneficial: againstBeneficial,
+        against_harmful: againstHarmful,
+      },
       unmatched_members: [...unmatchedSet],
       rescored_candidates: !dry_run ? scoredCandidateIds.size : 0,
       // Include parsed resolution list in dry_run for admin review.
