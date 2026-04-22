@@ -79,6 +79,14 @@ Deno.serve(async (req) => {
       dry_run = false,
     } = body ?? {};
 
+    // Fallback for source_url (votes.source_url is NOT NULL): use the URL when
+    // provided, otherwise build a storage:// reference from the uploaded path.
+    const sourceUrlForVote: string =
+      (typeof hlasovanie_url === "string" && hlasovanie_url.trim()) ||
+      (typeof hlasovanie_storage_path === "string" && hlasovanie_storage_path
+        ? `storage://voting-records/${hlasovanie_storage_path}`
+        : "");
+
     if (!jurisdiction_id || !meeting_date || (!hlasovanie_url && !hlasovanie_storage_path)) {
       return json({ error: "jurisdiction_id, meeting_date and (hlasovanie_url or hlasovanie_storage_path) are required" }, 400);
     }
@@ -190,7 +198,7 @@ Deno.serve(async (req) => {
             topic: resolution.topic.slice(0, 500),
             vote_direction: mv.direction,
             points: pts,
-            source_url: hlasovanie_url,
+            source_url: sourceUrlForVote,
             climate_relevance_tier: cls.tier,
             reviewer_note: cls.tier === 2 && cls.reviewer_note ? cls.reviewer_note : null,
             confidence: cls.confidence ?? null,
@@ -212,13 +220,18 @@ Deno.serve(async (req) => {
 
     // Write audit log for this import run.
     if (!dry_run) {
-      await svc.from("review_audit_log").insert({
-        candidate_id: null,
-        reviewer: "system:parse-voting-record",
-        reviewer_user_id: callerId,
-        action: "VOTES_IMPORTED",
-        note: `CAP-03 import: ${jur.name} / ${meeting_date} — ${votesInserted} votes, t1=${tier1} t2=${tier2} t3=${tier3count}`,
-      }).catch((e) => console.warn("[parse-voting-record] audit log write failed:", e));
+      try {
+        const { error: auditErr } = await svc.from("review_audit_log").insert({
+          candidate_id: null,
+          reviewer: "system:parse-voting-record",
+          reviewer_user_id: callerId,
+          action: "VOTES_IMPORTED",
+          note: `CAP-03 import: ${jur.name} / ${meeting_date} — ${votesInserted} votes, t1=${tier1} t2=${tier2} t3=${tier3count}`,
+        });
+        if (auditErr) console.warn("[parse-voting-record] audit log write failed:", auditErr.message);
+      } catch (e) {
+        console.warn("[parse-voting-record] audit log write threw:", e);
+      }
 
       // Trigger rescore for affected candidates with climate-relevant votes.
       const rescoreResults: Array<{ candidateId: string; ok: boolean }> = [];
