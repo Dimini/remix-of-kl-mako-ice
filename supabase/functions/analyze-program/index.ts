@@ -192,7 +192,7 @@ async function extractPdfText(buf: ArrayBuffer): Promise<string> {
   let nativeText = "";
   try {
     const { Buffer: NodeBuffer } = await import("node:buffer");
-    const { default: pdf } = await import("npm:pdf-parse@1.1.1");
+    const { default: pdf } = await import("pdf-parse");
     const data = await pdf(NodeBuffer.from(buf));
     nativeText = data.text ?? "";
   } catch (e) {

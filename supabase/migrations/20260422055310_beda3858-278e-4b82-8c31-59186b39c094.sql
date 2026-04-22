@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.jurisdictions IS 'Council jurisdictions (kraj/mesto) for voting record imports. CAP-03.';
