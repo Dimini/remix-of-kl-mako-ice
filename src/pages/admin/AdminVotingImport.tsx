@@ -3,6 +3,7 @@ import { FileText, Loader2, Play, Eye, AlertTriangle, CheckCircle2, Info, Upload
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { FileUploadButton } from "@/components/ui/file-upload-button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
