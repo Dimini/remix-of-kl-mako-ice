@@ -7,6 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 import { supabase } from "@/integrations/supabase/client";
+import { QUESTIONNAIRE_MAX_SCORE, QUESTIONNAIRE_MIN_SCORE } from "@/lib/scoring/questionnaireCaps";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -343,7 +344,7 @@ export function ScorePreview({ candidateId }: ScorePreviewProps) {
                   raw NRSR skóre (Σ points × local_relevance) = {questionnaireDebug.meta.rawTotal ?? "—"}
                 </li>
                 <li className="text-foreground">
-                  questionnaire_score (0–54) = {questionnaireRow?.questionnaire_score ?? "—"}
+                  questionnaire_score (min: {QUESTIONNAIRE_MIN_SCORE}, max: {QUESTIONNAIRE_MAX_SCORE}) = {questionnaireRow?.questionnaire_score ?? "—"}
                 </li>
                 <li className="text-muted-foreground">
                   status = {questionnaireRow?.status ?? "—"}
