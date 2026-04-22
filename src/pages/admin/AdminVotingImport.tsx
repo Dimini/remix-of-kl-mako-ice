@@ -156,7 +156,8 @@ export default function AdminVotingImport() {
       return;
     }
     setUploading(false);
-    setRunning(true);
+    if (dry) setRunningDry(true);
+    else setRunningImport(true);
 
     try {
       const { data, error } = await supabase.functions.invoke("parse-voting-record", {
@@ -192,16 +193,15 @@ export default function AdminVotingImport() {
         variant: "destructive",
       });
     } finally {
-      setRunning(false);
+      if (dry) setRunningDry(false);
+      else setRunningImport(false);
     }
   }
 
-  const busy = uploading || running;
+  const busy = uploading || runningDry || runningImport;
   const hlasovaineReady =
     hlasovaineMode === "url" ? !!hlasovaineUrl.trim() : !!hlasovaineFile;
   const canSubmit = !!jurisdictionId && !!meetingDate && hlasovaineReady;
-
-  const buttonLabel = uploading ? "Nahrávam PDF…" : running ? "Spúšťam…" : null;
 
   return (
     <div className="space-y-6 max-w-4xl">
