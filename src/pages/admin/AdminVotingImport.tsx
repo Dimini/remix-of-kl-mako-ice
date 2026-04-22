@@ -86,7 +86,8 @@ export default function AdminVotingImport() {
   const [uzneseniaFile, setUzneseniaFile] = useState<File | null>(null);
 
   const [uploading, setUploading] = useState(false);
-  const [running, setRunning] = useState(false);
+  const [runningDry, setRunningDry] = useState(false);
+  const [runningImport, setRunningImport] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
 
   useEffect(() => {
