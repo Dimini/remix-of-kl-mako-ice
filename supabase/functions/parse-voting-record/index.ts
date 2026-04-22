@@ -27,7 +27,12 @@ const VOTE_MAP: Record<string, string> = {
   "ZDRŽALA SA": "abstain",
   "NEHLASOVAL": "absent",
   "NEHLASOVALA": "absent",
+  "NEPRÍTOMNÝ": "absent",
+  "NEPRÍTOMNÁ": "absent",
+  "AKLAMAČNE": "for", // acclamation = aye-by-voice; treat as 'for'
 };
+
+const VOTE_TOKEN_RE = /^(ZA|PROTI|ZDRŽAL SA|ZDRŽALA SA|NEHLASOVAL|NEHLASOVALA|NEPRÍTOMNÝ|NEPRÍTOMNÁ|AKLAMAČNE)$/i;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -308,42 +313,95 @@ async function extractPdfText(buf: ArrayBuffer): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
-// Hlasovanie PDF parser
-// Splits on "Uznesenie č." markers and extracts per-member votes.
+// Hlasovanie PDF parser — supports H.E.R. Systém format used by Slovak councils.
+// Header line example:
+//   "VÝSLEDOK HLASOVANIA č. 2 - BOD č. 1a. - Schválenie programu rokovania"
+// Followed by per-member rows where the vote token (ZA / PROTI / ZDRŽAL SA /
+// NEHLASOVAL / NEPRÍTOMNÝ / AKLAMAČNE) appears on its own line after the
+// member's name (sometimes on the same line, sometimes one or two lines below).
+//
+// Also supports legacy "Uznesenie č. N" / "Hlasovanie č. N" headers.
 
 function parseHlasovanie(text: string): ParsedResolution[] {
   const results: ParsedResolution[] = [];
 
-  // Split on resolution boundaries — accept both "Uznesenie č." and "Hlasovanie č." headers,
-  // with various spellings (č./číslo/c./No./Nr.) and optional whitespace/newlines.
-  const headerRe = /(?=(?:Uznesenie|Hlasovanie)\s*(?:č\.?|číslo|c\.|No\.?|Nr\.?)?\s*[\d/\-]+)/i;
+  const headerRe = /(?=(?:VÝSLEDOK\s+HLASOVANIA|Uznesenie|Hlasovanie)\s*(?:č\.?|číslo|c\.|No\.?|Nr\.?)?\s*[\d/\-]+)/i;
   const blocks = text.split(headerRe);
 
   for (const block of blocks) {
     if (!block.trim()) continue;
 
-    // Extract resolution reference (e.g. "1/2023" or "5")
-    const refMatch = block.match(/(?:Uznesenie|Hlasovanie)\s*(?:č\.?|číslo|c\.|No\.?|Nr\.?)?\s*([\d/\-]+)/i);
+    // Skip the initial attendance block ("Výsledok prezentácie ...") — no vote tokens.
+    if (/Výsledok\s+prezentácie/i.test(block) && !/VÝSLEDOK\s+HLASOVANIA/i.test(block)) {
+      continue;
+    }
+    // Skip explicitly invalid votes.
+    if (/neplatné\s+hlasovanie/i.test(block)) continue;
+
+    const refMatch = block.match(/(?:VÝSLEDOK\s+HLASOVANIA|Uznesenie|Hlasovanie)\s*(?:č\.?|číslo|c\.|No\.?|Nr\.?)?\s*([\d/\-]+)/i);
     if (!refMatch) continue;
     const ref = refMatch[1].trim();
 
-    // Topic: first non-empty line after the ref line, or line containing "Predmet:" / "Názov:"
     const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+
+    // Topic: prefer "BOD č. X. - <topic>" segment from H.E.R. header; else Predmet/Názov; else next line.
     let topic = "";
-    const labelLine = lines.find((l) => /^(Predmet|Názov|Nazov|Bod programu)\s*:/i.test(l));
-    if (labelLine) {
-      topic = labelLine.replace(/^(Predmet|Názov|Nazov|Bod programu)\s*:\s*/i, "").trim();
+    const bodMatch = block.match(/BOD\s+č\.?\s*[^\s-]+\s*[-–]\s*([^\n(]+?)(?:\s*\(|\n|$)/i);
+    if (bodMatch) {
+      topic = bodMatch[1].trim();
     } else {
-      const refLineIdx = lines.findIndex((l) => /(Uznesenie|Hlasovanie)/i.test(l));
-      const nextLine = lines.slice(refLineIdx + 1).find((l) => l.length > 5 && !/^Výsledok/i.test(l));
-      topic = nextLine ?? `Uznesenie ${ref}`;
+      const labelLine = lines.find((l) => /^(Predmet|Názov|Nazov|Bod programu)\s*:/i.test(l));
+      if (labelLine) {
+        topic = labelLine.replace(/^(Predmet|Názov|Nazov|Bod programu)\s*:\s*/i, "").trim();
+      } else {
+        const refLineIdx = lines.findIndex((l) => /(VÝSLEDOK\s+HLASOVANIA|Uznesenie|Hlasovanie)/i.test(l));
+        const nextLine = lines.slice(refLineIdx + 1).find((l) =>
+          l.length > 5 && !/^Výsledok/i.test(l) && !/^Zasadnutie/i.test(l) && !/^Dňa/i.test(l) && !/^Riadok/i.test(l)
+        );
+        topic = nextLine ?? `Uznesenie ${ref}`;
+      }
     }
 
-    // Extract member votes
+    // Extract member votes.
     const memberVotes: MemberVote[] = [];
-    for (const line of lines) {
-      const voteMatch = matchVoteLine(line);
-      if (voteMatch) memberVotes.push(voteMatch);
+    const TOKENS = "ZA|PROTI|ZDRŽAL SA|ZDRŽALA SA|NEHLASOVAL|NEHLASOVALA|NEPRÍTOMNÝ|NEPRÍTOMNÁ|AKLAMAČNE";
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Same-line: "1    1    Iveta Adamčíková    ZA"
+      const sameLine = line.match(new RegExp(`^\\d{1,3}\\s+\\d{1,3}\\s+(.+?)\\s+(${TOKENS})\\s*$`, "i"));
+      if (sameLine) {
+        const dir = VOTE_MAP[sameLine[2].toUpperCase()];
+        if (dir) memberVotes.push({ name: cleanName(sameLine[1]), direction: dir as MemberVote["direction"] });
+        continue;
+      }
+
+      // Name on this line, vote token on a nearby following line.
+      const nameOnly = line.match(/^\d{1,3}\s+\d{1,3}\s+(.+)$/);
+      if (nameOnly) {
+        const name = cleanName(nameOnly[1]);
+        for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+          const cand = lines[j];
+          if (VOTE_TOKEN_RE.test(cand)) {
+            const dir = VOTE_MAP[cand.toUpperCase()];
+            if (dir) memberVotes.push({ name, direction: dir as MemberVote["direction"] });
+            break;
+          }
+          const trailing = cand.match(new RegExp(`\\s(${TOKENS})\\s*$`, "i"));
+          if (trailing && cand.length < 60) {
+            const dir = VOTE_MAP[trailing[1].toUpperCase()];
+            if (dir) memberVotes.push({ name, direction: dir as MemberVote["direction"] });
+            break;
+          }
+          if (/^\d{1,3}\s+\d{1,3}\s+/.test(cand)) break;
+        }
+        continue;
+      }
+
+      // Legacy fallbacks.
+      const legacy = matchVoteLine(line);
+      if (legacy) memberVotes.push(legacy);
     }
 
     if (memberVotes.length > 0) {
@@ -354,23 +412,25 @@ function parseHlasovanie(text: string): ParsedResolution[] {
   return results;
 }
 
+function cleanName(raw: string): string {
+  return raw.replace(/\s+/g, " ").replace(/\s*[-–]\s*$/, "").trim();
+}
+
 function matchVoteLine(line: string): MemberVote | null {
-  // Try pipe-separated: "Novák Ján | ZA"
-  const pipeMatch = line.match(/^(.+?)\s*\|\s*(ZA|PROTI|ZDRŽAL SA|ZDRŽALA SA|NEHLASOVAL|NEHLASOVALA)\s*$/i);
+  const TOKENS = "ZA|PROTI|ZDRŽAL SA|ZDRŽALA SA|NEHLASOVAL|NEHLASOVALA|NEPRÍTOMNÝ|NEPRÍTOMNÁ|AKLAMAČNE";
+
+  const pipeMatch = line.match(new RegExp(`^(.+?)\\s*\\|\\s*(${TOKENS})\\s*$`, "i"));
   if (pipeMatch) {
-    const dir = VOTE_MAP[(pipeMatch[2] ?? "").toUpperCase()];
-    if (dir) return { name: pipeMatch[1].trim(), direction: dir as MemberVote["direction"] };
+    const dir = VOTE_MAP[pipeMatch[2].toUpperCase()];
+    if (dir) return { name: cleanName(pipeMatch[1]), direction: dir as MemberVote["direction"] };
   }
 
-  // Try tab/multi-space separated at end of line: "Novák Ján    ZA"
-  const spaceMatch = line.match(/^(.+?)\s{2,}(ZA|PROTI|ZDRŽAL SA|ZDRŽALA SA|NEHLASOVAL|NEHLASOVALA)\s*$/i);
+  const spaceMatch = line.match(new RegExp(`^(.+?)\\s{2,}(${TOKENS})\\s*$`, "i"));
   if (spaceMatch) {
-    const dir = VOTE_MAP[(spaceMatch[2] ?? "").toUpperCase()];
-    if (dir) return { name: spaceMatch[1].trim(), direction: dir as MemberVote["direction"] };
+    const dir = VOTE_MAP[spaceMatch[2].toUpperCase()];
+    if (dir) return { name: cleanName(spaceMatch[1]), direction: dir as MemberVote["direction"] };
   }
 
-  // Try column checkmark format: "Novák Ján    X" under a column header
-  // (handled by enrichment from context — skip here)
   return null;
 }
 
