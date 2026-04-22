@@ -226,7 +226,7 @@ Deno.serve(async (req) => {
             continue;
           }
           votesInserted++;
-          if (cls.tier !== 3) scoredCandidateIds.add(candidateId);
+          scoredCandidateIds.add(candidateId);
         } else {
           votesInserted++; // count what would be inserted
         }
