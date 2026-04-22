@@ -14,8 +14,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Badge } from "@/types/domain";
+import { QUESTIONNAIRE_MAX_SCORE, QUESTIONNAIRE_MIN_SCORE } from "@/lib/scoring/questionnaireCaps";
 
-const FORMULA_VERSION = "v1.0";
+const FORMULA_VERSION = "v1.1";
 
 const NORM_CAPS: {
   component: string;
@@ -34,9 +35,9 @@ const NORM_CAPS: {
   {
     component: "Klimatický dotazník",
     pillar: "SLOVÁ",
-    min: "0",
-    max: "54",
-    source: "NRSR 2023 — strana PS dosiahla 54 b.",
+    min: String(QUESTIONNAIRE_MIN_SCORE),
+    max: `+${QUESTIONNAIRE_MAX_SCORE}`,
+    source: `Dynamický rozsah (${QUESTIONNAIRE_MAX_SCORE} = súčet max, ${QUESTIONNAIRE_MIN_SCORE} = súčet min)`,
   },
   {
     component: "Hlasovania v zastupiteľstve",
@@ -224,6 +225,16 @@ export default function Metodologia() {
         </p>
         <div className="font-mono text-sm bg-muted/50 rounded p-4 mb-5">
           normalised = min(100, max(0, (raw − min) ÷ (max − min) × 100))
+        </div>
+        
+        <div className="bg-muted/50 rounded p-4 mb-5 space-y-2 text-sm">
+          <p className="font-bold mb-2">Príklady normalizácie (Dotazník):</p>
+          <ul className="list-disc pl-5 space-y-1 text-foreground/80">
+            <li>Kandidát s <strong>{QUESTIONNAIRE_MAX_SCORE}</strong> bodmi (MAX) → <strong>100 %</strong></li>
+            <li>Kandidát s <strong>0</strong> bodmi (neutrálny) → <strong>{Math.round(((0 - QUESTIONNAIRE_MIN_SCORE) / (QUESTIONNAIRE_MAX_SCORE - QUESTIONNAIRE_MIN_SCORE)) * 100)} %</strong></li>
+            <li>Kandidát neodpovedal → <strong>vylúči sa z výpočtu</strong> (skóre tvorí iba program)</li>
+            <li>Kandidát s <strong>{QUESTIONNAIRE_MIN_SCORE}</strong> bodmi (MIN) → <strong>0 %</strong></li>
+          </ul>
         </div>
 
         <div className="overflow-x-auto rounded-lg border bg-card">

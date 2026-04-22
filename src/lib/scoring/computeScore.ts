@@ -17,13 +17,13 @@ import type {
 } from "@/types/domain";
 import type { EvidenceRecord } from "@/lib/repository/types";
 import { getEvidenceType, PILLAR_FOR_SOURCE } from "@/lib/evidenceTypes";
+import { QUESTIONNAIRE_MIN_SCORE, QUESTIONNAIRE_MAX_SCORE } from "./questionnaireCaps";
 
 export const FORMULA_VERSION = "v1.0";
 
 // Absolute caps — see CLAUDE.md "Normalisation".
 export const SCORING_CAPS = {
   program: { min: -35.30, max: 17.31 },        // Carter et al. global range
-  questionnaire: { min: 0, max: 54 },          // NRSR 2023, PS top score
   actions: { min: -10, max: 15 },              // designed cap
   // votes: cap is per-candidate ±n×2 — derived from evidence count
 } as const;
@@ -136,23 +136,25 @@ export function computeScore(input: ScoreInput): ScoreResult {
         })();
 
   // QUESTIONNAIRE: use the NRSR raw score (0–54) from the Edge Function when
-  // available. The confidence-proxy fallback (confidence × 54) cannot capture
+  // available. The confidence-proxy fallback (confidence × max) cannot capture
   // the pro/anti direction of individual measures and must not be used when the
   // AI-derived score is present.
   const questionnaireNorm =
-    input.questionnaireRawScore !== null && input.questionnaireRawScore !== undefined
-      ? clampNorm(input.questionnaireRawScore, SCORING_CAPS.questionnaire.min, SCORING_CAPS.questionnaire.max)
-      : questionnaire.length === 0
-        ? null
-        : (() => {
-            const rawAvg = avg(
-              questionnaire.map((e) => {
-                const conf = e.confidence ?? 1;
-                return conf * SCORING_CAPS.questionnaire.max;
-              }),
-            );
-            return clampNorm(rawAvg, SCORING_CAPS.questionnaire.min, SCORING_CAPS.questionnaire.max);
-          })();
+    input.questionnaireResponded === false
+      ? null
+      : input.questionnaireRawScore !== null && input.questionnaireRawScore !== undefined
+        ? clampNorm(input.questionnaireRawScore, QUESTIONNAIRE_MIN_SCORE, QUESTIONNAIRE_MAX_SCORE)
+        : questionnaire.length === 0
+          ? null
+          : (() => {
+              const rawAvg = avg(
+                questionnaire.map((e) => {
+                  const conf = e.confidence ?? 1;
+                  return conf * QUESTIONNAIRE_MAX_SCORE;
+                }),
+              );
+              return clampNorm(rawAvg, QUESTIONNAIRE_MIN_SCORE, QUESTIONNAIRE_MAX_SCORE);
+            })();
 
   // SOCIAL: Phase 2 — always null in MVP per CLAUDE.md.
   const socialNorm: number | null = null;

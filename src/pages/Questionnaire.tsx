@@ -44,65 +44,11 @@ import type { CandidateRecord } from "@/lib/repository/types";
 // Scale: súhlas 1 (vôbec nesúhlasím) → 5 (úplne súhlasím)
 // ---------------------------------------------------------------------------
 
-interface ScaleQuestion {
-  id: string;
-  label: string;
-  hint?: string;
-}
+import { QUESTIONNAIRE_QUESTIONS } from "@/lib/questionnaire";
 
-const SCALE_QUESTIONS: ScaleQuestion[] = [
-  {
-    id: "q1_climate_priority",
-    label:
-      "Klíma a životné prostredie patria medzi top 3 priority môjho programu pre kraj/mesto.",
-  },
-  {
-    id: "q2_emission_target",
-    label:
-      "Podporím prijatie merateľného cieľa zníženia emisií skleníkových plynov pre kraj/mesto do roku 2030.",
-    hint: "Napr. klimatický plán so záväznými míľnikmi.",
-  },
-  {
-    id: "q3_public_transport",
-    label:
-      "Presadím rozšírenie a zatraktívnenie verejnej dopravy ako alternatívy k individuálnej automobilovej doprave.",
-  },
-  {
-    id: "q4_renewables",
-    label:
-      "Aktívne podporím rozvoj obnoviteľných zdrojov energie (slnko, vietor, geotermál) na území kraja/mesta.",
-  },
-  {
-    id: "q5_building_renovation",
-    label:
-      "Vyhradím prostriedky na hĺbkovú obnovu verejných budov so zameraním na energetickú efektívnosť.",
-  },
-  {
-    id: "q6_green_infrastructure",
-    label:
-      "Budem zvyšovať podiel zelene a vodozádržných prvkov v zastavanom území (parky, stromoradia, dažďové záhrady).",
-  },
-  {
-    id: "q7_waste",
-    label:
-      "Podporím opatrenia na výrazné zvýšenie miery triedenia a recyklácie odpadu.",
-  },
-  {
-    id: "q8_just_transition",
-    label:
-      "Súhlasím, že klimatické opatrenia musia byť spravodlivé voči nízkopríjmovým domácnostiam.",
-  },
-  {
-    id: "q9_adaptation",
-    label:
-      "Považujem prípravu kraja/mesta na dopady klimatickej zmeny (horúčavy, sucho, povodne) za naliehavú úlohu.",
-  },
-  {
-    id: "q10_transparency",
-    label:
-      "Zaviažem sa zverejňovať pokrok v plnení klimatických cieľov minimálne raz ročne.",
-  },
-];
+const SCALE_QUESTIONS = QUESTIONNAIRE_QUESTIONS.filter((q) => q.type === "scale");
+
+
 
 const scaleEnum = z.enum(["1", "2", "3", "4", "5"], {
   message: "Vyberte odpoveď na škále 1–5.",

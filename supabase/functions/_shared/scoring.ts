@@ -164,10 +164,10 @@ export function buildScoreBreakdown(
             programsWithScore.length,
         );
 
-  // QUESTIONNAIRE: clampNorm the raw 0-54 score from the latest submitted response.
+  // QUESTIONNAIRE: clampNorm the raw score from the latest submitted response.
   const qRow = questionnaires[0] ?? null;
   const questionnaireNorm =
-    qRow?.questionnaire_score == null
+    meta.questionnaireResponded === false || qRow?.questionnaire_score == null
       ? null
       : round1(
           clampNorm(
