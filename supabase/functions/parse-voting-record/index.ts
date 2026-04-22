@@ -18,6 +18,8 @@ const CLIMATE_KEYWORDS = [
   "elektromobil", "cyklodoprava", "mhd", "zeleň", "park",
   "biodiverzita", "ovzdušie", "odpad", "energia", "uhlík",
   "životné prostredie", "teplota", "skleníkový",
+  "fotovoltick",   // fotovoltických, fotovoltické, fotovoltika
+  "vnútroblok",    // vnútroblokov, vnútrobloku — inner-courtyard revitalisation
 ];
 
 const VOTE_MAP: Record<string, string> = {
