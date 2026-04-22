@@ -27,7 +27,12 @@ const VOTE_MAP: Record<string, string> = {
   "ZDRŽALA SA": "abstain",
   "NEHLASOVAL": "absent",
   "NEHLASOVALA": "absent",
+  "NEPRÍTOMNÝ": "absent",
+  "NEPRÍTOMNÁ": "absent",
+  "AKLAMAČNE": "for", // acclamation = aye-by-voice; treat as 'for'
 };
+
+const VOTE_TOKEN_RE = /^(ZA|PROTI|ZDRŽAL SA|ZDRŽALA SA|NEHLASOVAL|NEHLASOVALA|NEPRÍTOMNÝ|NEPRÍTOMNÁ|AKLAMAČNE)$/i;
 
 // ---------------------------------------------------------------------------
 // Types
