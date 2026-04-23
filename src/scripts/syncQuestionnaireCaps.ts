@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { QUESTIONNAIRE_MAX_SCORE, QUESTIONNAIRE_MIN_SCORE } from "../lib/scoring/questionnaireCaps";
 
 // Requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to be set in environment.
+declare const process: { env: Record<string, string | undefined>; exit: (code: number) => never };
+
 const supabaseUrl = process.env.SUPABASE_URL || "";
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
