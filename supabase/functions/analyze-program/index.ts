@@ -434,7 +434,8 @@ Analyse the following electoral program text and return the JSON as specified:
 ${chunkText}
 ---`;
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: buildAnthropicHeaders(apiKey),
@@ -451,9 +452,23 @@ ${chunkText}
     if (!resp.ok) {
       const errBody = await resp.text();
       console.error(`[analyze-program][claude] error body: ${errBody.slice(0, 500)}`);
+
+      // Retry on overload / rate limit / transient 5xx with exponential backoff.
+      const retryable = resp.status === 529 || resp.status === 529 ||
+        resp.status === 429 || (resp.status >= 500 && resp.status < 600);
+      if (retryable && attempt < MAX_ATTEMPTS - 1) {
+        const backoffMs = Math.min(15000, 1000 * Math.pow(2, attempt)) + Math.floor(Math.random() * 500);
+        console.log(`[analyze-program][claude] retrying in ${backoffMs}ms`);
+        await delay(backoffMs);
+        continue;
+      }
+
+      const userMsg = resp.status === 529
+        ? "Anthropic je momentálne preťažený. Skúste to prosím o chvíľu znova."
+        : "Anthropic API error";
       throw new Response(
-        JSON.stringify({ error: "Anthropic API error", status: resp.status, detail: errBody.slice(0, 500) }),
-        { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } },
+        JSON.stringify({ error: userMsg, status: resp.status, detail: errBody.slice(0, 500) }),
+        { status: 503, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
     const data = await resp.json();
@@ -467,7 +482,7 @@ ${chunkText}
   }
 
   throw new Response(
-    JSON.stringify({ error: "parse_error", detail: "Claude returned malformed JSON after 2 attempts" }),
+    JSON.stringify({ error: "parse_error", detail: "Claude returned malformed JSON after retries" }),
     { status: 422, headers: { "Content-Type": "application/json", ...corsHeaders } },
   );
 }
