@@ -77,10 +77,10 @@ app.get('/api/co2-per-capita', async (req, res) => {
     res.json(result);
     
   } catch (error) {
-    console.error('Error fetching CO2 data:', error.message);
-    res.status(500).json({ 
+    console.error('Error fetching CO2 data:', error);
+    res.status(500).json({
       error: 'Failed to fetch CO2 emissions data',
-      message: error.message,
+      detail: 'Upstream data source unavailable.',
       fallback: {
         latest: { year: 2021, value: 6.1 },
         timeSeries: []
@@ -160,10 +160,10 @@ app.get('/api/electricity-mix', async (req, res) => {
     res.json(result);
     
   } catch (error) {
-    console.error('Error fetching electricity mix data:', error.message);
-    res.status(500).json({ 
+    console.error('Error fetching electricity mix data:', error);
+    res.status(500).json({
       error: 'Failed to fetch electricity mix data',
-      message: error.message,
+      detail: 'Upstream data source unavailable.',
       fallback: {
         electricityMix: {
           year: 2022,
@@ -222,10 +222,10 @@ app.get('/api/temperature-monthly', async (req, res) => {
     res.json(result);
     
   } catch (error) {
-    console.error('Error fetching temperature data:', error.message);
-    res.status(500).json({ 
+    console.error('Error fetching temperature data:', error);
+    res.status(500).json({
       error: 'Failed to fetch temperature data',
-      message: error.message,
+      detail: 'Upstream data source unavailable.',
       fallback: {
         timeSeries: [],
         note: "City-level series used as a proxy for national trend; for rigorous analysis, use national-average datasets."
@@ -234,15 +234,11 @@ app.get('/api/temperature-monthly', async (req, res) => {
   }
 });
 
-// Health check endpoint
+// Health check endpoint — returns minimal status only.
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
-    cache: {
-      size: cache.size,
-      keys: Array.from(cache.keys())
-    }
   });
 });
 
