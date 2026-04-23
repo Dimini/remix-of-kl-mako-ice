@@ -47,5 +47,5 @@ export async function verifyReviewerOrAdmin(req: Request): Promise<string> {
       { status: 403, headers: { "Content-Type": "application/json" } },
     );
   }
-  return user.id;
+  return userId;
 }
